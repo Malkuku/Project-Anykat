@@ -8,3 +8,33 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+/MyIdea/
+/tomcat.8080/
+
+# 忽略的目录
+/out/
+/target/
+/node_modules/
+/dist/
+/build/
+/tmp/
+/logs/
+/logs/*
+/log/
+/log/*
+/logs/*/
+/logs/*/*
+/log/*/
+/log/*/*
+/tmp/*
+/temp/
+/temp/*
+/tmp/*/
+/tmp/*/*
+/temp/*/
+/temp/*/*
+/tmp/*/*/
+/tmp/*/*/*
+/temp/*/*/
+/temp/*/*/*
