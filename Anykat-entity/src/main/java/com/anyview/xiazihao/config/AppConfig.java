@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 @Data
 public class AppConfig {
     private TomcatConfig tomcat;
+    private JwtConfig jwt;
 
     // 私有静态实例变量
     private static volatile AppConfig instance;

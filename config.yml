@@ -1,4 +1,18 @@
+# Tomcat相关配置
 tomcat:
+  #端口
   port: 8080
+  #webapp目录
   webappDir: "Anykat-application/src/webapp"
+  #扫描的目录
   classesDir: "Anykat-application/target/classes"
+
+
+# Jwt相关配置
+jwt:
+  #Jwt密钥
+  secretKey:  "ProjectAnykatKaCatIsMyLongLongSecretKeyTo256Bits"
+  #管理员Jwt密钥
+  adminSecretKey: "ProjectAnykatKaCatIsMyLongLongSecretKeyTo256BitsUsingByAdmin"
+  #有效时间
+  expireTime: 21600000 #  6h
