@@ -3,16 +3,33 @@ package com.anyview.xiazihao;
 
 import com.anyview.xiazihao.test.Movie;
 import com.anyview.xiazihao.utils.JsonUtils;
+import com.anyview.xiazihao.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Slf4j
 public class UtilsTest {
+    // 测试Jwt工具类
+    @Test
+    public void testJwt(){
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", 1);
+        claims.put("username", "admin");
+        String token = JwtUtils.createToken(claims);
+        log.info(token);
+
+        Map<String, Object> parseClaims = JwtUtils.parseToken(token);
+        log.info(parseClaims.toString());
+
+        JwtUtils.verifyUserId(token, 1);
+    }
 
     //测试Json封装
     @Test
