@@ -1,0 +1,4 @@
+tomcat:
+  port: 8080
+  webappDir: "Anykat-application/src/webapp"
+  classesDir: "Anykat-application/target/classes"
