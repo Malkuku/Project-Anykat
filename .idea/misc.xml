@@ -9,6 +9,7 @@
         <option value="$PROJECT_DIR$/Anykat-parent/pom.xml" />
         <option value="$PROJECT_DIR$/Anykat-entity/pom.xml" />
         <option value="$PROJECT_DIR$/Anykat-application/pom.xml" />
+        <option value="$PROJECT_DIR$/Anykat-test/pom.xml" />
       </list>
     </option>
   </component>
