@@ -1,5 +1,7 @@
 package com.anyview.xiazihao.config;
 
+import com.anyview.xiazihao.entity.config.JwtConfig;
+import com.anyview.xiazihao.entity.config.TomcatConfig;
 import lombok.Data;
 import org.yaml.snakeyaml.Yaml;
 

@@ -1,7 +1,7 @@
 package com.anyview.xiazihao;
 
 
-import com.anyview.xiazihao.test.Movie;
+import com.anyview.xiazihao.entity.test.Movie;
 import com.anyview.xiazihao.utils.JsonUtils;
 import com.anyview.xiazihao.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;

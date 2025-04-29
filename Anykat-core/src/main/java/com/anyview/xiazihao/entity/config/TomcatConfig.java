@@ -1,4 +1,4 @@
-package com.anyview.xiazihao.config;
+package com.anyview.xiazihao.entity.config;
 
 import lombok.Data;
 

@@ -13,6 +13,8 @@
     <modules>
         <module>../Anykat-entity</module>
         <module>../Anykat-utils</module>
+        <module>../Anykat-core</module>
+        <module>../Anykat-application</module>
     </modules>
 
     <!-- 版本控制 -->
@@ -135,6 +137,12 @@
                 <scope>test</scope>
             </dependency>
 
+            <!-- 核心 -->
+            <dependency>
+                <groupId>com.anyview</groupId>
+                <artifactId>Anykat-core</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

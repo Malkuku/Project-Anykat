@@ -1,4 +1,4 @@
-package com.anyview.xiazihao.test;
+package com.anyview.xiazihao.entity.test;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

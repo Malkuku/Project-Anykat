@@ -30,12 +30,10 @@
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- 实体类依赖 -->
+        <!-- 核心模块 -->
         <dependency>
             <groupId>com.anyview</groupId>
-            <artifactId>Anykat-entity</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <artifactId>Anykat-core</artifactId>
         </dependency>
     </dependencies>
 
