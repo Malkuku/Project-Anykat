@@ -25,7 +25,7 @@ public class ClassPathScanner {
         String path = packageName.replace('.', '/');
         try {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            log.info("ClassLoader: {}", classLoader);
+            log.debug("ClassLoader: {}", classLoader);
             Enumeration<URL> resources = classLoader.getResources(path);
 
             while (resources.hasMoreElements()) {
@@ -48,8 +48,8 @@ public class ClassPathScanner {
     private static List<Class<?>> findClasses(File directory, String packageName,
                                               Predicate<Class<?>> classFilter) throws ClassNotFoundException {
         List<Class<?>> classes = new ArrayList<>();
-        log.info("Scanning classes in package: {}",packageName);
-        log.info("Scanning classes in directory: {}",directory.getAbsolutePath());
+        log.debug("Scanning classes in package: {}",packageName);
+        log.debug("Scanning classes in directory: {}",directory.getAbsolutePath());
 
         if (!directory.exists()) {
             return classes;
@@ -66,8 +66,8 @@ public class ClassPathScanner {
                 classes.addAll(findClasses(file, subPackage, classFilter));
             } else if (file.getName().endsWith(".class")) {
                 String className = packageName + '.' +
-                        file.getName().substring(0, file.getName().length() - 6);
-                Class<?> clazz = Class.forName(className);
+                        file.getName().substring(0, file.getName().length() - 6);//获取class全类名
+                Class<?> clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader()); //根据全类名找到clazz对象(不对类进行初始化)
                 if (classFilter.test(clazz)) {
                     classes.add(clazz);
                 }
