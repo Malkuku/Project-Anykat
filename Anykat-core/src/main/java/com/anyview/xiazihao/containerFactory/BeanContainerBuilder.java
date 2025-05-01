@@ -2,11 +2,13 @@ package com.anyview.xiazihao.containerFactory;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.*;
 
+@Slf4j
 public class BeanContainerBuilder {
     private final BeanRegistry registry;
 
@@ -213,9 +215,11 @@ public class BeanContainerBuilder {
             if (field.isAnnotationPresent(KatAutowired.class)) {
                 Object bean = getBean(field.getType()); // 从容器获取依赖
                 field.setAccessible(true);
+                log.debug(String.valueOf(target.getClass().getClassLoader()));
+                log.debug(String.valueOf(bean.getClass().getClassLoader()));
+
                 field.set(target, bean); // 注入到目标对象
             }
         }
     }
-
 }

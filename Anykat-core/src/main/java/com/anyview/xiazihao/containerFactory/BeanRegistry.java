@@ -1,16 +1,18 @@
 package com.anyview.xiazihao.containerFactory;
 
-import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.classPathScanner.ClassPathScanner;
+import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
+@Slf4j
 //注册和元数据管理
 public class BeanRegistry {
     // 类定义注册表
     private final Map<String, Class<?>> classRegistry = new HashMap<>();
     // 接口到实现类的映射
-    private final Map<Class<?>, Class<?>> interfaceToImplementation = new HashMap<>();
+    private final Map<String, Class<?>> interfaceToImplementation = new HashMap<>();
     // 包扫描路径
     private final Set<String> basePackages;
     public BeanRegistry(Set<String> basePackages) {
@@ -34,6 +36,7 @@ public class BeanRegistry {
         for (Class<?> clazz : componentClasses) {
             registerClass(clazz);
         }
+        log.debug("BeanRegistry: {}", classRegistry);
     }
 
     //  注册类
@@ -48,8 +51,8 @@ public class BeanRegistry {
     private void initializeInterfaceLinks() {
         for (Class<?> clazz : classRegistry.values()) {
             for (Class<?> intf : clazz.getInterfaces()) {
-                if (!interfaceToImplementation.containsKey(intf)) {
-                    interfaceToImplementation.put(intf, clazz);
+                if (!interfaceToImplementation.containsKey(intf.getName())) {
+                    interfaceToImplementation.put(intf.getName(), clazz);
                 }
             }
         }
@@ -64,7 +67,7 @@ public class BeanRegistry {
     //  解析bean名称
     public String resolveBeanName(Class<?> type) {
         if (type.isInterface()) {
-            Class<?> implementation = interfaceToImplementation.get(type);
+            Class<?> implementation = interfaceToImplementation.get(type.getName());
             if (implementation == null) {
                 throw new RuntimeException("No implementation for interface: " + type.getName());
             }
@@ -79,7 +82,11 @@ public class BeanRegistry {
     }
 
     public Class<?> getImplementation(Class<?> interfaceType) {
-        return interfaceToImplementation.get(interfaceType);
+        log.debug("interfaceType: {}", interfaceType);
+        log.debug("interfaceToImplementation: {}", interfaceToImplementation);
+        log.debug(String.valueOf(interfaceToImplementation.get(interfaceType.getName())));
+        log.debug("Input ClassLoader: {}", interfaceType.getClassLoader());
+        return interfaceToImplementation.get(interfaceType.getName());
     }
 
 
