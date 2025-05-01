@@ -20,6 +20,9 @@ public class ContainerFactory {
     private final Set<String> beansInCreation = new HashSet<>();
     //接口到实现类的映射
     private final Map<Class<?>, Class<?>> interfaceToImplementation = new HashMap<>();
+    // 依赖图
+    private final Map<String, List<String>> dependencyGraph = new HashMap<>();
+    private final Map<String, Integer> inDegree = new HashMap<>();
     // 包扫描路径
     private final Set<String> basePackages;
 
@@ -27,6 +30,7 @@ public class ContainerFactory {
         this.basePackages = new HashSet<>(Arrays.asList(basePackages));
         scanComponents();
         initializeInterfaceLinks();
+        buildDependencyGraph();
         initializeSingletons();
     }
 
@@ -34,6 +38,7 @@ public class ContainerFactory {
         this.basePackages = AppConfig.getInstance().getContainer().getScanPackages();
         scanComponents();
         initializeInterfaceLinks();
+        buildDependencyGraph();
         initializeSingletons();
 
     }
@@ -42,31 +47,95 @@ public class ContainerFactory {
     private void scanComponents() {
         List<Class<?>> componentClasses = new ArrayList<>();
         for (String basePackage : basePackages) {
-            componentClasses.addAll(ClassPathScanner.scanClassesWithAnnotation(
-                    basePackage, KatComponent.class));
+            componentClasses.addAll(
+                    ClassPathScanner.scanClassesWithAnnotation(basePackage, KatComponent.class)
+            );
         }
-
+        // 先全部注册到 classRegistry（不处理依赖）
         for (Class<?> clazz : componentClasses) {
-            register(clazz);
+            String beanName = getBeanName(clazz);
+            classRegistry.put(beanName, clazz);
         }
     }
 
-    // 初始化所有单例Bean
+    // 初始化单例实例
     private void initializeSingletons() {
-        for (Map.Entry<String, Class<?>> entry : classRegistry.entrySet()) {
-            Class<?> clazz = entry.getValue();
+        List<String> sortedBeans = topologicalSort();
+        for (String beanName : sortedBeans) {
+            Class<?> clazz = classRegistry.get(beanName);
             if (clazz.isAnnotationPresent(KatSingleton.class)) {
-                getBean(clazz); // 触发单例初始化
+                getBean(beanName, clazz); // 触发初始化
             }
         }
     }
 
-    // 注册组件
-    public void register(Class<?> clazz) {
-        if (clazz.isAnnotationPresent(KatComponent.class)) {
-            String beanName = getBeanName(clazz);
-            classRegistry.put(beanName, clazz);
+
+    //构建依赖
+    private void buildDependencyGraph() {
+        // 初始化图和入度
+        for (String beanName : classRegistry.keySet()) {
+            dependencyGraph.put(beanName, new ArrayList<>());
+            inDegree.put(beanName, 0);
         }
+
+        // 分析每个 Bean 的依赖
+        for (Map.Entry<String, Class<?>> entry : classRegistry.entrySet()) {
+            String beanName = entry.getKey();
+            Class<?> clazz = entry.getValue();
+
+            // 处理字段依赖
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.isAnnotationPresent(KatAutowired.class)) {
+                    String dependencyName = resolveBeanName(field.getType());
+                    dependencyGraph.get(beanName).add(dependencyName);
+                    inDegree.put(dependencyName, inDegree.get(dependencyName) + 1);
+                }
+            }
+
+            // 处理构造器依赖（如果有 @KatAutowired 构造器）
+            Constructor<?> autowiredCtor = findAutowiredConstructor(clazz);
+            if (autowiredCtor != null) {
+                for (Class<?> paramType : autowiredCtor.getParameterTypes()) {
+                    String dependencyName = resolveBeanName(paramType);
+                    dependencyGraph.get(beanName).add(dependencyName);
+                    inDegree.put(dependencyName, inDegree.get(dependencyName) + 1);
+                }
+            }
+        }
+    }
+
+
+    //拓扑排序
+    private List<String> topologicalSort() {
+        Queue<String> queue = new LinkedList<>();
+        List<String> sortedBeans = new ArrayList<>();
+
+        // 初始化队列(入度为0的Bean)
+        for (String bean : inDegree.keySet()) {
+            if (inDegree.get(bean) == 0) {
+                queue.offer(bean);
+            }
+        }
+
+        // 拓扑排序
+        while (!queue.isEmpty()) {
+            String bean = queue.poll();
+            sortedBeans.add(bean);
+
+            for (String dependent : dependencyGraph.getOrDefault(bean, Collections.emptyList())) {
+                inDegree.put(dependent, inDegree.get(dependent) - 1);
+                if (inDegree.get(dependent) == 0) {
+                    queue.offer(dependent);
+                }
+            }
+        }
+
+        // 检查循环依赖
+        if (sortedBeans.size() != classRegistry.size()) {
+            throw new RuntimeException("Circular dependency detected!");
+        }
+
+        return sortedBeans;
     }
 
     //手动注入依赖
@@ -89,6 +158,20 @@ public class ContainerFactory {
                 }
             }
         }
+    }
+
+    private String resolveBeanName(Class<?> type) {
+        // 1. 如果是接口，查找实现类
+        if (type.isInterface()) {
+            Class<?> implementation = interfaceToImplementation.get(type);
+            if (implementation == null) {
+                throw new RuntimeException("No implementation found for interface: " + type.getName());
+            }
+            return getBeanName(implementation); // 返回实现类的 Bean 名称
+        }
+
+        // 2. 具体类，直接返回 Bean 名称
+        return getBeanName(type);
     }
 
     // 获取Bean名称
