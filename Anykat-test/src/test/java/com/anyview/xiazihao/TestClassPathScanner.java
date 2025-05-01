@@ -1,7 +1,7 @@
 package com.anyview.xiazihao;
 
-import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.classPathScanner.ClassPathScanner;
+import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import org.junit.Test;
 
 import java.util.List;
