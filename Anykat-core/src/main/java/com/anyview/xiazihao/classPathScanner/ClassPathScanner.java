@@ -13,6 +13,11 @@ import java.util.jar.JarFile;
 
 @Slf4j
 public class ClassPathScanner {
+    private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+    public static void setClassLoader(ClassLoader classLoader) {
+        ClassPathScanner.classLoader = classLoader;
+    }
 
     /**
      * 扫描指定包下的所有类
@@ -24,7 +29,6 @@ public class ClassPathScanner {
         List<Class<?>> classes = new ArrayList<>();
         String path = packageName.replace('.', '/');
         try {
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             log.debug("ClassLoader: {}", classLoader);
             Enumeration<URL> resources = classLoader.getResources(path);
 
