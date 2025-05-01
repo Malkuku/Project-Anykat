@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.config;
 
+import com.anyview.xiazihao.entity.config.ContainerConfig;
 import com.anyview.xiazihao.entity.config.JwtConfig;
 import com.anyview.xiazihao.entity.config.TomcatConfig;
 import lombok.Data;
@@ -12,6 +13,7 @@ import java.io.FileNotFoundException;
 public class AppConfig {
     private TomcatConfig tomcat;
     private JwtConfig jwt;
+    private ContainerConfig container;
 
     // 私有静态实例变量
     private static volatile AppConfig instance;

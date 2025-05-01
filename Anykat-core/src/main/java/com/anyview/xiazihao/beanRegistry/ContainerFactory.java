@@ -4,7 +4,9 @@ import com.anyview.xiazihao.beanRegistry.Annotation.KatAutowired;
 import com.anyview.xiazihao.beanRegistry.Annotation.KatComponent;
 import com.anyview.xiazihao.beanRegistry.Annotation.KatSingleton;
 import com.anyview.xiazihao.classPathScanner.ClassPathScanner;
+import com.anyview.xiazihao.config.AppConfig;
 
+import java.io.FileNotFoundException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -19,10 +21,17 @@ public class ContainerFactory {
     //接口到实现类的映射
     private final Map<Class<?>, Class<?>> interfaceToImplementation = new HashMap<>();
     // 包扫描路径
-    private final String basePackage;
+    private final Set<String> basePackages;
 
-    public ContainerFactory(String basePackage) {
-        this.basePackage = basePackage;
+    public ContainerFactory(String... basePackages) {
+        this.basePackages = new HashSet<>(Arrays.asList(basePackages));
+        scanComponents();
+        initializeInterfaceLinks();
+        initializeSingletons();
+    }
+
+    public ContainerFactory() throws FileNotFoundException {
+        this.basePackages = AppConfig.getInstance().getContainer().getScanPackages();
         scanComponents();
         initializeInterfaceLinks();
         initializeSingletons();
@@ -31,8 +40,11 @@ public class ContainerFactory {
 
     // 扫描组件并注册
     private void scanComponents() {
-        List<Class<?>> componentClasses = ClassPathScanner.scanClassesWithAnnotation(
-                basePackage, KatComponent.class);
+        List<Class<?>> componentClasses = new ArrayList<>();
+        for (String basePackage : basePackages) {
+            componentClasses.addAll(ClassPathScanner.scanClassesWithAnnotation(
+                    basePackage, KatComponent.class));
+        }
 
         for (Class<?> clazz : componentClasses) {
             register(clazz);

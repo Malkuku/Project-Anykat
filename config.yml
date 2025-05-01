@@ -18,3 +18,11 @@ jwt:
   adminSecretKey: "ProjectAnykatKaCatIsMyLongLongSecretKeyTo256BitsUsingByAdmin"
   #有效时间
   expireTime: 21600000 #  6h
+
+
+# DI容器扫描的包
+container:
+  scanPackages:
+    - "com.anyview.xiazihao.service"
+    - "com.anyview.xiazihao.controller"
+    - "com.anyview.xiazihao.dao"
