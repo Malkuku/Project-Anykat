@@ -1,4 +1,4 @@
-package com.anyview.xiazihao.beanRegistry.Annotation;
+package com.anyview.xiazihao.ContainerFactory.Annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,6 +1,6 @@
 package com.anyview.xiazihao;
 
-import com.anyview.xiazihao.beanRegistry.Annotation.KatComponent;
+import com.anyview.xiazihao.ContainerFactory.Annotation.KatComponent;
 import com.anyview.xiazihao.classPathScanner.ClassPathScanner;
 import org.junit.Test;
 

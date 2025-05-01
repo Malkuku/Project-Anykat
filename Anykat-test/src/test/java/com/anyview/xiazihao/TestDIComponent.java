@@ -1,13 +1,10 @@
 package com.anyview.xiazihao;
 
-import com.anyview.xiazihao.beanRegistry.Annotation.KatAutowired;
-import com.anyview.xiazihao.beanRegistry.ContainerFactory;
-import com.anyview.xiazihao.config.AppConfig;
+import com.anyview.xiazihao.ContainerFactory.Annotation.KatAutowired;
+import com.anyview.xiazihao.ContainerFactory.ContainerFactory;
 import com.anyview.xiazihao.service.MovieService;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Set;
 
 public class TestDIComponent {
     private ContainerFactory containerFactory;
