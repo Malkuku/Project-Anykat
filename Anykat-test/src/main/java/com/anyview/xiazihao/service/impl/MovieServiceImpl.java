@@ -1,7 +1,7 @@
 package com.anyview.xiazihao.service.impl;
 
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatAutowired;
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatComponent;
+import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
+import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.dao.MovieDao;
 import com.anyview.xiazihao.entity.test.Movie;
 import com.anyview.xiazihao.service.MovieService;

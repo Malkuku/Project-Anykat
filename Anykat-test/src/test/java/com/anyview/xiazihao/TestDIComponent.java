@@ -1,7 +1,7 @@
 package com.anyview.xiazihao;
 
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatAutowired;
-import com.anyview.xiazihao.ContainerFactory.ContainerFactory;
+import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
+import com.anyview.xiazihao.containerFactory.ContainerFactory;
 import com.anyview.xiazihao.service.MovieService;
 import org.junit.Before;
 import org.junit.Test;

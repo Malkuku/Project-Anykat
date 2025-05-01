@@ -1,7 +1,7 @@
-package com.anyview.xiazihao.ContainerFactory;
+package com.anyview.xiazihao.containerFactory;
 
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatAutowired;
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatSingleton;
+import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
+import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

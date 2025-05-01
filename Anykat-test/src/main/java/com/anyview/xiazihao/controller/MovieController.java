@@ -1,7 +1,7 @@
 package com.anyview.xiazihao.controller;
 
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatAutowired;
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatComponent;
+import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
+import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.service.MovieService;
 
 @KatComponent

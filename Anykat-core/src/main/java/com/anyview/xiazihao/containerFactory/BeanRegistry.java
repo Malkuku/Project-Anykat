@@ -1,6 +1,6 @@
-package com.anyview.xiazihao.ContainerFactory;
+package com.anyview.xiazihao.containerFactory;
 
-import com.anyview.xiazihao.ContainerFactory.Annotation.KatComponent;
+import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.classPathScanner.ClassPathScanner;
 
 import java.util.*;
