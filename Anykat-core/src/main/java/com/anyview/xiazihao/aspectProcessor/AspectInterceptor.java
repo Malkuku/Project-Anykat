@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.aspectProcessor;
 
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -8,6 +9,7 @@ import net.bytebuddy.implementation.bind.annotation.SuperCall;
 import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
+@Slf4j
 public class AspectInterceptor {
     private final Object target;
     private final AspectProcessor aspectProcessor;
@@ -21,14 +23,13 @@ public class AspectInterceptor {
     @RuntimeType
     public Object intercept(@Origin Method method,
                             @AllArguments Object[] args,
-                            @SuperCall Callable<?> callable) throws Exception {
+                            @SuperCall Callable<?> callable) throws Throwable {
+        long start = System.nanoTime();
         try {
             return aspectProcessor.applyAspects(target, method, args);
-        } catch (Throwable throwable) {
-            if (throwable instanceof Exception) {
-                throw (Exception) throwable;
-            }
-            throw new Exception(throwable);
+        } finally {
+            long cost = (System.nanoTime() - start) / 1000;
+            log.trace("Aspect execution cost: {} μs for {}", cost, method.getName());
         }
     }
 }

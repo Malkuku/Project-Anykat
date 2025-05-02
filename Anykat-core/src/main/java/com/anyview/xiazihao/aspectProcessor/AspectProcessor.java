@@ -6,13 +6,13 @@ import com.anyview.xiazihao.aspectProcessor.annotation.KatOrder;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class AspectProcessor {
     // 缓存切点表达式与对应通知方法的映射
-    private final Map<String, List<AdviceWrapper>> aspectCache = new ConcurrentHashMap<>();
+    private final Map<String, ConcurrentSkipListSet<AdviceWrapper>> aspectCache = new ConcurrentHashMap<>();
 
     // 缓存已编译的正则表达式
     private final Map<String, Pattern> compiledPatterns = new ConcurrentHashMap<>();
@@ -46,11 +46,14 @@ public class AspectProcessor {
         // 编译切点表达式
         compiledPatterns.computeIfAbsent(pointcut, this::compilePointcut);
 
-        // 注册通知方法并按优先级排序
-        aspectCache.computeIfAbsent(pointcut, k -> new CopyOnWriteArrayList<>())
-                .add(new AdviceWrapper(aspect, adviceMethod, priority));
-
-        aspectCache.get(pointcut).sort(Comparator.comparingInt(AdviceWrapper::priority));
+        // 注册
+        aspectCache.compute(pointcut, (k, set) -> {
+            if (set == null) {
+                set = new ConcurrentSkipListSet<>(Comparator.comparingInt(AdviceWrapper::priority));
+            }
+            set.add(new AdviceWrapper(aspect, adviceMethod, priority));
+            return set;
+        });
     }
 
     // 编译切点表达式为正则
