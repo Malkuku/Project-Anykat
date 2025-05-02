@@ -137,6 +137,18 @@
                 <scope>test</scope>
             </dependency>
 
+            <!-- bytebuddy -->
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>1.15.11</version>
+            </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy-agent</artifactId>
+                <version>1.15.11</version>
+            </dependency>
+
             <!-- 核心 -->
             <dependency>
                 <groupId>com.anyview</groupId>
@@ -171,6 +183,7 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <properties>
