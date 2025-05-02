@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.containerFactory;
 
+import com.anyview.xiazihao.aspectProcessor.annotation.KatAspect;
 import com.anyview.xiazihao.classPathScanner.ClassPathScanner;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,8 @@ import java.util.*;
 @Slf4j
 //注册和元数据管理
 public class BeanRegistry {
+    //  切面类映射
+    private final Set<Class<?>> aspectClasses = new HashSet<>();
     // 类定义注册表
     private final Map<String, Class<?>> classRegistry = new HashMap<>();
     // 接口到实现类的映射
@@ -21,6 +24,7 @@ public class BeanRegistry {
 
     public void scanAndRegister() {
         scanComponents();
+        scanAspects();
         initializeInterfaceLinks();
     }
 
@@ -37,6 +41,22 @@ public class BeanRegistry {
             registerClass(clazz);
         }
         log.debug("BeanRegistry: {}", classRegistry);
+    }
+
+    //切面扫描
+    private void scanAspects() {
+        List<Class<?>> aspectList = basePackages.stream()
+                .flatMap(pkg -> ClassPathScanner.scanClassesWithAnnotation(pkg, KatAspect.class).stream())
+                .toList();
+
+        aspectList.forEach(aspect -> {
+            aspectClasses.add(aspect);
+            registerClass(aspect);  // 切面也需要作为普通Bean注册
+        });
+    }
+
+    public Set<Class<?>> getAspectClasses() {
+        return Collections.unmodifiableSet(aspectClasses);
     }
 
     //  注册类

@@ -1,16 +1,30 @@
 package com.anyview.xiazihao.containerFactory;
 
+import com.anyview.xiazihao.aspectProcessor.AspectInterceptor;
+import com.anyview.xiazihao.aspectProcessor.AspectProcessor;
+import com.anyview.xiazihao.aspectProcessor.annotation.KatAspect;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.matcher.ElementMatchers;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 @Slf4j
 public class BeanContainerBuilder {
     private final BeanRegistry registry;
+    private final AspectProcessor aspectProcessor; //aop处理器
 
     // 实例缓存和状态
     private final Map<String, Object> singletonInstances = new HashMap<>();
@@ -19,14 +33,17 @@ public class BeanContainerBuilder {
     // 依赖图
     private final Map<String, List<String>> dependencyGraph = new HashMap<>();
     private final Map<String, Integer> inDegree = new HashMap<>();
-
+    // 切面实例缓存
+    private final Map<Class<?>, Object> aspectInstances = new ConcurrentHashMap<>();
 
     public BeanContainerBuilder(BeanRegistry registry) {
         this.registry = registry;
+        this.aspectProcessor = new AspectProcessor();
     }
 
     public void build() {
         buildDependencyGraph();
+        processAspects();
         initializeSingletons();
     }
 
@@ -95,6 +112,56 @@ public class BeanContainerBuilder {
         });
     }
 
+    //处理aop注册
+    private void processAspects() {
+        registry.getAspectClasses().forEach(aspectClass -> {
+            try {
+                Object aspect = createAspectInstance(aspectClass);
+                aspectInstances.put(aspectClass, aspect);
+                aspectProcessor.registerAspect(aspect);
+            } catch (Exception e) {
+                throw new RuntimeException("Aspect initialization failed: " + aspectClass.getName(), e);
+            }
+        });
+    }
+
+    private Object createAspectInstance(Class<?> aspectClass) throws Exception {
+        // 切面也需要依赖注入
+        Object instance = createRawInstance(aspectClass);
+        injectFields(instance);
+        return instance;
+    }
+
+    // 创建原始实例（不经过AOP代理）
+    private Object createRawInstance(Class<?> clazz) throws Exception {
+        Constructor<?> autowiredCtor = findAutowiredConstructor(clazz);
+        if (autowiredCtor != null) {
+            return createInstanceWithConstructor(autowiredCtor);
+        }
+        return clazz.getDeclaredConstructor().newInstance();
+    }
+
+
+    private Object createProxy(Object target, Class<?> targetClass) throws Exception {
+        if (targetClass.isInterface()) {
+            return Proxy.newProxyInstance(
+                    targetClass.getClassLoader(),
+                    new Class<?>[]{targetClass},
+                    (proxy, method, args) -> aspectProcessor.applyAspects(target, method, args)
+            );
+        } else {
+            return new ByteBuddy()
+                    .subclass(targetClass)
+                    .method(not(isDeclaredBy(Object.class))) // 关键修改：在method()处过滤
+                    .intercept(MethodDelegation.to(new AspectInterceptor(target, aspectProcessor)))
+                    .make()
+                    .load(targetClass.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+                    .getLoaded()
+                    .getDeclaredConstructor()
+                    .newInstance();
+        }
+    }
+
     // 获取Bean实例
     @SuppressWarnings("unchecked") //忽略泛型警告
     public <T> T getBean(Class<T> interfaceType) {
@@ -125,10 +192,10 @@ public class BeanContainerBuilder {
 
         beansInCreation.add(beanName);
         try {
-            Class<?> targetClass = classRegistry.get(beanName);
-            Object instance = createInstance(targetClass); //创建实例
+            Class<?> targetClass = registry.getClassRegistry().get(beanName);
+            Object instance = createInstance(targetClass);
 
-            // 如果是单例则缓存
+            // 如果是单例则缓存代理后的实例
             if (targetClass.isAnnotationPresent(KatSingleton.class)) {
                 singletonInstances.put(beanName, instance);
             }
@@ -154,20 +221,37 @@ public class BeanContainerBuilder {
 
     // 创建实例
     private Object createInstance(Class<?> clazz) throws Exception {
-        // 1. 优先使用@KatAutowired构造器
+        // 1. 创建原始实例（不区分单例/原型）
+        Object rawInstance;
         Constructor<?> autowiredCtor = findAutowiredConstructor(clazz);
         if (autowiredCtor != null) {
-            return createInstanceWithConstructor(autowiredCtor);
+            rawInstance = createInstanceWithConstructor(autowiredCtor);
+        } else {
+            rawInstance = clazz.getDeclaredConstructor().newInstance();
         }
 
-        // 2. 使用默认无参构造器
+        // 2. 注入依赖
+        injectFields(rawInstance);
+
+        // 3. 统一应用AOP代理（无论是否单例）
+        return wrapWithAopIfNeeded(rawInstance, clazz);
+    }
+
+    private Object wrapWithAopIfNeeded(Object rawInstance, Class<?> targetClass) {
         try {
-            Object instance = clazz.getDeclaredConstructor().newInstance(); //获取无参构造，并创建实例
-            injectFields(instance); //注入依赖字段
-            return instance;
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException("No suitable constructor found for " + clazz.getName());
+            if (shouldProxy(targetClass)) {
+                return createProxy(rawInstance, targetClass);
+            }
+            return rawInstance;
+        } catch (Exception e) {
+            throw new RuntimeException("AOP proxy creation failed for " + targetClass.getName(), e);
         }
+    }
+
+    private boolean shouldProxy(Class<?> targetClass) {
+        // 不是切面类 && 有匹配的切面逻辑
+        return !targetClass.isAnnotationPresent(KatAspect.class) &&
+                aspectProcessor.hasMatchingAdvice(targetClass);
     }
 
     // 查找@KatAutowired构造器
