@@ -12,6 +12,10 @@ public class ContainerFactory {
     private final BeanRegistry registry;
     private final BeanContainerBuilder builder;
 
+    // 初始化锁
+    private volatile boolean initialized = false;
+    private final Object initLock = new Object();
+
     public ContainerFactory(String... basePackages) {
         log.debug("初始化扫描包 {}", (Object) basePackages);
         this.registry = new BeanRegistry(new HashSet<>(Arrays.asList(basePackages)));
@@ -24,8 +28,15 @@ public class ContainerFactory {
     }
 
     private void initialize() {
-        registry.scanAndRegister();  // 扫描和注册组件
-        builder.build();             // 构建容器
+        if (!initialized) {
+            synchronized (initLock) {
+                if (!initialized) {
+                    registry.scanAndRegister();
+                    builder.build();
+                    initialized = true; // 标记为已初始化
+                }
+            }
+        }
     }
 
     // 委托给builder的方法
