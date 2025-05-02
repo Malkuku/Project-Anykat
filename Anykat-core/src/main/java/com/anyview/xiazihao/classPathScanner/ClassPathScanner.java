@@ -7,16 +7,26 @@ import java.io.IOException;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 @Slf4j
 public class ClassPathScanner {
-    private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    private static volatile ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+    private static final Map<String, List<Class<?>>> scanCache = new ConcurrentHashMap<>();
+
 
     public static void setClassLoader(ClassLoader classLoader) {
-        ClassPathScanner.classLoader = classLoader;
+        ClassPathScanner.classLoader = Objects.requireNonNull(classLoader);
+    }
+
+
+    public static List<Class<?>> scanClasses(String packageName, Predicate<Class<?>> classFilter) {
+        String cacheKey = packageName + ":" + classFilter.toString();
+        return scanCache.computeIfAbsent(cacheKey, key -> doScan(packageName, classFilter));
     }
 
     /**
@@ -25,7 +35,7 @@ public class ClassPathScanner {
      * @param classFilter 类过滤器
      * @return 符合条件的类列表
      */
-    public static List<Class<?>> scanClasses(String packageName, Predicate<Class<?>> classFilter) {
+    public static List<Class<?>> doScan(String packageName, Predicate<Class<?>> classFilter) {
         List<Class<?>> classes = new ArrayList<>();
         String path = packageName.replace('.', '/');
         try {
@@ -79,45 +89,37 @@ public class ClassPathScanner {
         }
         return classes;
     }
-    private static Set<Class<?>> findClassesInJar(JarFile jar, String path, String packageName,
-                                                  Predicate<Class<?>> classFilter) throws ClassNotFoundException, IOException {
+    private static List<Class<?>> findClassesInJar(JarFile jar, String path, String packageName,
+                                                   Predicate<Class<?>> classFilter) {
         Set<Class<?>> classes = new HashSet<>();
-        Enumeration<JarEntry> entries = jar.entries();
-
-        while (entries.hasMoreElements()) {
-            JarEntry entry = entries.nextElement();
-            String entryName = entry.getName();
-
-            // 跳过目录和非class文件
-            if (entry.isDirectory() || !entryName.endsWith(".class")) {
-                continue;
-            }
-
-            // 检查是否在指定路径下
-            if (!entryName.startsWith(path)) {
-                continue;
-            }
-
-            // 转换为完全限定类名
-            String className = entryName
-                    .substring(0, entryName.length() - 6) // 去掉".class"
-                    .replace('/', '.'); // 路径分隔符转换为包分隔符
-
-            try {
-                Class<?> clazz = Class.forName(className);
-                if (classFilter.test(clazz)) {
-                    classes.add(clazz);
+        try {
+            Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                String entryName = entry.getName();
+                if (entry.isDirectory() || !entryName.endsWith(".class") || !entryName.startsWith(path)) {
+                    continue;
                 }
-            } catch (NoClassDefFoundError e) {
-                // 忽略无法加载的类
-                System.err.println("无法加载类: " + className + ", 原因: " + e.getMessage());
-            } catch (UnsupportedClassVersionError e) {
-                // 忽略不支持的类版本
-                System.err.println("不支持的类版本: " + className);
+                String className = entryName.replace('/', '.').substring(0, entryName.length() - 6);
+                try {
+                    Class<?> clazz = Class.forName(className, false, classLoader); // 显式指定ClassLoader
+                    if (classFilter.test(clazz)) {
+                        classes.add(clazz);
+                    }
+                } catch (NoClassDefFoundError | UnsupportedClassVersionError e) {
+                    log.warn("Skipping class due to error: {}", className, e);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to scan JAR: " + jar.getName(), e);
+        } finally {
+            try {
+                jar.close(); // 确保关闭JarFile
+            } catch (IOException e) {
+                log.error("Failed to close JAR: {}", jar.getName(), e);
             }
         }
-
-        return classes;
+        return new ArrayList<>(classes);
     }
 
     /**
