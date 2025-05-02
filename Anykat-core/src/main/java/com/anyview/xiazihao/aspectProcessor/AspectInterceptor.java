@@ -1,6 +1,5 @@
 package com.anyview.xiazihao.aspectProcessor;
 
-import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
@@ -18,6 +17,7 @@ public class AspectInterceptor {
         this.aspectProcessor = aspectProcessor;
     }
 
+    //在运行时，拦截目标方法，并执行切面逻辑
     @RuntimeType
     public Object intercept(@Origin Method method,
                             @AllArguments Object[] args,

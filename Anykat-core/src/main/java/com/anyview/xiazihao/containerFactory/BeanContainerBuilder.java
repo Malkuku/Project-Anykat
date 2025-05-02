@@ -9,11 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
-import net.bytebuddy.matcher.ElementMatchers;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,8 +31,6 @@ public class BeanContainerBuilder {
     // 依赖图
     private final Map<String, List<String>> dependencyGraph = new HashMap<>();
     private final Map<String, Integer> inDegree = new HashMap<>();
-    // 切面实例缓存
-    private final Map<Class<?>, Object> aspectInstances = new ConcurrentHashMap<>();
 
     public BeanContainerBuilder(BeanRegistry registry) {
         this.registry = registry;
@@ -117,7 +113,6 @@ public class BeanContainerBuilder {
         registry.getAspectClasses().forEach(aspectClass -> {
             try {
                 Object aspect = createAspectInstance(aspectClass);
-                aspectInstances.put(aspectClass, aspect);
                 aspectProcessor.registerAspect(aspect);
             } catch (Exception e) {
                 throw new RuntimeException("Aspect initialization failed: " + aspectClass.getName(), e);
@@ -125,8 +120,8 @@ public class BeanContainerBuilder {
         });
     }
 
+    // 切面也需要依赖注入
     private Object createAspectInstance(Class<?> aspectClass) throws Exception {
-        // 切面也需要依赖注入
         Object instance = createRawInstance(aspectClass);
         injectFields(instance);
         return instance;

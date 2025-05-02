@@ -149,6 +149,16 @@ public class AspectProcessor {
                 .anyMatch(pointcut -> matchesPointcut(pointcut, methodSignature));
     }
 
+    // 检查切点是否匹配签名
+    private boolean matchesPointcut(String pointcut, String signature) {
+        Pattern pattern = compiledPatterns.get(pointcut);
+        if (pattern == null) {
+            pattern = compilePointcut(pointcut);
+            compiledPatterns.put(pointcut, pattern);
+        }
+        return pattern.matcher(signature).matches();
+    }
+
     // 构建完整方法签名
     private String buildMethodSignature(Method method) {
         String params = Arrays.stream(method.getParameterTypes())
@@ -187,23 +197,9 @@ public class AspectProcessor {
         return result;
     }
 
-    // 检查切点是否匹配签名
-    private boolean matchesPointcut(String pointcut, String signature) {
-        Pattern pattern = compiledPatterns.get(pointcut);
-        if (pattern == null) {
-            pattern = compilePointcut(pointcut);
-            compiledPatterns.put(pointcut, pattern);
-        }
-        return pattern.matcher(signature).matches();
-    }
-
     // 通知包装类
-    private static class AdviceWrapper {
-        private final Object aspectInstance;
-        private final Method adviceMethod;
-        private final int priority;
-
-        public AdviceWrapper(Object aspectInstance, Method adviceMethod, int priority) {
+    private record AdviceWrapper(Object aspectInstance, Method adviceMethod, int priority) {
+        private AdviceWrapper(Object aspectInstance, Method adviceMethod, int priority) {
             this.aspectInstance = aspectInstance;
             this.adviceMethod = adviceMethod;
             this.priority = priority;
@@ -212,10 +208,6 @@ public class AspectProcessor {
 
         public Object invoke(ProceedingJoinPoint joinPoint) throws Throwable {
             return adviceMethod.invoke(aspectInstance, joinPoint);
-        }
-
-        public int priority() {
-            return priority;
         }
     }
 }
