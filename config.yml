@@ -5,9 +5,9 @@ tomcat:
   #端口
   port: 8080
   #webapp目录
-  webappDir: "Anykat-application/src/webapp"
+  webappDir: "Anykat-test/src/webapp"
   #扫描的目录
-  classesDir: "Anykat-application/target/classes"
+  classesDir: "Anykat-test/target/classes"
 
 
 # Jwt相关配置
@@ -26,3 +26,4 @@ container:
     - "com.anyview.xiazihao.service"
     - "com.anyview.xiazihao.controller"
     - "com.anyview.xiazihao.dao"
+    - "com.anyview.xiazihao.aspect"
