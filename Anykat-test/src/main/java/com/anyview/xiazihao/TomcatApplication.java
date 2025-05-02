@@ -46,7 +46,7 @@ public class TomcatApplication {
         ClassLoader tomcatLoader = ctx.getLoader().getClassLoader();
 
         // 3. 设置类加载器
-        Thread.currentThread().setContextClassLoader(tomcatLoader);
+        Thread.currentThread().setContextClassLoader(tomcatLoader); //核心
         ClassPathScanner.setClassLoader(tomcatLoader);
 
         // 4. 初始化容器工厂
