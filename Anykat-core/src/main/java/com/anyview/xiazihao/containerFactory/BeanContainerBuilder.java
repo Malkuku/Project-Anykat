@@ -25,8 +25,8 @@ public class BeanContainerBuilder {
     private final AspectProcessor aspectProcessor; //aop处理器
 
     // 实例缓存和状态
-    private final Map<String, Object> singletonInstances = new HashMap<>();
-    private final Set<String> beansInCreation = new HashSet<>();
+    private final Map<String, Object> singletonInstances = new ConcurrentHashMap<>();
+    private final Set<String> beansInCreation = ConcurrentHashMap.newKeySet(); // 线程安全Set
 
     // 依赖图
     private final Map<String, List<String>> dependencyGraph = new HashMap<>();
@@ -171,36 +171,44 @@ public class BeanContainerBuilder {
     @SuppressWarnings("unchecked") //忽略泛型警告
     public <T> T getBean(String beanName, Class<T> clazz) {
         // 检查单例缓存
-        if (singletonInstances.containsKey(beanName)) {
-            return (T) singletonInstances.get(beanName);
-        }
-        Map<String, Class<?>> classRegistry = registry.getClassRegistry();
-        // 检查是否已注册
-        if (!classRegistry.containsKey(beanName)) {
-            throw new RuntimeException("Bean not registered: " + beanName);
+        Object bean = singletonInstances.get(beanName);
+        if (bean != null) {
+            return (T) bean;
         }
 
-        // 检查循环依赖
-        if (beansInCreation.contains(beanName)) {
-            throw new RuntimeException("Circular dependency detected for bean: " + beanName);
-        }
+        synchronized (this) {
+            bean = singletonInstances.get(beanName);
+            if (bean == null) {
+                Map<String, Class<?>> classRegistry = registry.getClassRegistry();
+                // 检查是否已注册
+                if (!classRegistry.containsKey(beanName)) {
+                    throw new RuntimeException("Bean not registered: " + beanName);
+                }
 
-        beansInCreation.add(beanName);
-        try {
-            Class<?> targetClass = registry.getClassRegistry().get(beanName);
-            Object instance = createInstance(targetClass);
+                // 检查循环依赖
+                if (beansInCreation.contains(beanName)) {
+                    throw new RuntimeException("Circular dependency detected for bean: " + beanName);
+                }
 
-            // 如果是单例则缓存代理后的实例
-            if (targetClass.isAnnotationPresent(KatSingleton.class)) {
-                singletonInstances.put(beanName, instance);
+                beansInCreation.add(beanName);
+                try {
+                    Class<?> targetClass = registry.getClassRegistry().get(beanName);
+                    Object instance = createInstance(targetClass);
+
+                    // 如果是单例则缓存代理后的实例
+                    if (targetClass.isAnnotationPresent(KatSingleton.class)) {
+                        singletonInstances.put(beanName, instance);
+                    }
+
+                    return (T) instance;
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to create bean: " + beanName, e);
+                } finally {
+                    beansInCreation.remove(beanName);
+                }
             }
-
-            return (T) instance;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create bean: " + beanName, e);
-        } finally {
-            beansInCreation.remove(beanName);
         }
+        return (T) bean;
     }
 
     //创建单例对象

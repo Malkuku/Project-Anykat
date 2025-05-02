@@ -6,26 +6,38 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 //注册和元数据管理
 public class BeanRegistry {
     //  切面类映射
-    private final Set<Class<?>> aspectClasses = new HashSet<>();
+    private final Set<Class<?>> aspectClasses = ConcurrentHashMap.newKeySet();
     // 类定义注册表
-    private final Map<String, Class<?>> classRegistry = new HashMap<>();
+    private final Map<String, Class<?>> classRegistry = new ConcurrentHashMap<>();
     // 接口到实现类的映射
-    private final Map<String, Class<?>> interfaceToImplementation = new HashMap<>();
+    private final Map<String, Class<?>> interfaceToImplementation = new ConcurrentHashMap<>();
     // 包扫描路径
     private final Set<String> basePackages;
     public BeanRegistry(Set<String> basePackages) {
         this.basePackages = basePackages;
     }
 
+    //初始化锁象
+    private final Object scanLock = new Object();
+    private volatile boolean scanned = false;
+
     public void scanAndRegister() {
-        scanComponents();
-        scanAspects();
-        initializeInterfaceLinks();
+        if (!scanned) {
+            synchronized (scanLock) {
+                if (!scanned) {
+                    scanComponents();
+                    scanAspects();
+                    initializeInterfaceLinks();
+                    scanned = true; // 标记为已扫描
+                }
+            }
+        }
     }
 
     //  扫描组件
@@ -63,7 +75,7 @@ public class BeanRegistry {
     public void registerClass(Class<?> clazz) {
         if (clazz.isAnnotationPresent(KatComponent.class)) {
             String beanName = getBeanName(clazz);
-            classRegistry.put(beanName, clazz);
+            classRegistry.putIfAbsent(beanName, clazz);
         }
     }
 
@@ -72,7 +84,7 @@ public class BeanRegistry {
         for (Class<?> clazz : classRegistry.values()) {
             for (Class<?> intf : clazz.getInterfaces()) {
                 if (!interfaceToImplementation.containsKey(intf.getName())) {
-                    interfaceToImplementation.put(intf.getName(), clazz);
+                    interfaceToImplementation.putIfAbsent(intf.getName(), clazz);
                 }
             }
         }
