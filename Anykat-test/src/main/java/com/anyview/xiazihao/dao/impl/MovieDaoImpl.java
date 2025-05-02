@@ -1,6 +1,7 @@
 package com.anyview.xiazihao.dao.impl;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
+import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.MovieDao;
 import com.anyview.xiazihao.entity.pojo.Movie;
 import com.anyview.xiazihao.utils.JdbcUtils;
@@ -10,6 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 @KatComponent
+@KatSingleton
 public class MovieDaoImpl implements MovieDao {
 
     @Override
