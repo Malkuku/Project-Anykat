@@ -27,3 +27,12 @@ container:
     - "com.anyview.xiazihao.controller"
     - "com.anyview.xiazihao.dao"
     - "com.anyview.xiazihao.aspect"
+
+# 数据库连接池相关设置
+hakimi:
+  url: "jdbc:mysql://localhost:3306/movie_tix"
+  username: "root"
+  password: "pin666"
+  maxSize: 10
+  minIdle: 5
+  maxWaitMillis: 10000
