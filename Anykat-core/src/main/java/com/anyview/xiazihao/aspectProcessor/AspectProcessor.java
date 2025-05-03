@@ -3,12 +3,14 @@ package com.anyview.xiazihao.aspectProcessor;
 import com.anyview.xiazihao.aspectProcessor.annotation.KatAround;
 import com.anyview.xiazihao.aspectProcessor.annotation.KatOrder;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 
 public class AspectProcessor {
     // 缓存切点表达式与对应通知方法的映射
@@ -58,8 +60,11 @@ public class AspectProcessor {
 
     // 编译切点表达式为正则
     private Pattern compilePointcut(String expression) {
-        String regex = convertToRegex(expression);
-        return Pattern.compile(regex);
+        // 先处理注解表达式
+        if (expression.startsWith("@annotation(")) {
+            return compileAnnotationPointcut(expression);
+        }
+        return Pattern.compile(convertToRegex(expression));
     }
 
     // 转换切点表达式为正则
@@ -135,6 +140,15 @@ public class AspectProcessor {
         return chars.length - 1;
     }
 
+    // 处理注解切点
+    private Pattern compileAnnotationPointcut(String expression) {
+        // 提取注解全限定名，如 "@annotation(com.example.Transactional)" -> "com.example.Transactional"
+        String annotationName = expression.substring("@annotation(".length(), expression.length() - 1);
+
+        // 匹配所有带有该注解的方法
+        return Pattern.compile(".*" + Pattern.quote(annotationName) + ".*");
+    }
+
     // 检查类是否有匹配的切面
     public boolean hasMatchingAdvice(Class<?> targetClass) {
         return aspectCache.keySet().stream()
@@ -162,6 +176,29 @@ public class AspectProcessor {
         return pattern.matcher(signature).matches();
     }
 
+    private boolean matchesPointcut(String pointcut, Method method) {
+        // 注解匹配逻辑
+        if (pointcut.startsWith("@annotation(")) {
+            String annotationName = pointcut.substring("@annotation(".length(), pointcut.length() - 1);
+            return hasAnnotation(method, annotationName);
+        }
+
+        // 原有方法签名匹配
+        String methodSignature = buildMethodSignature(method);
+        return matchesPointcut(pointcut, methodSignature);
+    }
+
+    // 检查方法是否带有指定注解
+    private boolean hasAnnotation(Method method, String annotationName) {
+        try {
+            Class<? extends Annotation> annotationClass =
+                    (Class<? extends Annotation>) Class.forName(annotationName);
+            return method.isAnnotationPresent(annotationClass);
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     // 构建完整方法签名
     private String buildMethodSignature(Method method) {
         String params = Arrays.stream(method.getParameterTypes())
@@ -178,9 +215,9 @@ public class AspectProcessor {
                 .map(Class::getName)
                 .collect(Collectors.joining(",")) + ")";
 
-        // 查找匹配的切面
+        // 优先检查注解匹配
         List<AdviceWrapper> matchedAdvices = aspectCache.entrySet().stream()
-                .filter(entry -> matchesPointcut(entry.getKey(), methodSignature))
+                .filter(entry -> matchesPointcut(entry.getKey(), method))
                 .flatMap(entry -> entry.getValue().stream())
                 .sorted(Comparator.comparingInt(AdviceWrapper::priority))
                 .toList();
