@@ -1,10 +1,9 @@
 package com.anyview.xiazihao.utils;
 
-import com.anyview.xiazihao.config.DataSourceConfig;
 import com.anyview.xiazihao.connectionPool.HakimiConnectionPool;
+import com.anyview.xiazihao.connectionPool.ConnectionContext;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.sql.DataSource;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,9 +16,48 @@ import java.util.function.Function;
 @Slf4j
 public class JdbcUtils {
 
-    // 获取连接(从连接池)
+    // 优先从事务上下文获取连接，没有则从连接池获取
     public static Connection getConnection() throws SQLException, FileNotFoundException {
-        return HakimiConnectionPool.getInstance().getConnection();
+        try {
+            // 1. 尝试从事务上下文获取
+            Connection txConn = ConnectionContext.getConnection();
+            if (txConn != null && !txConn.isClosed()) {
+                return txConn;
+            }
+            // 2. 没有事务则从连接池获取
+            return HakimiConnectionPool.getInstance().getConnection();
+        } catch (IllegalStateException e) {
+            // 上下文未初始化时回退到连接池
+            return HakimiConnectionPool.getInstance().getConnection();
+        }
+    }
+
+    // 通用查询方法（自动判断是否关闭连接）
+    public static <T> List<T> executeQuery(String sql, Function<ResultSet, T> rowMapper, Object... params)
+            throws SQLException, FileNotFoundException {
+        Connection conn = getConnection();
+        boolean isTxActive = ConnectionContext.isActive(); // 是否在事务中
+        try {
+            return executeQuery(conn, sql, !isTxActive, rowMapper, params);
+        } finally {
+            if (!isTxActive && conn != null) {
+                conn.close(); // 非事务场景手动关闭
+            }
+        }
+    }
+
+    // 通用更新方法（自动判断事务）
+    public static int executeUpdate(String sql, Object... params)
+            throws SQLException, FileNotFoundException {
+        Connection conn = getConnection();
+        boolean isTxActive = ConnectionContext.isActive();
+        try {
+            return executeUpdate(conn, sql, !isTxActive, params);
+        } finally {
+            if (!isTxActive && conn != null) {
+                conn.close();
+            }
+        }
     }
 
     // 通用查询方法 (动态SQL+参数)
@@ -80,50 +118,29 @@ public class JdbcUtils {
         }
     }
 
-    // 关闭资源
-    private static void closeResources(Connection conn, PreparedStatement stmt, ResultSet rs) {
-        try {
-            if (rs != null) rs.close();
-            if (stmt != null) stmt.close();
-            if (conn != null) conn.close();
-        } catch (SQLException e) {
-            log.error("Error closing resources: {}", e.getMessage());
-        }
-    }
-
+    // 改造事务方法（使用上下文管理）
     public static <T> T executeTransaction(Function<Connection, T> action) throws Exception {
         Connection conn = null;
         try {
             conn = getConnection();
-            conn.setAutoCommit(false); // 关闭自动提交，开始事务
+            ConnectionContext.bindConnection(conn); // 绑定到上下文
+            conn.setAutoCommit(false);
 
-            T result = action.apply(conn); // 执行事务中的操作
-            conn.commit(); // 提交事务
+            T result = action.apply(conn);
+            conn.commit();
             return result;
         } catch (Exception e) {
             if (conn != null) {
-                try {
-                    conn.rollback(); // 出现异常时回滚事务
-                } catch (SQLException rollbackEx) {
-                    System.err.println("Error rolling back transaction: " + rollbackEx.getMessage());
-                }
+                conn.rollback();
             }
-            throw e; // 重新抛出异常
+            throw e;
         } finally {
+            ConnectionContext.unbindConnection();
             if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // 恢复自动提交
-                    conn.close(); // 关闭连接
-                } catch (SQLException e) {
-                    System.err.println("Error closing connection: " + e.getMessage());
-                }
+                conn.setAutoCommit(true);
+                conn.close();
             }
         }
-    }
-
-    // 事务回调接口
-    public interface TransactionCallback<T> {
-        T doInTransaction(Connection conn) throws SQLException;
     }
 }
 
