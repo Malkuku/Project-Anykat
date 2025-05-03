@@ -1,6 +1,7 @@
 package com.anyview.xiazihao.config;
 
 import com.anyview.xiazihao.entity.config.ContainerConfig;
+import com.anyview.xiazihao.entity.config.HakimiConfig;
 import com.anyview.xiazihao.entity.config.JwtConfig;
 import com.anyview.xiazihao.entity.config.TomcatConfig;
 import lombok.Data;
@@ -14,6 +15,7 @@ public class AppConfig {
     private TomcatConfig tomcat;
     private JwtConfig jwt;
     private ContainerConfig container;
+    private HakimiConfig hakimi;
 
     // 私有静态实例变量
     private static volatile AppConfig instance;
