@@ -7,6 +7,7 @@ import com.anyview.xiazihao.entity.pojo.Movie;
 import com.anyview.xiazihao.service.MovieService;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
+import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public class MovieServiceImpl implements MovieService {
     private MovieDao movieDao;
 
     @Override
-    public Movie selectMovieById(Integer id) throws SQLException {
+    public Movie selectMovieById(Integer id) throws SQLException, FileNotFoundException {
         return movieDao.selectMovieById(id, JdbcUtils.getConnection(), true);
     }
 

@@ -1,9 +1,11 @@
 package com.anyview.xiazihao.utils;
 
 import com.anyview.xiazihao.config.DataSourceConfig;
+import com.anyview.xiazihao.connectionPool.HakimiConnectionPool;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.DataSource;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,11 +16,10 @@ import java.util.function.Function;
 
 @Slf4j
 public class JdbcUtils {
-    private static final DataSource dataSource = DataSourceConfig.createDataSource();
 
     // 获取连接(从连接池)
-    public static Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+    public static Connection getConnection() throws SQLException, FileNotFoundException {
+        return HakimiConnectionPool.getInstance().getConnection();
     }
 
     // 通用查询方法 (动态SQL+参数)
@@ -45,7 +46,7 @@ public class JdbcUtils {
                 stmt.close();
             }
             if(conn != null && isAutoCloseConn) {
-                conn.close();
+               conn.close();
             }
         }
     }
