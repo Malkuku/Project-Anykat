@@ -190,27 +190,8 @@ public class AspectProcessor {
         }
 
         // 创建连接点
-        ProceedingJoinPoint joinPoint = new ProceedingJoinPoint(target, method, args);
+        ChainableProceedingJoinPoint joinPoint = new ChainableProceedingJoinPoint(target, method, args,matchedAdvices);
 
-        // 执行通知链
-        Object result = null;
-        for (AdviceWrapper advice : matchedAdvices) {
-            result = advice.invoke(joinPoint);
-        }
-        return result;
-    }
-
-    // 通知包装类
-    private record AdviceWrapper(Object aspectInstance, Method adviceMethod, int priority) {
-        private AdviceWrapper(Object aspectInstance, Method adviceMethod, int priority) {
-            this.aspectInstance = aspectInstance;
-            this.adviceMethod = adviceMethod;
-            this.priority = priority;
-            this.adviceMethod.setAccessible(true);
-        }
-
-        public Object invoke(ProceedingJoinPoint joinPoint) throws Throwable {
-            return adviceMethod.invoke(aspectInstance, joinPoint);
-        }
+        return joinPoint.proceed();
     }
 }
