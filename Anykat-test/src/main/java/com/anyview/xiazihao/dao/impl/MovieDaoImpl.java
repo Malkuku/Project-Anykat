@@ -8,7 +8,7 @@ import com.anyview.xiazihao.entity.pojo.Movie;
 import com.anyview.xiazihao.utils.JdbcUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.Connection;
+import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -16,14 +16,11 @@ import java.util.List;
 @KatSingleton
 @Slf4j
 public class MovieDaoImpl implements MovieDao {
-
     @Override
-    public Movie selectMovieById(Integer id, Connection conn, boolean isAutoCloseConn) throws SQLException {
+    public Movie selectMovieById(Integer id) throws SQLException, FileNotFoundException {
         String sql = "SELECT * FROM movies WHERE id = ?";
         List<Movie> movieList = JdbcUtils.executeQuery(
-                conn,
                 sql,
-                isAutoCloseConn,
                 rs -> {
                     Movie movie = new Movie();
                     try {
@@ -48,7 +45,7 @@ public class MovieDaoImpl implements MovieDao {
     }
 
     @Override
-    public void updateMovie(Movie movie,Connection conn, boolean isAutoCloseConn) throws SQLException {
+    public void updateMovie(Movie movie) throws SQLException, FileNotFoundException {
         String sql = "UPDATE movies SET " +
                 "title = COALESCE(?, title), " +
                 "release_date = COALESCE(?, release_date), " +
@@ -59,7 +56,7 @@ public class MovieDaoImpl implements MovieDao {
                 "status = COALESCE(?, status), " +
                 "updated_at = NOW() " +
                 "WHERE id = ?";
-        JdbcUtils.executeUpdate(conn, sql,isAutoCloseConn,
+        JdbcUtils.executeUpdate( sql,
                 movie.getTitle(),
                 movie.getReleaseDate(),
                 movie.getPosterUrl(),
@@ -72,11 +69,11 @@ public class MovieDaoImpl implements MovieDao {
     }
 
     @Override
-    public void addMovie(Movie movie,Connection conn,boolean isAutoCloseConn) throws SQLException {
+    public void addMovie(Movie movie) throws SQLException, FileNotFoundException {
         String sql = "INSERT INTO movies (title, release_date, poster_url, duration, genre, rating, status) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         log.info("Executing SQL: {}", sql);
-        JdbcUtils.executeUpdate(conn, sql,isAutoCloseConn,
+        JdbcUtils.executeUpdate(sql,
                 movie.getTitle(),
                 movie.getReleaseDate(),
                 movie.getPosterUrl(),
@@ -88,16 +85,16 @@ public class MovieDaoImpl implements MovieDao {
     }
 
     @Override
-    public void deleteMoviesByIds(List<Integer> ids,Connection conn,boolean isAutoCloseConn) throws SQLException {
+    public void deleteMoviesByIds(List<Integer> ids) throws SQLException, FileNotFoundException {
         String sql = "DELETE FROM movies WHERE id IN (" +
                 String.join(",", ids.stream().map(id -> "?").toArray(String[]::new)) +
                 ")";
         log.info("Executing SQL: {}", sql);
-        JdbcUtils.executeUpdate(conn, sql, isAutoCloseConn,ids.toArray());
+        JdbcUtils.executeUpdate(sql,ids.toArray());
     }
 
     @Override
-    public Integer countMovies(MovieQueryParam param, Connection conn, boolean isAutoCloseConn) throws SQLException {
+    public Integer countMovies(MovieQueryParam param) throws SQLException, FileNotFoundException {
         String sql = "SELECT COUNT(*) FROM movies WHERE 1=1 " +
                 "AND (? IS NULL OR title LIKE CONCAT('%', ?, '%')) " +
                 "AND (? IS NULL OR release_date = ?) " +
@@ -110,9 +107,7 @@ public class MovieDaoImpl implements MovieDao {
 
 
         List<Integer> total = JdbcUtils.executeQuery(
-                conn,
                 sql,
-                isAutoCloseConn,
                 rs -> {
                     Integer count = 0;
                     try {
@@ -135,7 +130,7 @@ public class MovieDaoImpl implements MovieDao {
     }
 
     @Override
-    public List<Movie> selectMoviesByPage(MovieQueryParam param,Connection conn ,boolean isAutoCloseConn) throws SQLException {
+    public List<Movie> selectMoviesByPage(MovieQueryParam param) throws SQLException, FileNotFoundException {
         String sql = """
                 SELECT *
                 FROM movies
@@ -152,9 +147,7 @@ public class MovieDaoImpl implements MovieDao {
                 LIMIT ? OFFSET ?""";
 
         return JdbcUtils.executeQuery(
-                conn,
                 sql,
-                isAutoCloseConn,
                 rs -> {
                     Movie movie = new Movie();
                     try {
@@ -186,12 +179,10 @@ public class MovieDaoImpl implements MovieDao {
     }
 
     @Override
-    public Double selectMovieLowestPriceByScreeningId(Integer movieId, Connection connection, boolean isAutoCloseConn) throws SQLException {
+    public Double selectMovieLowestPriceByScreeningId(Integer movieId) throws SQLException, FileNotFoundException {
         String sql = "select min(price) from screenings where movie_id = ? and status = 1";
         List<Double> priceList = JdbcUtils.executeQuery(
-                connection,
                 sql,
-                isAutoCloseConn,
                 rs -> {
                     Double price = 0.0;
                     try {

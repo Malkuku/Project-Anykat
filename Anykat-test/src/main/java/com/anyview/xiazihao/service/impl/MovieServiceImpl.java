@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.service.impl;
 
+import com.anyview.xiazihao.annotation.KatTransactional;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
@@ -8,7 +9,6 @@ import com.anyview.xiazihao.entity.param.MovieQueryParam;
 import com.anyview.xiazihao.entity.pojo.Movie;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.MovieService;
-import com.anyview.xiazihao.utils.JdbcUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
@@ -26,7 +26,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Movie selectMovieById(Integer id) {
         try {
-            return movieDao.selectMovieById(id, JdbcUtils.getConnection(),true);
+            return movieDao.selectMovieById(id);
         } catch (SQLException | FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -35,7 +35,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void updateMovie(Movie movie) {
         try {
-            movieDao.updateMovie(movie, JdbcUtils.getConnection(),true);
+            movieDao.updateMovie(movie);
         } catch (SQLException | FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -44,19 +44,20 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void addMovie(Movie movie) {
         try {
-            movieDao.addMovie(movie, JdbcUtils.getConnection(),true);
+            movieDao.addMovie(movie);
         } catch (SQLException | FileNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
+    @KatTransactional
     public void deleteMoviesByIds(List<Integer> ids) throws FileNotFoundException {
         try {
             if(ids == null || ids.isEmpty()) {
                 return;
             }
-            movieDao.deleteMoviesByIds(ids, JdbcUtils.getConnection(),true);
+            movieDao.deleteMoviesByIds(ids);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -64,14 +65,14 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public PageResult<Movie> selectMoviesByPage(MovieQueryParam param) throws SQLException, FileNotFoundException {
-        Integer total = movieDao.countMovies(param, JdbcUtils.getConnection(),true);
-        List<Movie> movies = movieDao.selectMoviesByPage(param, JdbcUtils.getConnection(),true);
+        Integer total = movieDao.countMovies(param);
+        List<Movie> movies = movieDao.selectMoviesByPage(param);
         return new PageResult<>(total, movies);
     }
 
     @Override
     public Double selectMovieLowestPriceByScreeningId(Integer movieId) throws SQLException, FileNotFoundException {
-        return movieDao.selectMovieLowestPriceByScreeningId(movieId, JdbcUtils.getConnection(),true);
+        return movieDao.selectMovieLowestPriceByScreeningId(movieId);
     }
 
     @Override
