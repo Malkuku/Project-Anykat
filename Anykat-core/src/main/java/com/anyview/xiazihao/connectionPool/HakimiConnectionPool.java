@@ -84,19 +84,6 @@ public class HakimiConnectionPool {
                     // 2. 初始化连接池数据结构
                     this.init();
 
-                    // 3. 创建初始连接
-                    for (int i = 0; i < hakimiConfig.getMinIdle(); i++) {
-                        try {
-                            Connection conn = createPhysicalConnection();
-                            idleConnections.offer(conn);
-                        } catch (SQLException e) {
-                            log.error("Failed to create initial connection", e);
-                            // 如果创建初始连接失败，关闭已创建的连接
-                            closeAllConnections();
-                            throw e;
-                        }
-                    }
-
                     // 4. 标记为已初始化
                     initialized = true;
                     log.info("Connection pool initialized with {} idle connections", hakimiConfig.getMinIdle());
