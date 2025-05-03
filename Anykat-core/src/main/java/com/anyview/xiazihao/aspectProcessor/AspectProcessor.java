@@ -190,7 +190,7 @@ public class AspectProcessor {
         }
 
         // 创建连接点
-        ChainableProceedingJoinPoint joinPoint = new ChainableProceedingJoinPoint(target, method, args,matchedAdvices);
+        ProceedingJoinPoint joinPoint = new ProceedingJoinPoint(target, method, args,matchedAdvices);
 
         return joinPoint.proceed();
     }

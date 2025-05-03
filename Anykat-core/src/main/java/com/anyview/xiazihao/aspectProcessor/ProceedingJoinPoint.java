@@ -1,21 +1,34 @@
 package com.anyview.xiazihao.aspectProcessor;
 
 
+import lombok.Getter;
+
 import java.lang.reflect.Method;
+import java.util.List;
 
-public interface ProceedingJoinPoint {
-    // 执行链式调用（关键方法）
-    Object proceed() throws Throwable;
+@Getter
+public class ProceedingJoinPoint {
+    private final Object target;
+    private final Method method;
+    private final Object[] args;
+    private final List<AdviceWrapper> advices;
+    private int currentPosition = 0; // 当前执行的切面位置
 
-    // 获取目标方法
-    Method getMethod();
+    public ProceedingJoinPoint(Object target, Method method, Object[] args, List<AdviceWrapper> advices) {
+        this.target = target;
+        this.method = method;
+        this.args = args;
+        this.advices = advices;
+    }
 
-    // 获取目标对象
-    Object getTarget();
-
-    // 获取方法参数
-    Object[] getArgs();
-
-    // 获取方法签名（可选）
-    String getSignature();
+    public Object proceed() throws Throwable {
+        if (currentPosition < advices.size()) {
+            // 执行下一个切面
+            AdviceWrapper currentAdvice = advices.get(currentPosition++);
+            return currentAdvice.invoke(this); // 递归调用
+        } else {
+            // 所有切面执行完毕，执行目标方法
+            return method.invoke(target, args);
+        }
+    }
 }
