@@ -115,12 +115,12 @@ public class HakimiConnectionPool {
             if (rawConn == null) {
                 waitCount.incrementAndGet();
                 try {
-                    rawConn = idleConnections.poll(hakimiConfig.getMaxWaitMillis(), TimeUnit.MILLISECONDS);
+                    rawConn = idleConnections.poll(hakimiConfig.getMaxWaitMillis(), TimeUnit.MILLISECONDS); //丢到等待队列中,当idleConnections.off方法触发时,会激活休眠的线程
                     if (rawConn == null) {
                         throw new SQLException("Wait timeout");
                     }
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    Thread.currentThread().interrupt(); //设置中断标志,传播中断链
                     throw new SQLException("Interrupted");
                 } finally {
                     waitCount.decrementAndGet();
@@ -170,7 +170,7 @@ public class HakimiConnectionPool {
                 case "close" -> {
                     if (!closed) {
                         closed = true;
-                        releaseConnection((Connection) proxy);
+                        releaseConnection((Connection) proxy); //调用实际方法将连接返回到连接池。
                     }
                     return null;
                 }
@@ -202,6 +202,7 @@ public class HakimiConnectionPool {
     }
 
 
+    //释放连接
     private void releaseConnection(Connection proxyConn) {
         try {
             InvocationHandler handler = Proxy.getInvocationHandler(proxyConn);
@@ -217,7 +218,7 @@ public class HakimiConnectionPool {
                 if (testConnection(rawConn)) {
                     resetConnection(rawConn);
                     if (!idleConnections.offer(rawConn)) {
-                        closeConnection(rawConn);
+                        closeConnection(rawConn); //关闭原始连接
                         createdCount.decrementAndGet();
                     }
                 } else {
@@ -258,7 +259,7 @@ public class HakimiConnectionPool {
                 return false;
             }
 
-            // 使用更高效的验证查询
+            //验证查询
             try (Statement stmt = conn.createStatement()) {
                 stmt.setQueryTimeout(1);
                 return stmt.execute("/* ping */ SELECT 1");
