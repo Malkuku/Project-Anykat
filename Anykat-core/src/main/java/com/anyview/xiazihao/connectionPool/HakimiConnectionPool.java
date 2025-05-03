@@ -57,24 +57,10 @@ public class HakimiConnectionPool {
 
 
     private final Object initLock = new Object();
-    public void init() throws SQLException {
-        if (!initialized) {
-            synchronized (initLock) {
-                if (!initialized) {
-                    // 初始化最小空闲连接
-                    for (int i = 0; i < hakimiConfig.getMinIdle(); i++) {
-                        idleConnections.add(createPhysicalConnection());
-                    }
-                    initialized = true;
-                }
-            }
-        }
-    }
-
     private void ensureInitialized() throws SQLException, FileNotFoundException {
         // 双重检查锁定模式确保线程安全
         if (!initialized) {
-            synchronized (this) {
+            synchronized (initLock) {
                 if (!initialized) {
                     // 1. 检查单例实例是否已创建
                     if (instance == null) {
@@ -82,25 +68,16 @@ public class HakimiConnectionPool {
                     }
 
                     // 2. 初始化连接池数据结构
-                    this.init();
+                    // 初始化最小空闲连接
+                    for (int i = 0; i < hakimiConfig.getMinIdle(); i++) {
+                        idleConnections.add(createPhysicalConnection());
+                    }
 
-                    // 4. 标记为已初始化
                     initialized = true;
                     log.info("Connection pool initialized with {} idle connections", hakimiConfig.getMinIdle());
                 }
             }
         }
-    }
-
-    /**
-     * 关闭所有连接（用于初始化失败时清理）
-     */
-    private void closeAllConnections() {
-        Connection conn;
-        while ((conn = idleConnections.poll()) != null) {
-            closeConnection(conn);
-        }
-        createdCount.set(0);
     }
 
     // 获取连接
