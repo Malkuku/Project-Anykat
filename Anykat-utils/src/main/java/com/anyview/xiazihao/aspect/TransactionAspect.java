@@ -3,6 +3,7 @@ package com.anyview.xiazihao.aspect;
 import com.anyview.xiazihao.aspectProcessor.ProceedingJoinPoint;
 import com.anyview.xiazihao.aspectProcessor.annotation.KatAround;
 import com.anyview.xiazihao.aspectProcessor.annotation.KatAspect;
+import com.anyview.xiazihao.aspectProcessor.annotation.KatOrder;
 import com.anyview.xiazihao.connectionPool.HakimiConnectionPool;
 import com.anyview.xiazihao.connectionPool.ConnectionContext;
 
@@ -12,6 +13,7 @@ import java.sql.Connection;
 public class TransactionAspect {
 
     @KatAround("@annotation(com.anyview.xiazihao.annotation.KatTransactional)")
+    @KatOrder(Integer.MIN_VALUE)
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         Connection conn = null;
         try {
