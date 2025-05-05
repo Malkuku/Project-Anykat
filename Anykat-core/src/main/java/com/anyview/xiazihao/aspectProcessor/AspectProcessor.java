@@ -202,19 +202,13 @@ public class AspectProcessor {
     // 构建完整方法签名
     private String buildMethodSignature(Method method) {
         String params = Arrays.stream(method.getParameterTypes())
-                .map(Class::getSimpleName) // 使用简单类名
+                .map(Class::getName)  // 使用完全限定名
                 .collect(Collectors.joining(","));
         return method.getDeclaringClass().getName() + "." + method.getName() + "(" + params + ")";
     }
 
     // 执行切面逻辑
     public Object applyAspects(Object target, Method method, Object[] args) throws Throwable {
-        // 构建更精确的方法签名
-        String methodSignature = target.getClass().getName() + "." + method.getName() +
-                "(" + Arrays.stream(method.getParameterTypes())
-                .map(Class::getName)
-                .collect(Collectors.joining(",")) + ")";
-
         // 优先检查注解匹配
         List<AdviceWrapper> matchedAdvices = aspectCache.entrySet().stream()
                 .filter(entry -> matchesPointcut(entry.getKey(), method))
