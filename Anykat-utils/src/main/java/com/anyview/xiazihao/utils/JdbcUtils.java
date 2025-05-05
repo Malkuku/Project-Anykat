@@ -2,6 +2,7 @@ package com.anyview.xiazihao.utils;
 
 import com.anyview.xiazihao.connectionPool.HakimiConnectionPool;
 import com.anyview.xiazihao.connectionPool.ConnectionContext;
+import com.anyview.xiazihao.sampleFlatMapper.KatSimpleMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
@@ -21,7 +22,7 @@ public class JdbcUtils {
         try {
             // 1. 尝试从事务上下文获取
             Connection txConn = ConnectionContext.getConnection();
-            if (txConn != null && !txConn.isClosed()) {
+            if (!txConn.isClosed()) {
                 return txConn;
             }
             // 2. 没有事务则从连接池获取
@@ -32,38 +33,34 @@ public class JdbcUtils {
         }
     }
 
-    // 通用查询方法（自动判断是否关闭连接）
-    public static <T> List<T> executeQuery(String sql, Function<ResultSet, T> rowMapper, Object... params)
-            throws SQLException, FileNotFoundException {
-        Connection conn = getConnection();
-        boolean isTxActive = ConnectionContext.isActive(); // 是否在事务中
-        try {
-            return executeQuery(conn, sql, !isTxActive, rowMapper, params);
-        } finally {
-            if (!isTxActive && conn != null) {
-                conn.close(); // 非事务场景手动关闭
-            }
-        }
+    //打印sql和参数
+    public static void printSqlAndParams(String sql, Object... params) {
+        log.info("Executing SQL: {}", sql);
+        log.info("Parameters: {}", (Object) params);
     }
 
-    // 通用更新方法（自动判断事务）
-    public static int executeUpdate(String sql, Object... params)
-            throws SQLException, FileNotFoundException {
+    
+    // 通用更新方法 (INSERT/UPDATE/DELETE)
+    public static int executeUpdate(String sql, Object... params) throws SQLException, FileNotFoundException {
+        printSqlAndParams(sql, params);
         Connection conn = getConnection();
         boolean isTxActive = ConnectionContext.isActive();
-        try {
-            return executeUpdate(conn, sql, !isTxActive, params);
+        printSqlAndParams(sql, params);
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            setParameters(stmt, params);
+            return stmt.executeUpdate();
         } finally {
-            if (!isTxActive && conn != null) {
+            if (conn != null && !isTxActive) {
                 conn.close();
             }
         }
     }
 
-    // 通用查询方法 (动态SQL+参数)
-    public static <T> List<T> executeQuery(Connection conn, String sql, boolean isAutoCloseConn ,Function<ResultSet, T> rowMapper,Object... params) throws SQLException {
-        log.info("Executing SQL: {}", sql);
-        log.info("Parameters: {}", (Object) params);
+    // 通用查询方法 (手动结果映射)
+    public static <T> List<T> executeQuery(String sql,Function<ResultSet, T> rowMapper,Object... params) throws SQLException, FileNotFoundException {
+        printSqlAndParams(sql, params);
+        Connection conn = getConnection();
+        boolean isTxActive = ConnectionContext.isActive();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         List<T> result = new ArrayList<>();
@@ -83,26 +80,27 @@ public class JdbcUtils {
             if (stmt != null) {
                 stmt.close();
             }
-            if(conn != null && isAutoCloseConn) {
-               conn.close();
+            if(conn != null && !isTxActive) {
+                conn.close();
             }
         }
     }
 
-    // 通用更新方法 (INSERT/UPDATE/DELETE)
-    public static int executeUpdate(Connection conn, String sql,boolean isAutoCloseConn, Object... params) throws SQLException {
-        log.info("Executing SQL: {}", sql);
-        log.info("Parameters: {}", (Object) params);
-        PreparedStatement stmt = null;
-        try {
-            stmt = conn.prepareStatement(sql);
+    // 通用查询方法(自动化映射)
+    public static <T> List<T> executeQuery(String sql, Class<T> clazz, Object... params) throws SQLException, FileNotFoundException {
+        printSqlAndParams(sql, params);
+        Connection conn = getConnection();
+        boolean isTxActive = ConnectionContext.isActive();
+
+        ResultSet rs;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             setParameters(stmt, params);
-            return stmt.executeUpdate();
+            rs = stmt.executeQuery();
+
+            // 使用映射器直接映射结果集
+            return KatSimpleMapper.map(rs, clazz);
         } finally {
-            if (stmt != null) {
-                stmt.close();
-            }
-            if(conn != null && isAutoCloseConn) {
+            if (conn != null && !isTxActive) {
                 conn.close();
             }
         }
@@ -118,7 +116,7 @@ public class JdbcUtils {
         }
     }
 
-    // 改造事务方法（使用上下文管理）
+    //事务方法
     public static <T> T executeTransaction(Function<Connection, T> action) throws Exception {
         Connection conn = null;
         try {
