@@ -36,3 +36,7 @@ hakimi:
   maxSize: 10
   minIdle: 5
   maxWaitMillis: 10000
+  #触发扩容的等待线程阈值（建议=maxSize*0.3）
+  maxWaitThreads: 3
+  #空闲连接超时时间（默认30分钟）
+  idleTimeoutMillis: 1800000
