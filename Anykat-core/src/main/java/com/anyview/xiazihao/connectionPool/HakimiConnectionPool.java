@@ -263,7 +263,7 @@ public class HakimiConnectionPool {
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     // 启动缩容任务（每5分钟检查一次）
     public void startShrinkTask() {
-        scheduler.scheduleAtFixedRate(() -> {
+        scheduler.scheduleWithFixedDelay(() -> {
             try {
                 int currentIdle = idleConnections.size();
                 int minIdle = hakimiConfig.getMinIdle();
