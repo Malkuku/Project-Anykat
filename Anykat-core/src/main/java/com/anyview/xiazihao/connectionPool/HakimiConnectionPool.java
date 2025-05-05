@@ -13,11 +13,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -73,6 +71,9 @@ public class HakimiConnectionPool {
                         idleConnections.add(createPhysicalConnection());
                     }
 
+                    //开启缩容任务
+                    startShrinkTask();
+
                     initialized = true;
                     log.info("Connection pool initialized with {} idle connections", hakimiConfig.getMinIdle());
                 }
@@ -88,13 +89,34 @@ public class HakimiConnectionPool {
         try {
             // 1. 尝试获取空闲连接
             while ((rawConn = idleConnections.poll()) != null) {
-                if (testConnection(rawConn)) {
-                    break;
-                }
+                if (testConnection(rawConn)) break;
+
                 closeConnection(rawConn);
                 createdCount.decrementAndGet();
                 rawConn = null;
             }
+
+            // 动态扩容
+            if (rawConn == null && waitCount.get() > hakimiConfig.getMaxWaitThreads()) {
+                int temporaryMax = (int) (hakimiConfig.getMaxSize() * 1.5); // 扩容上限：maxSize 的 1.5 倍
+                int current;
+                do {
+                    current = createdCount.get();
+                    if (current >= temporaryMax) {
+                        break; // 已达到扩容上限
+                    }
+                } while (!createdCount.compareAndSet(current, current + 1));
+                if (current < temporaryMax) {
+                    log.warn("已启用动态扩容");
+                    try {
+                        rawConn = createPhysicalConnection();
+                    } catch (SQLException e) {
+                        createdCount.decrementAndGet(); // 创建失败时回滚计数器
+                        throw e;
+                    }
+                }
+            }
+
 
             // 2. 创建新连接
             if (rawConn == null) {
@@ -153,55 +175,6 @@ public class HakimiConnectionPool {
         );
     }
 
-    private class ConnectionInvocationHandler implements InvocationHandler {
-        private final Connection rawConnection;
-        private volatile boolean closed = false;
-        private volatile long lastUsedTime = System.currentTimeMillis();
-
-        public ConnectionInvocationHandler(Connection rawConn) {
-            this.rawConnection = rawConn;
-        }
-
-        @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            lastUsedTime = System.currentTimeMillis();
-
-            switch (method.getName()) {
-                case "close" -> {
-                    if (!closed) {
-                        closed = true;
-                        releaseConnection((Connection) proxy); //调用实际方法将连接返回到连接池。
-                    }
-                    return null;
-                }
-                case "isClosed" -> {
-                    return closed;
-                }
-                case "getRawConnection" ->
-                        throw new UnsupportedOperationException("Direct access to raw connection is prohibited");
-                case "getLastUsedTime" -> {
-                    return lastUsedTime;
-                }
-                case "realClose" -> {
-                    closeConnection(rawConnection);
-                    createdCount.decrementAndGet();
-                    return null;
-                }
-            }
-
-            if (closed) {
-                throw new SQLException("Connection already closed");
-            }
-
-            try {
-                return method.invoke(rawConnection, args);
-            } catch (InvocationTargetException e) {
-                throw e.getCause();
-            }
-        }
-    }
-
-
     //释放连接
     private void releaseConnection(Connection proxyConn) {
         try {
@@ -213,17 +186,16 @@ public class HakimiConnectionPool {
                     if (!activeConnections.remove(rawConn)) {
                         return; // 连接已被其他线程释放
                     }
-                }
-
-                if (testConnection(rawConn)) {
-                    resetConnection(rawConn);
-                    if (!idleConnections.offer(rawConn)) {
-                        closeConnection(rawConn); //关闭原始连接
+                    if (testConnection(rawConn)) {
+                        resetConnection(rawConn);
+                        if (!idleConnections.offer(rawConn)) {
+                            closeConnection(rawConn); //关闭原始连接
+                            createdCount.decrementAndGet();
+                        }
+                    } else {
+                        closeConnection(rawConn);
                         createdCount.decrementAndGet();
                     }
-                } else {
-                    closeConnection(rawConn);
-                    createdCount.decrementAndGet();
                 }
             }
         } catch (Exception e) {
@@ -286,4 +258,110 @@ public class HakimiConnectionPool {
             }
         }
     }
+
+    //定时任务
+    ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    // 启动缩容任务（每5分钟检查一次）
+    public void startShrinkTask() {
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                int currentIdle = idleConnections.size();
+                int minIdle = hakimiConfig.getMinIdle();
+
+                // 仅当空闲连接 > minIdle 时才尝试缩容
+                if (currentIdle <= minIdle) {
+                    return;
+                }
+
+                // 计算最多可回收的连接数（避免过度缩容）
+                int maxShrink = currentIdle - minIdle;
+                int shrunk = 0;
+
+                while (shrunk < maxShrink) {
+                    // 非阻塞取出连接（避免长时间锁住队列）
+                    Connection conn = idleConnections.poll(10, TimeUnit.MILLISECONDS);
+                    if (conn == null) {
+                        break; // 队列已空
+                    }
+
+                    // 检查是否超时
+                    if (isIdleTimeout(conn, hakimiConfig.getIdleTimeoutMillis())) {
+                        closeConnection(conn);
+                        createdCount.decrementAndGet();
+                        log.warn("关闭空闲连接");
+                        shrunk++;
+                    } else {
+                        // 未超时，放回队列（避免误杀）
+                        idleConnections.offer(conn);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Shrink task error", e);
+            }
+        }, 300, 300, TimeUnit.SECONDS);
+    }
+
+    // 检查连接是否空闲超时
+    private boolean isIdleTimeout(Connection conn, long idleTimeoutMillis) {
+        if (conn instanceof Proxy) {
+            InvocationHandler handler = Proxy.getInvocationHandler(conn);
+            if (handler instanceof HakimiConnectionPool.ConnectionInvocationHandler) {
+                long idleTime = System.currentTimeMillis() -
+                        ((HakimiConnectionPool.ConnectionInvocationHandler) handler).lastUsedTime;
+                return idleTime > idleTimeoutMillis;
+            }
+        }
+        return false;
+    }
+
+    private class ConnectionInvocationHandler implements InvocationHandler {
+        private final Connection rawConnection;
+        private volatile boolean closed = false;
+        private volatile long lastUsedTime = System.currentTimeMillis();
+
+        public ConnectionInvocationHandler(Connection rawConn) {
+            this.rawConnection = rawConn;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            lastUsedTime = System.currentTimeMillis();
+
+            switch (method.getName()) {
+                case "close" -> {
+                    if (!closed) {
+                        closed = true;
+                        releaseConnection((Connection) proxy); //调用实际方法将连接返回到连接池。
+                    }
+                    return null;
+                }
+                case "isClosed" -> {
+                    return closed;
+                }
+                case "getRawConnection" ->
+                        throw new UnsupportedOperationException("Direct access to raw connection is prohibited");
+                case "getLastUsedTime" -> {
+                    return lastUsedTime;
+                }
+                case "realClose" -> {
+                    closeConnection(rawConnection);
+                    createdCount.decrementAndGet();
+                    return null;
+                }
+            }
+
+            if (closed) {
+                throw new SQLException("Connection already closed");
+            }
+
+            try {
+                return method.invoke(rawConnection, args);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        }
+    }
 }
+
+
+
