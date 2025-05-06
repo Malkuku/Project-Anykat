@@ -23,7 +23,7 @@ public final class KatSimpleMapper {
         static final Map<Class<?>, Map<String, MethodHandle>> SETTER_CACHE = new ConcurrentHashMap<>();
     }
 
-    // 命名策略枚举保持不变
+    // 命名策略枚举
     public enum NamingStrategy {
         SNAKE_CASE {
             @Override
@@ -76,7 +76,7 @@ public final class KatSimpleMapper {
             // 获取或创建构造函数句柄
             Constructor<T> constructor = targetClass.getDeclaredConstructor();
             constructor.setAccessible(true);
-            MethodHandle constructorHandle = MethodHandles.lookup().unreflectConstructor(constructor);
+            MethodHandle constructorHandle = MethodHandles.lookup().unreflectConstructor(constructor);// 使用MethodHandle包装构造器，比传统反射调用性能更高
 
             // 从缓存获取或创建字段信息
             Map<String, MethodHandle> setters = Cache.SETTER_CACHE
@@ -88,7 +88,7 @@ public final class KatSimpleMapper {
             return (rs, index) -> {
                 try {
                     @SuppressWarnings("unchecked")
-                    T instance = (T) constructorHandle.invoke();
+                    T instance = (T) constructorHandle.invoke();//创建目标对象实例
 
                     for (Map.Entry<String, MethodHandle> entry : setters.entrySet()) {
                         String fieldName = entry.getKey();
@@ -98,12 +98,11 @@ public final class KatSimpleMapper {
                             Object value = rs.getObject(columnName);
                             if (value != null) {
                                 Class<?> fieldType = fieldTypes.get(fieldName);
-                                Object convertedValue = convertType(value, fieldType);
-                                entry.getValue().invoke(instance, convertedValue);
+                                Object convertedValue = convertType(value, fieldType);//类型转换
+                                entry.getValue().invoke(instance, convertedValue);//设置属性值
                             }
                         } catch (SQLException e) {
                             // 列不存在时跳过
-                            continue;
                         }
                     }
                     return instance;
@@ -122,11 +121,11 @@ public final class KatSimpleMapper {
     private static <T> Map<String, MethodHandle> createSetters(Class<T> targetClass) {
         try {
             Map<String, MethodHandle> setters = new HashMap<>();
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandles.Lookup lookup = MethodHandles.lookup();// 获取MethodHandles.Lookup实例，用于方法/字段查找
 
             for (Field field : targetClass.getDeclaredFields()) {
                 try {
-                    MethodHandle setter = lookup.unreflectSetter(field);
+                    MethodHandle setter = lookup.unreflectSetter(field);// 尝试通过标准setter方法获取MethodHandle
                     setters.put(field.getName(), setter);
                 } catch (IllegalAccessException e) {
                     // 如果字段没有setter，尝试直接设置字段值
@@ -135,7 +134,7 @@ public final class KatSimpleMapper {
                     setters.put(field.getName(), setter);
                 }
             }
-            return Collections.unmodifiableMap(setters);
+            return Collections.unmodifiableMap(setters); // 返回不可修改的Map
         } catch (Exception e) {
             throw new RuntimeException("Failed to create setters for " + targetClass.getName(), e);
         }
