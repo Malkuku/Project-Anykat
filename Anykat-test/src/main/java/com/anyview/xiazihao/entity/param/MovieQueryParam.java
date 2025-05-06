@@ -20,4 +20,5 @@ public class MovieQueryParam {
     private Integer status;        // 状态(0-下架,1-上映)
     private Integer page = 1;      // 页码(默认1)
     private Integer pageSize = 10; // 每页条数(默认10)
+    private Integer offset = 0;
 }

@@ -117,46 +117,21 @@ public class MovieDaoImpl implements MovieDao {
                 SELECT *
                 FROM movies
                 WHERE 1=1\s
-                    AND (? IS NULL OR title LIKE CONCAT('%', ?, '%'))
-                    AND (? IS NULL OR release_date <= ?)
-                    AND (? IS NULL OR duration >= ?)
-                    AND (? IS NULL OR duration <= ?)
-                    AND (? IS NULL OR genre LIKE CONCAT('%', ?, '%'))
-                    AND (? IS NULL OR rating >= ?)
-                    AND (? IS NULL OR rating <= ?)
-                    AND (? IS NULL OR status = ?)
+                    AND (#{title} IS NULL OR title LIKE CONCAT('%', #{title}, '%'))
+                    AND (#{releaseDate} IS NULL OR release_date <= #{releaseDate})
+                    AND (#{minDuration} IS NULL OR duration >= #{minDuration})
+                    AND (#{maxDuration} IS NULL OR duration <= #{maxDuration})
+                    AND (#{genre} IS NULL OR genre LIKE CONCAT('%', #{genre}, '%'))
+                    AND (#{minRating} IS NULL OR rating >= #{minRating})
+                    AND (#{maxRating} IS NULL OR rating <= #{maxRating})
+                    AND (#{status} IS NULL OR status = #{status})
                 ORDER BY updated_at desc\s
-                LIMIT ? OFFSET ?""";
+                LIMIT #{pageSize} OFFSET #{offset}""";
 
         return JdbcUtils.executeQuery(
                 sql,
-                rs -> {
-                    Movie movie = new Movie();
-                    try {
-                        movie.setId(rs.getInt("id"));
-                        movie.setTitle(rs.getString("title"));
-                        movie.setReleaseDate(rs.getDate("release_date").toLocalDate());
-                        movie.setPosterUrl(rs.getString("poster_url"));
-                        movie.setDuration(rs.getInt("duration"));
-                        movie.setGenre(rs.getString("genre"));
-                        movie.setRating(rs.getDouble("rating"));
-                        movie.setStatus(rs.getInt("status"));
-                        movie.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        movie.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                    return movie;
-                },
-                param.getTitle(), param.getTitle(),
-                param.getReleaseDate(), param.getReleaseDate(),
-                param.getMinDuration(), param.getMinDuration(),
-                param.getMaxDuration(), param.getMaxDuration(),
-                param.getGenre(), param.getGenre(),
-                param.getMinRating(), param.getMinRating(),
-                param.getMaxRating(), param.getMaxRating(),
-                param.getStatus(), param.getStatus(),
-                param.getPageSize(), (param.getPage() - 1) * param.getPageSize()
+                Movie.class,
+                param
         );
     }
 

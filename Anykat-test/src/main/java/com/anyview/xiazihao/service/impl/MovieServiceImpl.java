@@ -65,6 +65,7 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public PageResult<Movie> selectMoviesByPage(MovieQueryParam param) throws SQLException, FileNotFoundException {
+        param.setOffset((param.getPage() - 1) * param.getPageSize());
         Integer total = movieDao.countMovies(param);
         List<Movie> movies = movieDao.selectMoviesByPage(param);
         return new PageResult<>(total, movies);
