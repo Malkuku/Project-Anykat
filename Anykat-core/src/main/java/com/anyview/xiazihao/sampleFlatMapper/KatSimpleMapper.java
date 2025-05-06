@@ -1,5 +1,7 @@
 package com.anyview.xiazihao.sampleFlatMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.*;
@@ -9,7 +11,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import java.util.regex.*;
 
+@Slf4j
 public final class KatSimpleMapper {
     // 使用静态内部类实现线程安全的缓存
     private static class Cache {
@@ -226,5 +230,83 @@ public final class KatSimpleMapper {
         Cache.MAPPER_CACHE.remove(targetClass);
         Cache.FIELD_TYPE_CACHE.remove(targetClass);
         Cache.SETTER_CACHE.remove(targetClass);
+    }
+
+    /**
+     * 从实体类提取参数
+     */
+    public static Object[] extractParamsFromEntity(String sql, Object entity) {
+        if (entity == null) {
+            return new Object[0];
+        }
+
+        List<String> paramNames = extractParamNames(sql);
+
+        Object[] params = new Object[paramNames.size()];
+        Class<?> clazz = entity.getClass();
+
+        for (int i = 0; i < paramNames.size(); i++) {
+            String paramName = paramNames.get(i);
+            try {
+                Field field = getField(clazz, paramName);
+                field.setAccessible(true);
+                params[i] = field.get(entity);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to extract parameter: " + paramName, e);
+            }
+        }
+
+        return params;
+    }
+
+    /**
+     * 从SQL中提取#{paramName}格式的参数名
+     */
+    private static List<String> extractParamNames(String sql) {
+        List<String> paramNames = new ArrayList<>();
+        Pattern pattern = Pattern.compile("#\\{(\\w+)\\}");
+        Matcher matcher = pattern.matcher(sql);
+
+        while (matcher.find()) {
+            paramNames.add(matcher.group(1));
+        }
+
+        return paramNames;
+    }
+
+    /**
+     * 将#{param}替换为?
+     */
+    public static String replaceParamPlaceholders(String sql) {
+        return sql.replaceAll("#\\{\\w+}", "?");
+    }
+
+    /**
+     * 获取字段（支持驼峰转下划线）
+     */
+    private static Field getField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
+        try {
+            return clazz.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException e) {
+            String snakeCase = camelToSnake(fieldName);
+            try {
+                return clazz.getDeclaredField(snakeCase);
+            } catch (NoSuchFieldException e2) {
+                for (Field field : clazz.getDeclaredFields()) {
+                    if (field.getName().equalsIgnoreCase(fieldName) ||
+                            field.getName().equalsIgnoreCase(snakeCase)) {
+                        return field;
+                    }
+                }
+                throw e2;
+            }
+        }
+    }
+
+    /**
+     * 驼峰转下划线
+     */
+    private static String camelToSnake(String str) {
+        return str.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
     }
 }

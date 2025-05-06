@@ -6,6 +6,7 @@ import com.anyview.xiazihao.sampleFlatMapper.KatSimpleMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +14,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class JdbcUtils {
@@ -88,6 +91,8 @@ public class JdbcUtils {
 
     // 通用查询方法(自动化映射)
     public static <T> List<T> executeQuery(String sql, Class<T> clazz, Object... params) throws SQLException, FileNotFoundException {
+        params = KatSimpleMapper.extractParamsFromEntity(sql,params[0]);
+        sql = KatSimpleMapper.replaceParamPlaceholders(sql);
         printSqlAndParams(sql, params);
         Connection conn = getConnection();
         boolean isTxActive = ConnectionContext.isActive();
