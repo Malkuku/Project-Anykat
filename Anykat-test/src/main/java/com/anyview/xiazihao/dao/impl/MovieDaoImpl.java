@@ -19,10 +19,10 @@ import java.util.List;
 public class MovieDaoImpl implements MovieDao {
     @Override
     public Movie selectMovieById(Integer id) throws SQLException, FileNotFoundException {
-        String sql = "SELECT * FROM movies WHERE id = ?";
+        String sql = "SELECT * FROM movies WHERE id = #{id}";
         List<Movie> movieList = JdbcUtils.executeQuery(
                 sql, Movie.class,
-                id
+                "id",id
         );
         return movieList.isEmpty() ? null : movieList.get(0);
     }
@@ -30,40 +30,23 @@ public class MovieDaoImpl implements MovieDao {
     @Override
     public void updateMovie(Movie movie) throws SQLException, FileNotFoundException {
         String sql = "UPDATE movies SET " +
-                "title = COALESCE(?, title), " +
-                "release_date = COALESCE(?, release_date), " +
-                "poster_url = COALESCE(?, poster_url), " +
-                "duration = COALESCE(?, duration), " +
-                "genre = COALESCE(?, genre), " +
-                "rating = COALESCE(?, rating), " +
-                "status = COALESCE(?, status), " +
+                "title = COALESCE(#{title}, title), " +
+                "release_date = COALESCE(#{releaseDate}, release_date), " +
+                "poster_url = COALESCE(#{posterUrl}, poster_url), " +
+                "duration = COALESCE(#{duration}, duration), " +
+                "genre = COALESCE(#{genre}, genre), " +
+                "rating = COALESCE(#{rating}, rating), " +
+                "status = COALESCE(#{status}, status), " +
                 "updated_at = NOW() " +
-                "WHERE id = ?";
-        JdbcUtils.executeUpdate( sql,
-                movie.getTitle(),
-                movie.getReleaseDate(),
-                movie.getPosterUrl(),
-                movie.getDuration(),
-                movie.getGenre(),
-                movie.getRating(),
-                movie.getStatus(),
-                movie.getId()
-        );
+                "WHERE id = #{id}";
+        JdbcUtils.executeUpdate(sql,movie);
     }
 
     @Override
     public void addMovie(Movie movie) throws SQLException, FileNotFoundException {
         String sql = "INSERT INTO movies (title, release_date, poster_url, duration, genre, rating, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        JdbcUtils.executeUpdate(sql,
-                movie.getTitle(),
-                movie.getReleaseDate(),
-                movie.getPosterUrl(),
-                movie.getDuration(),
-                movie.getGenre(),
-                movie.getRating(),
-                movie.getStatus()
-        );
+                "VALUES (#{title}, #{releaseDate}, #{posterUrl}, #{duration}, #{genre}, #{rating}, #{status})";
+        JdbcUtils.executeUpdate(sql,movie);
     }
 
     @Override
@@ -77,35 +60,20 @@ public class MovieDaoImpl implements MovieDao {
     @Override
     public Integer countMovies(MovieQueryParam param) throws SQLException, FileNotFoundException {
         String sql = "SELECT COUNT(*) FROM movies WHERE 1=1 " +
-                "AND (? IS NULL OR title LIKE CONCAT('%', ?, '%')) " +
-                "AND (? IS NULL OR release_date = ?) " +
-                "AND (? IS NULL OR duration >= ?) " +
-                "AND (? IS NULL OR duration <= ?) " +
-                "AND (? IS NULL OR genre = ?) " +
-                "AND (? IS NULL OR rating >= ?) " +
-                "AND (? IS NULL OR rating <= ?) " +
-                "AND (? IS NULL OR status = ?)";
+                "AND (#{title} IS NULL OR title LIKE CONCAT('%', #{title}, '%')) " +
+                "AND (#{releaseDate} IS NULL OR release_date = #{releaseDate}) " +
+                "AND (#{minDuration} IS NULL OR duration >= #{minDuration}) " +
+                "AND (#{maxDuration} IS NULL OR duration <= #{maxDuration}) " +
+                "AND (#{genre} IS NULL OR genre = #{genre}) " +
+                "AND (#{minRating} IS NULL OR rating >= #{minRating}) " +
+                "AND (#{maxRating} IS NULL OR rating <= #{maxRating}) " +
+                "AND (#{status} IS NULL OR status = #{status})";
 
 
         List<Integer> total = JdbcUtils.executeQuery(
                 sql,
-                rs -> {
-                    Integer count = 0;
-                    try {
-                        count = rs.getInt(1);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                    return count;
-                },
-                param.getTitle(), param.getTitle(),// title
-                param.getReleaseDate(), param.getReleaseDate(), // release_date
-                param.getMinDuration(), param.getMinDuration(),  // min_duration
-                param.getMaxDuration(), param.getMaxDuration(),  // max_duration
-                param.getGenre(), param.getGenre(),              // genre
-                param.getMinRating(), param.getMinRating(),     // min_rating
-                param.getMaxRating(), param.getMaxRating(),     // max_rating
-                param.getStatus(), param.getStatus()            // status
+                Integer.class,
+                param
         );
         return total.get(0);
     }
@@ -137,19 +105,11 @@ public class MovieDaoImpl implements MovieDao {
 
     @Override
     public Double selectMovieLowestPriceByScreeningId(Integer movieId) throws SQLException, FileNotFoundException {
-        String sql = "select min(price) from screenings where movie_id = ? and status = 1";
+        String sql = "select min(price) from screenings where movie_id = #{movieId} and status = 1";
         List<Double> priceList = JdbcUtils.executeQuery(
                 sql,
-                rs -> {
-                    Double price = 0.0;
-                    try {
-                        price = rs.getDouble(1);
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    }
-                    return price;
-                },
-                movieId
+                Double.class,
+                "movieId",movieId
         );
         return priceList.isEmpty() ? 0.0 : priceList.get(0);
     }
