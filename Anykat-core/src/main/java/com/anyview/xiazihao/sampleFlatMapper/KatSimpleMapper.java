@@ -232,45 +232,127 @@ public final class KatSimpleMapper {
         Cache.SETTER_CACHE.remove(targetClass);
     }
 
+    private static final Map<Class<?>, Map<String, Field>> FIELD_CACHE = new ConcurrentHashMap<>();
+
     /**
-     * 从实体类提取参数
+     * 提取 SQL 参数（支持实体类、Map、基本变量）
+     * @param sql SQL 语句，如 "SELECT * FROM user WHERE id = #{id}"
+     * @param params 参数（可以是实体类、Map，或显式键值对如 "id", 123）
      */
-    public static Object[] extractParamsFromEntity(String sql, Object entity) {
-        if (entity == null) {
-            return new Object[0];
+    public static Object[] extractParams(String sql, Object... params) {
+        List<String> paramNames = extractNamedParamNames(sql);
+        List<Object> values = new ArrayList<>();
+
+        for (String paramName : paramNames) {
+            Object value = findParamValue(paramName, params);
+            if (value == null && !containsParam(paramName, params)) {
+                throw new IllegalArgumentException("Parameter '" + paramName + "' not found");
+            }
+            values.add(value);
         }
 
-        List<String> paramNames = extractParamNames(sql);
+        return values.toArray();
+    }
 
-        Object[] params = new Object[paramNames.size()];
-        Class<?> clazz = entity.getClass();
 
-        for (int i = 0; i < paramNames.size(); i++) {
-            String paramName = paramNames.get(i);
-            try {
-                Field field = getField(clazz, paramName);
-                field.setAccessible(true);
-                params[i] = field.get(entity);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to extract parameter: " + paramName, e);
+
+    /**
+     * 从混合参数中查找值（优先级：Map > 键值对 > 实体类字段）
+     */
+    private static Object findParamValue(String paramName, Object[] params) {
+        // 第一阶段：查找 Map 中的参数（最高优先级）
+        for (Object param : params) {
+            if (param instanceof Map<?, ?> map) {
+                if (map.containsKey(paramName)) {
+                    return map.get(paramName);
+                }
             }
         }
 
-        return params;
+        // 第二阶段：查找显式键值对（如 "id", 123）
+        for (int i = 0; i < params.length; i++) {
+            if (params[i] instanceof String key && i + 1 < params.length) {
+                if (key.equals(paramName)) {
+                    return params[i + 1];
+                }
+            }
+        }
+
+        // 第三阶段：查找实体类字段（最低优先级）
+        for (Object param : params) {
+            if (param == null || param instanceof Map || param instanceof String) {
+                continue; // 跳过 Map 和键值对
+            }
+            Class<?> clazz = param.getClass();
+            cacheEntityFields(clazz);
+            Map<String, Field> fieldMap = FIELD_CACHE.get(clazz);
+            if (fieldMap != null) {
+                Field field = fieldMap.get(paramName.toLowerCase());
+                if (field != null) {
+                    try {
+                        field.setAccessible(true);
+                        return field.get(param);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException("Failed to access field: " + paramName, e);
+                    }
+                }
+            }
+        }
+
+        return null; // 未找到
+    }
+
+    /**
+     * 检查参数是否存在于任意实体中
+     */
+    private static boolean containsParam(String paramName, Object[] entities) {
+        for (Object entity : entities) {
+            if (entity == null) continue;
+            Map<String, Field> fieldMap = FIELD_CACHE.get(entity.getClass());
+            if (fieldMap != null && fieldMap.containsKey(paramName.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 缓存实体类的所有字段（包括父类字段）
+     */
+    private static void cacheEntityFields(Class<?> clazz) {
+        if (FIELD_CACHE.containsKey(clazz)) {
+            return; // 已缓存
+        }
+
+        Map<String, Field> fieldMap = new HashMap<>();
+        // 递归获取所有字段（包括父类）
+        Class<?> currentClass = clazz;
+        while (currentClass != null && currentClass != Object.class) {
+            for (Field field : currentClass.getDeclaredFields()) {
+                String fieldName = field.getName();
+                // 原始名称（小写）
+                fieldMap.put(fieldName.toLowerCase(), field);
+                // 驼峰转下划线格式（如果不同）
+                String snakeCase = camelToSnake(fieldName);
+                if (!snakeCase.equals(fieldName)) {
+                    fieldMap.put(snakeCase.toLowerCase(), field);
+                }
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+
+        FIELD_CACHE.put(clazz, fieldMap);
     }
 
     /**
      * 从SQL中提取#{paramName}格式的参数名
      */
-    private static List<String> extractParamNames(String sql) {
+    private static List<String> extractNamedParamNames(String sql) {
         List<String> paramNames = new ArrayList<>();
-        Pattern pattern = Pattern.compile("#\\{(\\w+)\\}");
-        Matcher matcher = pattern.matcher(sql);
-
+        Matcher matcher = Pattern.compile("#\\{(\\w+)}").matcher(sql);
         while (matcher.find()) {
             paramNames.add(matcher.group(1));
         }
-
         return paramNames;
     }
 
@@ -279,28 +361,6 @@ public final class KatSimpleMapper {
      */
     public static String replaceParamPlaceholders(String sql) {
         return sql.replaceAll("#\\{\\w+}", "?");
-    }
-
-    /**
-     * 获取字段（支持驼峰转下划线）
-     */
-    private static Field getField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
-        try {
-            return clazz.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            String snakeCase = camelToSnake(fieldName);
-            try {
-                return clazz.getDeclaredField(snakeCase);
-            } catch (NoSuchFieldException e2) {
-                for (Field field : clazz.getDeclaredFields()) {
-                    if (field.getName().equalsIgnoreCase(fieldName) ||
-                            field.getName().equalsIgnoreCase(snakeCase)) {
-                        return field;
-                    }
-                }
-                throw e2;
-            }
-        }
     }
 
     /**
