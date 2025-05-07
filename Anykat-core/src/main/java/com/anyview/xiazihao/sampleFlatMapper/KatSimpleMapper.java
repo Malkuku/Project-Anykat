@@ -342,19 +342,10 @@ public final class KatSimpleMapper {
 
 
     /**
-     * 从混合参数中查找值（优先级：Map > 键值对 > 实体类字段）
+     * 从混合参数中查找值（优先级：键值对 > Map > 实体类字段）
      */
     private static Object findParamValue(String paramName, Object[] params) {
-        // 第一阶段：查找 Map 中的参数（最高优先级）
-        for (Object param : params) {
-            if (param instanceof Map<?, ?> map) {
-                if (map.containsKey(paramName)) {
-                    return map.get(paramName);
-                }
-            }
-        }
-
-        // 第二阶段：查找显式键值对（如 "id", 123）
+        // 1：查找显式键值对（如 "id", 123）
         for (int i = 0; i < params.length; i++) {
             if (params[i] instanceof String key && i + 1 < params.length) {
                 if (key.equals(paramName)) {
@@ -363,7 +354,16 @@ public final class KatSimpleMapper {
             }
         }
 
-        // 第三阶段：查找实体类字段（最低优先级）
+        // 2：查找 Map 中的参数
+        for (Object param : params) {
+            if (param instanceof Map<?, ?> map) {
+                if (map.containsKey(paramName)) {
+                    return map.get(paramName);
+                }
+            }
+        }
+
+        // 3：查找实体类字段
         for (Object param : params) {
             if (param == null || param instanceof Map || param instanceof String) {
                 continue;
