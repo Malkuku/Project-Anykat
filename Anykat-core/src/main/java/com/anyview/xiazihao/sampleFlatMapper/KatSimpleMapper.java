@@ -23,8 +23,28 @@ public final class KatSimpleMapper {
         // 字段类型缓存 (Class -> (FieldName -> FieldType))
         static final Map<Class<?>, Map<String, Class<?>>> FIELD_TYPE_CACHE = new ConcurrentHashMap<>();
 
-        // setter方法句柄缓存 (Class -> (FieldName -> MethodHandle))
-        static final Map<Class<?>, Map<String, MethodHandle>> SETTER_CACHE = new ConcurrentHashMap<>();
+        //缓存访问器数组 [getter, setter]
+        static final Map<Class<?>, Map<String, MethodHandle[]>> ACCESSOR_CACHE = new ConcurrentHashMap<>();
+
+        //字段缓存
+        private static final Map<Class<?>, Map<String, Field>> FIELD_CACHE = new ConcurrentHashMap<>();
+
+        //sql模板缓存
+        private static final Map<String, SqlTemplate> SQL_TEMPLATE_CACHE = new ConcurrentHashMap<>();
+
+        private static final Pattern PARAM_PATTERN = Pattern.compile("#\\{(\\w+)}");
+    }
+
+    private static final class SqlTemplate {
+        final String originalSql;      // 原始SQL，如 "SELECT * FROM user WHERE id = #{id}"
+        final String preparedSql;      // 预处理SQL，如 "SELECT * FROM user WHERE id = ?"
+        final List<String> paramNames; // 参数名列表，如 ["id"]
+
+        SqlTemplate(String sql) {
+            this.originalSql = sql;
+            this.paramNames = extractNamedParamNames(sql);
+            this.preparedSql = replaceParamPlaceholders(sql);
+        }
     }
 
     // 命名策略枚举
@@ -77,14 +97,13 @@ public final class KatSimpleMapper {
      */
     private static <T> BiFunction<ResultSet, Integer, T> createMapper(Class<T> targetClass) {
         try {
-            // 获取或创建构造函数句柄
             Constructor<T> constructor = targetClass.getDeclaredConstructor();
             constructor.setAccessible(true);
-            MethodHandle constructorHandle = MethodHandles.lookup().unreflectConstructor(constructor);// 使用MethodHandle包装构造器，比传统反射调用性能更高
+            MethodHandle constructorHandle = MethodHandles.lookup().unreflectConstructor(constructor);
 
-            // 从缓存获取或创建字段信息
-            Map<String, MethodHandle> setters = Cache.SETTER_CACHE
-                    .computeIfAbsent(targetClass, KatSimpleMapper::createSetters);
+            // 使用新的 ACCESSOR_CACHE
+            Map<String, MethodHandle[]> accessors = Cache.ACCESSOR_CACHE
+                    .computeIfAbsent(targetClass, KatSimpleMapper::createAccessors);
 
             Map<String, Class<?>> fieldTypes = Cache.FIELD_TYPE_CACHE
                     .computeIfAbsent(targetClass, KatSimpleMapper::getFieldTypes);
@@ -92,18 +111,19 @@ public final class KatSimpleMapper {
             return (rs, index) -> {
                 try {
                     @SuppressWarnings("unchecked")
-                    T instance = (T) constructorHandle.invoke();//创建目标对象实例
+                    T instance = (T) constructorHandle.invoke();
 
-                    for (Map.Entry<String, MethodHandle> entry : setters.entrySet()) {
+                    for (Map.Entry<String, MethodHandle[]> entry : accessors.entrySet()) {
                         String fieldName = entry.getKey();
+                        MethodHandle setter = entry.getValue()[1]; // [1]是setter
                         String columnName = namingStrategy.convert(fieldName);
 
                         try {
                             Object value = rs.getObject(columnName);
                             if (value != null) {
                                 Class<?> fieldType = fieldTypes.get(fieldName);
-                                Object convertedValue = convertType(value, fieldType);//类型转换
-                                entry.getValue().invoke(instance, convertedValue);//设置属性值
+                                Object convertedValue = convertType(value, fieldType);
+                                setter.invoke(instance, convertedValue);
                             }
                         } catch (SQLException e) {
                             // 列不存在时跳过
@@ -120,27 +140,44 @@ public final class KatSimpleMapper {
     }
 
     /**
-     * 创建setter方法句柄映射 (带缓存)
+     * 创建并缓存setter和getter方法句柄
      */
-    private static <T> Map<String, MethodHandle> createSetters(Class<T> targetClass) {
+    private static <T> Map<String, MethodHandle[]> createAccessors(Class<T> targetClass) {
         try {
-            Map<String, MethodHandle> setters = new HashMap<>();
-            MethodHandles.Lookup lookup = MethodHandles.lookup();// 获取MethodHandles.Lookup实例，用于方法/字段查找
+            Map<String, MethodHandle[]> accessors = new HashMap<>();
+            MethodHandles.Lookup lookup = MethodHandles.lookup();
 
             for (Field field : targetClass.getDeclaredFields()) {
+                String fieldName = field.getName();
+                MethodHandle[] handlers = new MethodHandle[2]; // [0]=getter, [1]=setter
+
                 try {
-                    MethodHandle setter = lookup.unreflectSetter(field);// 尝试通过标准setter方法获取MethodHandle
-                    setters.put(field.getName(), setter);
-                } catch (IllegalAccessException e) {
-                    // 如果字段没有setter，尝试直接设置字段值
+                    // 优先尝试通过标准getter/setter方法获取
+                    String capitalized = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                    Method getterMethod = targetClass.getMethod("get" + capitalized);
+                    handlers[0] = lookup.unreflect(getterMethod);
+
+                    try {
+                        Method setterMethod = targetClass.getMethod("set" + capitalized, field.getType());
+                        handlers[1] = lookup.unreflect(setterMethod);
+                    } catch (NoSuchMethodException e) {
+                        // 没有标准setter，使用字段直接访问
+                        field.setAccessible(true);
+                        handlers[1] = lookup.unreflectSetter(field);
+                    }
+                } catch (NoSuchMethodException e) {
+                    // 没有标准getter/setter，直接访问字段
                     field.setAccessible(true);
-                    MethodHandle setter = lookup.unreflectSetter(field);
-                    setters.put(field.getName(), setter);
+                    handlers[0] = lookup.unreflectGetter(field);
+                    handlers[1] = lookup.unreflectSetter(field);
                 }
+
+                accessors.put(fieldName, handlers);
             }
-            return Collections.unmodifiableMap(setters); // 返回不可修改的Map
+
+            return Collections.unmodifiableMap(accessors);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create setters for " + targetClass.getName(), e);
+            throw new RuntimeException("Failed to create accessors for " + targetClass.getName(), e);
         }
     }
 
@@ -220,7 +257,9 @@ public final class KatSimpleMapper {
     public static void clearCache() {
         Cache.MAPPER_CACHE.clear();
         Cache.FIELD_TYPE_CACHE.clear();
-        Cache.SETTER_CACHE.clear();
+        Cache.ACCESSOR_CACHE.clear();
+        Cache.FIELD_CACHE.clear();
+        Cache.SQL_TEMPLATE_CACHE.clear();
     }
 
     /**
@@ -229,10 +268,17 @@ public final class KatSimpleMapper {
     public static void clearCache(Class<?> targetClass) {
         Cache.MAPPER_CACHE.remove(targetClass);
         Cache.FIELD_TYPE_CACHE.remove(targetClass);
-        Cache.SETTER_CACHE.remove(targetClass);
+        Cache.ACCESSOR_CACHE.remove(targetClass);
+        Cache.FIELD_CACHE.remove(targetClass);
     }
 
-    private static final Map<Class<?>, Map<String, Field>> FIELD_CACHE = new ConcurrentHashMap<>();
+    /**
+     * 清除指定SQL模板缓存
+     */
+    public static void removeSqlTemplate(String sql) {
+        Cache.SQL_TEMPLATE_CACHE.remove(sql);
+    }
+
 
     /**
      * 提取 SQL 参数（支持实体类、Map、基本变量）
@@ -240,20 +286,15 @@ public final class KatSimpleMapper {
      * @param params 参数（可以是实体类、Map，或显式键值对如 "id", 123）
      */
     public static Object[] extractParams(String sql, Object... params) {
-        List<String> paramNames = extractNamedParamNames(sql);
-        List<Object> values = new ArrayList<>();
+        SqlTemplate template = Cache.SQL_TEMPLATE_CACHE.computeIfAbsent(sql,SqlTemplate::new);
+        Object[] result = new Object[template.paramNames.size()];
 
-        for (String paramName : paramNames) {
-            Object value = findParamValue(paramName, params);
-            if (value == null && !containsParam(paramName, params)) {
-                throw new IllegalArgumentException("Parameter '" + paramName + "' not found");
-            }
-            values.add(value);
+        for (int i = 0; i < template.paramNames.size(); i++) {
+            String paramName = template.paramNames.get(i);
+            result[i] = findParamValue(paramName, params);
         }
-
-        return values.toArray();
+        return result;
     }
-
 
 
     /**
@@ -281,20 +322,18 @@ public final class KatSimpleMapper {
         // 第三阶段：查找实体类字段（最低优先级）
         for (Object param : params) {
             if (param == null || param instanceof Map || param instanceof String) {
-                continue; // 跳过 Map 和键值对
+                continue;
             }
+
             Class<?> clazz = param.getClass();
-            cacheEntityFields(clazz);
-            Map<String, Field> fieldMap = FIELD_CACHE.get(clazz);
-            if (fieldMap != null) {
-                Field field = fieldMap.get(paramName.toLowerCase());
-                if (field != null) {
-                    try {
-                        field.setAccessible(true);
-                        return field.get(param);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException("Failed to access field: " + paramName, e);
-                    }
+            Map<String, MethodHandle[]> accessors = Cache.ACCESSOR_CACHE.computeIfAbsent(clazz,KatSimpleMapper::createAccessors);
+            MethodHandle getter = accessors.get(paramName)[0]; // [0]是getter
+            log.info(String.valueOf(getter));
+            if (getter != null) {
+                try {
+                    return getter.invoke(param);
+                } catch (Throwable e) {
+                    throw new RuntimeException("Failed to access field: " + paramName, e);
                 }
             }
         }
@@ -308,7 +347,7 @@ public final class KatSimpleMapper {
     private static boolean containsParam(String paramName, Object[] entities) {
         for (Object entity : entities) {
             if (entity == null) continue;
-            Map<String, Field> fieldMap = FIELD_CACHE.get(entity.getClass());
+            Map<String, Field> fieldMap = Cache.FIELD_CACHE.get(entity.getClass());
             if (fieldMap != null && fieldMap.containsKey(paramName.toLowerCase())) {
                 return true;
             }
@@ -320,7 +359,7 @@ public final class KatSimpleMapper {
      * 缓存实体类的所有字段（包括父类字段）
      */
     private static void cacheEntityFields(Class<?> clazz) {
-        if (FIELD_CACHE.containsKey(clazz)) {
+        if (Cache.FIELD_CACHE.containsKey(clazz)) {
             return; // 已缓存
         }
 
@@ -341,7 +380,7 @@ public final class KatSimpleMapper {
             currentClass = currentClass.getSuperclass();
         }
 
-        FIELD_CACHE.put(clazz, fieldMap);
+        Cache.FIELD_CACHE.put(clazz, fieldMap);
     }
 
     /**
@@ -349,7 +388,7 @@ public final class KatSimpleMapper {
      */
     private static List<String> extractNamedParamNames(String sql) {
         List<String> paramNames = new ArrayList<>();
-        Matcher matcher = Pattern.compile("#\\{(\\w+)}").matcher(sql);
+        Matcher matcher = Cache.PARAM_PATTERN.matcher(sql);
         while (matcher.find()) {
             paramNames.add(matcher.group(1));
         }
