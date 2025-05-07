@@ -42,7 +42,7 @@ public final class KatSimpleMapper {
 
         SqlTemplate(String sql) {
             this.originalSql = sql;
-            this.paramNames = extractNamedParamNames(sql);
+            this.paramNames = Collections.unmodifiableList(extractNamedParamNames(sql));
             this.preparedSql = replaceParamPlaceholders(sql);
         }
     }
