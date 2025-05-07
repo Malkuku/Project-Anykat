@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 
 @KatComponent
@@ -54,7 +55,6 @@ public class MovieDaoImpl implements MovieDao {
     public void addMovie(Movie movie) throws SQLException, FileNotFoundException {
         String sql = "INSERT INTO movies (title, release_date, poster_url, duration, genre, rating, status) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        log.info("Executing SQL: {}", sql);
         JdbcUtils.executeUpdate(sql,
                 movie.getTitle(),
                 movie.getReleaseDate(),
@@ -71,7 +71,6 @@ public class MovieDaoImpl implements MovieDao {
         String sql = "DELETE FROM movies WHERE id IN (" +
                 String.join(",", ids.stream().map(id -> "?").toArray(String[]::new)) +
                 ")";
-        log.info("Executing SQL: {}", sql);
         JdbcUtils.executeUpdate(sql,ids.toArray());
     }
 
@@ -131,7 +130,8 @@ public class MovieDaoImpl implements MovieDao {
         return JdbcUtils.executeQuery(
                 sql,
                 Movie.class,
-                param
+                param,
+                "offset", 2
         );
     }
 
