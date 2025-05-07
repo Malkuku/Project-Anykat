@@ -57,7 +57,7 @@ public class JdbcUtils {
             setParameters(stmt, params);
             return stmt.executeUpdate();
         } finally {
-            if (conn != null && !isTxActive) {
+            if(conn != null && !isTxActive) {
                 conn.close();
             }
         }
@@ -87,12 +87,8 @@ public class JdbcUtils {
             }
             return result;
         } finally {
-            if (rs != null) {
-                rs.close();
-            }
-            if (stmt != null) {
-                stmt.close();
-            }
+            closeSilently(rs);
+            closeSilently(stmt);
             if(conn != null && !isTxActive) {
                 conn.close();
             }
@@ -131,6 +127,15 @@ public class JdbcUtils {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
             }
+        }
+    }
+
+    //  关闭资源
+    private static void closeSilently(AutoCloseable resource) {
+        if (resource != null) {
+            try {
+                resource.close();
+            } catch (Exception ignored) {}
         }
     }
 
