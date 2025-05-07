@@ -87,7 +87,10 @@ public final class KatSimpleMapper {
 
         List<T> results = new ArrayList<>();
         while (rs.next()) {
-            results.add(mapper.apply(rs, 1));
+            T instance = mapper.apply(rs, 1);
+            if (instance != null) {  // 只添加非 null 值
+                results.add(instance);
+            }
         }
         return results;
     }
@@ -96,6 +99,11 @@ public final class KatSimpleMapper {
      * 创建映射函数 (带缓存)
      */
     private static <T> BiFunction<ResultSet, Integer, T> createMapper(Class<T> targetClass) {
+        // 处理不可变类型（如 Integer、String 等）
+        if (isImmutableType(targetClass)) {
+            return createImmutableMapper(targetClass);
+        }
+
         try {
             Constructor<T> constructor = targetClass.getDeclaredConstructor();
             constructor.setAccessible(true);
@@ -137,6 +145,38 @@ public final class KatSimpleMapper {
         } catch (Exception e) {
             throw new RuntimeException("Mapper creation failed for " + targetClass.getName(), e);
         }
+    }
+
+    /**
+     * 判断是否为不可变类型
+     */
+    private static boolean isImmutableType(Class<?> clazz) {
+        return clazz == Integer.class || clazz == int.class ||
+                clazz == Long.class || clazz == long.class ||
+                clazz == Double.class || clazz == double.class ||
+                clazz == Float.class || clazz == float.class ||
+                clazz == Short.class || clazz == short.class ||
+                clazz == Byte.class || clazz == byte.class ||
+                clazz == Boolean.class || clazz == boolean.class ||
+                clazz == Character.class || clazz == char.class ||
+                clazz == String.class;
+    }
+
+    /**
+     * 创建不可变类型的映射器
+     */
+    private static <T> BiFunction<ResultSet, Integer, T> createImmutableMapper(Class<T> targetClass) {
+        return (rs, index) -> {
+            try {
+                Object value = rs.getObject(index);
+                if (value == null) {
+                    return null;
+                }
+                return (T) convertType(value, targetClass);
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to map immutable type: " + targetClass.getName(), e);
+            }
+        };
     }
 
     /**
@@ -196,7 +236,11 @@ public final class KatSimpleMapper {
      * 类型转换方法
      */
     private static Object convertType(Object value, Class<?> targetType) {
-        if (value == null) return null;
+        if (value == null){
+            if(targetType == Number.class){ // Number类型检查
+                return 0;
+            }else return null;
+        }
         if (targetType.isInstance(value)) return value;
 
         // 数值类型转换
@@ -247,7 +291,7 @@ public final class KatSimpleMapper {
                 return timestamp.toLocalDateTime().toLocalDate();
             }
         }
-
+        log.warn("Unknown type to convert{} ", value);
         return value;
     }
 
@@ -327,8 +371,15 @@ public final class KatSimpleMapper {
 
             Class<?> clazz = param.getClass();
             Map<String, MethodHandle[]> accessors = Cache.ACCESSOR_CACHE.computeIfAbsent(clazz,KatSimpleMapper::createAccessors);
-            MethodHandle getter = accessors.get(paramName)[0]; // [0]是getter
-            log.info(String.valueOf(getter));
+            MethodHandle getter;
+            try{
+                getter = accessors.get(paramName)[0]; // [0]是getter
+            } catch (Exception e) {
+                log.error("Failed to access field: {}", paramName);
+                log.error("Check accessors: {}", accessors);
+                throw new RuntimeException(e);
+            }
+
             if (getter != null) {
                 try {
                     return getter.invoke(param);
@@ -337,8 +388,8 @@ public final class KatSimpleMapper {
                 }
             }
         }
-
-        return null; // 未找到
+        // 未找到
+        return null;
     }
 
     /**
