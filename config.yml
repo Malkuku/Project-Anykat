@@ -5,9 +5,9 @@ tomcat:
   #端口
   port: 8080
   #webapp目录
-  webappDir: "Anykat-test/src/webapp"
+  webappDir: "Anykat-application/src/webapp"
   #扫描的目录
-  classesDir: "Anykat-test/target/classes"
+  classesDir: "Anykat-management/target/classes"
 
 
 # Jwt相关配置
