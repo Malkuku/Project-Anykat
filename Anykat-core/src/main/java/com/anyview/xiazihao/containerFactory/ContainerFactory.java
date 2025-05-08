@@ -1,6 +1,7 @@
 package com.anyview.xiazihao.containerFactory;
 
 import com.anyview.xiazihao.config.AppConfig;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
@@ -9,7 +10,9 @@ import java.util.HashSet;
 
 @Slf4j
 public class ContainerFactory {
+    @Getter
     private final BeanRegistry registry;
+    @Getter
     private final BeanContainerBuilder builder;
 
     // 初始化锁
