@@ -14,7 +14,6 @@
         <module>../Anykat-entity</module>
         <module>../Anykat-utils</module>
         <module>../Anykat-core</module>
-        <module>../Anykat-application</module>
         <module>../Anykat-management</module>
     </modules>
 
@@ -154,12 +153,6 @@
             <dependency>
                 <groupId>com.anyview</groupId>
                 <artifactId>Anykat-core</artifactId>
-                <version>1.0-SNAPSHOT</version>
-            </dependency>
-            <!-- 启动 -->
-            <dependency>
-                <groupId>com.anyview</groupId>
-                <artifactId>Anykat-application</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <!-- 工具 -->

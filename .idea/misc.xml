@@ -16,6 +16,7 @@
     </option>
     <option name="ignoredFiles">
       <set>
+        <option value="$PROJECT_DIR$/Anykat-application/pom.xml" />
         <option value="$PROJECT_DIR$/Anykat-test/pom.xml" />
       </set>
     </option>

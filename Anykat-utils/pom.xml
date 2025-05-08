@@ -60,11 +60,19 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!-- servlet -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
         <!-- 核心模块 -->
         <dependency>
             <groupId>com.anyview</groupId>
             <artifactId>Anykat-core</artifactId>
         </dependency>
+
     </dependencies>
 
     <properties>
