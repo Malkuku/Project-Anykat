@@ -159,11 +159,14 @@ public class BeanContainerBuilder {
 
     // 获取Bean实例
     @SuppressWarnings("unchecked") //忽略泛型警告
-    public <T> T getBean(Class<T> interfaceType) {
-        //接口模式
-        Class<?> implementationClass = registry.getImplementation(interfaceType);
+    public <T> T getBean(Class<T> clazz) {
+        //检查是不是接口
+        if (!clazz.isInterface()) {
+            return getBean(registry.getBeanName(clazz), clazz);
+        }
+        Class<?> implementationClass = registry.getImplementation(clazz);
         if (implementationClass == null) {
-            throw new RuntimeException("No implementation found for " + interfaceType);
+            throw new RuntimeException("No implementation found for " + clazz);
         }
         return (T) getBean(registry.getBeanName(implementationClass), implementationClass);
     }
