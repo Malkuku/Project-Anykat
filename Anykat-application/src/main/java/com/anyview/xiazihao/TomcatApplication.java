@@ -1,6 +1,8 @@
 package com.anyview.xiazihao;
 
+import com.anyview.xiazihao.classPathScanner.ClassPathScanner;
 import com.anyview.xiazihao.config.AppConfig;
+import com.anyview.xiazihao.containerFactory.ContainerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
@@ -12,6 +14,7 @@ import java.io.File;
 @Slf4j
 public class TomcatApplication {
     public static void main(String[] args) throws Exception {
+
         //加载配置信息
         final int PORT = AppConfig.getInstance().getTomcat().getPort();
         final String WEBAPP_DIR = AppConfig.getInstance().getTomcat().getWebappDir();
@@ -38,6 +41,20 @@ public class TomcatApplication {
 
         // 3. 启动服务器
         tomcat.start();
+
+        // 2. 获取Tomcat类加载器
+        ClassLoader tomcatLoader = ctx.getLoader().getClassLoader();
+
+        // 3. 设置类加载器
+        Thread.currentThread().setContextClassLoader(tomcatLoader); //核心
+        ClassPathScanner.setClassLoader(tomcatLoader);
+
+        // 4. 初始化容器工厂
+        final ContainerFactory containerFactory = new ContainerFactory();
+
+        // 5. 存入ServletContext
+        ctx.getServletContext().setAttribute("ContainerFactory", containerFactory);
+
         log.info("Server running at http://localhost:{}",tomcat.getConnector().getPort());
         tomcat.getServer().await();
     }
