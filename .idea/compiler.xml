@@ -8,12 +8,13 @@
         <outputRelativeToContentRoot value="true" />
         <module name="Anykat-utils" />
         <module name="Anykat-application" />
-        <module name="Anykat-test" />
+        <module name="Anykat-management" />
         <module name="Anykat-entity" />
         <module name="Anykat-core" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Anykat-test" target="17" />
       <module name="Project-Anykat" target="17" />
     </bytecodeTargetLevel>
   </component>

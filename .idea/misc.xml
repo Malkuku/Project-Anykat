@@ -11,7 +11,13 @@
         <option value="$PROJECT_DIR$/Anykat-application/pom.xml" />
         <option value="$PROJECT_DIR$/Anykat-test/pom.xml" />
         <option value="$PROJECT_DIR$/Anykat-core/pom.xml" />
+        <option value="$PROJECT_DIR$/Anykat-management/pom.xml" />
       </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/Anykat-test/pom.xml" />
+      </set>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="corretto-17 (3)" project-jdk-type="JavaSDK">
