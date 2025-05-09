@@ -1,9 +1,6 @@
 package com.anyview.xiazihao.utils;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,36 +49,44 @@ public class PathUtils {
 
         for (int i = 0; i < pattern.length(); i++) {
             char c = pattern.charAt(i);
-            switch (c) {
-                case '?':
-                    regex.append('.');
-                    break;
-                case '*':
-                    // 检查是否是**通配符
-                    if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '*') {
-                        regex.append(".*");
-                        i++; // 跳过下一个*
-                    } else {
-                        regex.append("[^/]*");
-                    }
-                    break;
-                case '.':
-                case '$':
-                case '^':
-                case '{':
-                case '}':
-                case '[':
-                case ']':
-                case '(':
-                case ')':
-                case '|':
-                case '+':
-                case '\\':
-                    // 转义正则特殊字符
-                    regex.append('\\').append(c);
-                    break;
-                default:
-                    regex.append(c);
+            if (c == '{') {
+                // 处理路径变量 {var}
+                int end = pattern.indexOf('}', i);
+                if (end == -1) {
+                    throw new IllegalArgumentException("Invalid path pattern: " + pattern);
+                }
+                regex.append("([^/]*)");
+                i = end;
+            }else{
+                switch (c) {
+                    case '?':
+                        regex.append('.');
+                        break;
+                    case '*':
+                        // 检查是否是**通配符
+                        if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '*') {
+                            regex.append(".*");
+                            i++; // 跳过下一个*
+                        } else {
+                            regex.append("[^/]*");
+                        }
+                        break;
+                    case '.':
+                    case '$':
+                    case '^':
+                    case '[':
+                    case ']':
+                    case '(':
+                    case ')':
+                    case '|':
+                    case '+':
+                    case '\\':
+                        // 转义正则特殊字符
+                        regex.append('\\').append(c);
+                        break;
+                    default:
+                        regex.append(c);
+                }
             }
         }
         regex.append('$');
@@ -94,23 +99,49 @@ public class PathUtils {
      */
     public static Map<String, String> extractPathVariables(String pattern, String path) {
         Map<String, String> variables = new HashMap<>();
+        pattern = normalize(pattern);
+        path = normalize(path);
 
-        // 将{var}转换为(?<var>[^/]*)正则捕获组
-        String regex = pattern.replaceAll("\\{([^/]+?)}", "(?<$1>[^/]*)");
-        regex = "^" + convertPatternToRegex(regex) + "$";
+        // 将 {var} 转换为正则捕获组
+        StringBuilder regex = new StringBuilder();
+        regex.append('^');
+        List<String> varNames = new ArrayList<>();
 
-        Matcher matcher = Pattern.compile(regex).matcher(path);
-        if (matcher.matches()) {
-            // 提取所有命名组
-            for (String name : getNamedGroups(regex)) {
-                String value = matcher.group(name);
-                if (value != null) {
-                    variables.put(name, value);
+        for (int i = 0; i < pattern.length(); i++) {
+            char c = pattern.charAt(i);
+            if (c == '{') {
+                int end = pattern.indexOf('}', i);
+                if (end == -1) {
+                    throw new IllegalArgumentException("Invalid path pattern: " + pattern);
                 }
+                String varName = pattern.substring(i + 1, end);
+                varNames.add(varName);
+                regex.append("([^/]*)");
+                i = end;
+            } else {
+                // 转义特殊字符
+                if (isRegexSpecialChar(c)) {
+                    regex.append('\\');
+                }
+                regex.append(c);
+            }
+        }
+        regex.append('$');
+
+        Matcher matcher = Pattern.compile(regex.toString()).matcher(path);
+        if (matcher.matches()) {
+            for (int i = 0; i < varNames.size(); i++) {
+                String varName = varNames.get(i);
+                String value = matcher.group(i + 1);
+                variables.put(varName, value);
             }
         }
 
         return variables;
+    }
+
+    private static boolean isRegexSpecialChar(char c) {
+        return ".$^{[(|)*+?\\".indexOf(c) != -1;
     }
 
     /**
