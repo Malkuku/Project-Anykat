@@ -6,8 +6,10 @@ DELETE FROM notification;
 DELETE FROM teacher_course;
 DELETE FROM student_class;
 DELETE FROM exercise;
-DELETE FROM question;
 DELETE FROM course;
+DELETE FROM choice_question;
+DELETE FROM subjective_question;
+DELETE FROM base_question;
 DELETE FROM semester;
 DELETE FROM class;
 DELETE FROM user;
@@ -20,7 +22,9 @@ ALTER TABLE notification AUTO_INCREMENT = 1;
 ALTER TABLE teacher_course AUTO_INCREMENT = 1;
 ALTER TABLE student_class AUTO_INCREMENT = 1;
 ALTER TABLE exercise AUTO_INCREMENT = 1;
-ALTER TABLE question AUTO_INCREMENT = 1;
+ALTER TABLE choice_question AUTO_INCREMENT = 1;
+ALTER TABLE subjective_question AUTO_INCREMENT = 1;
+ALTER TABLE base_question AUTO_INCREMENT = 1;
 ALTER TABLE course AUTO_INCREMENT = 1;
 ALTER TABLE semester AUTO_INCREMENT = 1;
 ALTER TABLE class AUTO_INCREMENT = 1;
@@ -126,27 +130,61 @@ INSERT INTO `course` (`name`, `semester_id`) VALUES
 ('线性代数', 10);
 
 #题目表
-INSERT INTO `question` (`type`, `description`, `content`, `answer`, `difficulty`, `score`, `creator_id`) VALUES
-(0, '数据结构基础知识测试', '以下哪种数据结构是先进先出的?', 'A', 1, 10, 10),
-(0, '算法时间复杂度评估', '快速排序的平均时间复杂度是?', 'B', 3, 10, 10),
-(1, '数据库规范化理论', '请简述数据库三大范式的主要内容。', '第一范式：每个列都是不可分割的原子数据项；第二范式：满足第一范式，并且非主属性完全依赖于主键；第三范式：满足第二范式，并且非主属性不传递依赖于主键。', 2, 10, 11),
-(0, '操作系统功能识别', '以下哪个不是操作系统的功能?', 'C', 2, 10, 11),
-(1, '网络通信协议理解', '请解释TCP三次握手的过程。', '第一次握手：客户端发送SYN=1,seq=x；第二次握手：服务器发送SYN=1,ACK=1,seq=y,ack=x+1；第三次握手：客户端发送ACK=1,seq=x+1,ack=y+1', 4, 15, 12),
-(0, '计算机组成原理', 'CPU的主要组成部分不包括?', 'C', 2, 10, 12),
-(1, '软件开发方法论', '请描述敏捷开发的主要特点。', '迭代开发、用户参与、适应变化、交付可工作软件、面对面沟通等', 3, 15, 13),
-(0, '机器学习算法识别', '以下哪个不是机器学习算法?', 'C', 1, 5, 13),
-(1, '神经网络训练原理', '请解释反向传播算法的基本原理。', '通过计算输出层误差，然后反向逐层计算各层误差，利用梯度下降法调整权重参数', 5, 20, 14),
-(0, '大数据技术组件', 'Hadoop的核心组件不包括?', 'D', 2, 10, 14),
-(0, '云计算特征识别', '以下哪项不是云计算的特点?', 'D', 2, 10, 15),
-(1, '加密技术比较', '请简述对称加密和非对称加密的区别。', '对称加密使用相同密钥加解密，速度快但密钥分发困难；非对称加密使用公钥私钥对，安全性高但速度慢', 3, 15, 15),
-(0, '密码学理论基础', 'RSA算法基于什么数学难题?', 'A', 3, 10, 16),
-(1, '物联网架构理解', '请描述物联网的三层架构。', '感知层、网络层、应用层', 2, 10, 16),
-(0, '嵌入式系统识别', '以下哪个不是嵌入式操作系统?', 'D', 1, 5, 17),
-(1, '信号处理技术', '请解释傅里叶变换的作用。', '将时域信号转换为频域信号，分析信号的频率成分', 4, 15, 17),
-(0, '自动控制原理', 'PID控制器中的P代表?', 'A', 1, 5, 18),
-(1, '数学定理理解', '请叙述拉格朗日中值定理的内容。', '如果函数f在闭区间[a,b]上连续，在开区间(a,b)内可导，则存在ξ∈(a,b)使得f\'(ξ)=(f(b)-f(a))/(b-a)', 4, 15, 18),
-(0, '线性代数概念', '矩阵的秩表示什么?', 'C', 2, 10, 19),
-(1, '编程范式理解', '请描述面向对象编程的三大特性。', '封装、继承、多态', 2, 10, 19);
+INSERT INTO `base_question` (`type`, `description`, `content`, `difficulty`, `score`, `creator_id`) VALUES
+-- 单选题(1-10)
+(0, '数据结构基础', '以下哪种数据结构是先进先出的?', 1, 10, 1),
+(0, '算法复杂度', '快速排序的平均时间复杂度是?', 3, 10, 1),
+(0, '操作系统', '以下哪个不是操作系统的功能?', 2, 10, 2),
+(0, '组成原理', 'CPU的主要组成部分不包括?', 2, 10, 2),
+(0, '网络协议', 'HTTP协议默认端口号是?', 1, 5, 3),
+(0, '数据库', '以下哪个不是关系型数据库?', 2, 10, 3),
+(0, '编程语言', 'Java是哪种类型的语言?', 1, 5, 4),
+(0, '人工智能', '以下哪个不是机器学习算法?', 1, 5, 4),
+(0, '大数据', 'Hadoop的核心组件不包括?', 2, 10, 5),
+(0, '云计算', '以下哪项不是云计算的特点?', 2, 10, 5),
+
+-- 多选题(11-15)
+(1, '数据结构', '以下哪些是线性数据结构?', 3, 15, 1),
+(1, '算法', '以下哪些排序算法是稳定的?', 4, 15, 2),
+(1, '操作系统', '以下哪些是进程调度算法?', 3, 15, 3),
+(1, '网络', '以下哪些是TCP协议的特点?', 3, 15, 4),
+(1, '数据库', '以下哪些是NoSQL数据库?', 3, 15, 5),
+
+-- 简答题(16-20)
+(2, '软件工程', '请简述敏捷开发的主要特点', 3, 20, 1),
+(2, '网络协议', '请解释TCP三次握手的过程', 4, 20, 2),
+(2, '数据库', '请简述数据库三大范式的主要内容', 3, 20, 3),
+(2, '编程基础', '请描述面向对象编程的三大特性', 2, 15, 4),
+(2, '操作系统', '请解释死锁的四个必要条件', 4, 20, 5);
+
+INSERT INTO `choice_question` (`question_id`, `is_multi`, `options`, `correct_answer`, `analysis`) VALUES
+-- 单选题(1-10)
+(1, FALSE, '{"A":"队列","B":"栈","C":"树","D":"图"}', 'A', '队列是先进先出的线性数据结构'),
+(2, FALSE, '{"A":"O(n)","B":"O(nlogn)","C":"O(n^2)","D":"O(logn)"}', 'B', '快速排序平均时间复杂度为O(nlogn)'),
+(3, FALSE, '{"A":"内存管理","B":"文件管理","C":"编译程序","D":"进程调度"}', 'C', '编译程序是编译器功能，不属于操作系统核心功能'),
+(4, FALSE, '{"A":"运算器","B":"控制器","C":"存储器","D":"寄存器"}', 'C', '存储器属于存储系统，不是CPU的组成部分'),
+(5, FALSE, '{"A":"80","B":"443","C":"3306","D":"21"}', 'A', 'HTTP默认端口是80，HTTPS是443'),
+(6, FALSE, '{"A":"MySQL","B":"MongoDB","C":"PostgreSQL","D":"Oracle"}', 'B', 'MongoDB是文档型NoSQL数据库'),
+(7, FALSE, '{"A":"编译型","B":"解释型","C":"混合型","D":"脚本语言"}', 'C', 'Java是先编译为字节码再解释执行'),
+(8, FALSE, '{"A":"KNN","B":"SVM","C":"HTTP","D":"决策树"}', 'C', 'HTTP是协议不是算法'),
+(9, FALSE, '{"A":"HDFS","B":"MapReduce","C":"YARN","D":"MySQL"}', 'D', 'MySQL是关系型数据库'),
+(10, FALSE, '{"A":"按需自助服务","B":"广泛的网络访问","C":"资源池化","D":"固定容量"}', 'D', '云计算特点是弹性可扩展'),
+
+-- 多选题(11-15)
+(11, TRUE, '{"A":"数组","B":"链表","C":"栈","D":"二叉树"}', 'A,B,C', '二叉树是非线性数据结构'),
+(12, TRUE, '{"A":"冒泡排序","B":"快速排序","C":"归并排序","D":"堆排序"}', 'A,C', '归并排序和冒泡排序是稳定的'),
+(13, TRUE, '{"A":"FIFO","B":"SJF","C":"RR","D":"DFS"}', 'A,B,C', 'DFS是深度优先搜索算法'),
+(14, TRUE, '{"A":"面向连接","B":"可靠传输","C":"无拥塞控制","D":"全双工"}', 'A,B,D', 'TCP有拥塞控制机制'),
+(15, TRUE, '{"A":"MongoDB","B":"Redis","C":"HBase","D":"MySQL"}', 'A,B,C', 'MySQL是关系型数据库');
+
+-- 简答题(16-20)
+INSERT INTO `subjective_question` (`question_id`, `reference_answer`, `word_limit`) VALUES
+(16, '1. 迭代开发\n2. 用户参与\n3. 适应变化\n4. 交付可工作软件\n5. 面对面沟通', 200),
+(17, '第一次握手：客户端发送SYN=1,seq=x\n第二次握手：服务器发送SYN=1,ACK=1,seq=y,ack=x+1\n第三次握手：客户端发送ACK=1,seq=x+1,ack=y+1', 300),
+(18, '第一范式：每个列都是不可分割的原子数据项\n第二范式：满足第一范式，并且非主属性完全依赖于主键\n第三范式：满足第二范式，并且非主属性不传递依赖于主键', 250),
+(19, '1. 封装：隐藏对象内部实现细节\n2. 继承：子类继承父类特性\n3. 多态：同一操作作用于不同对象产生不同行为', 150),
+(20, '1. 互斥条件\n2. 请求与保持条件\n3. 不剥夺条件\n4. 循环等待条件', 200);
+
 
 #练习表
 INSERT INTO `exercise` (`name`, `course_id`, `start_time`, `end_time`, `status`, `creator_id`) VALUES

@@ -4,7 +4,7 @@ CREATE TABLE `user` (
 `name` varchar(50) NOT NULL COMMENT '姓名',
 `username` varchar(50) NOT NULL COMMENT '用户名',
 `password` varchar(255) NOT NULL COMMENT '密码',
-`role` tinyint(1) NOT NULL COMMENT '身份标识(0:学生,1:老师,2:管理员)',
+`role`  tinyint(1) NOT NULL COMMENT '身份标识(0:学生,1:老师,2:管理员)',
 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`),
@@ -44,21 +44,52 @@ CONSTRAINT `fk_course_semester` FOREIGN KEY (`semester_id`) REFERENCES `semester
 )  COMMENT='课程表';
 
 -- 题目表
-CREATE TABLE `question` (
-`id` int(11) NOT NULL AUTO_INCREMENT,
-`type` tinyint(1) NOT NULL COMMENT '题目类型(0:选择题,1:简答题)',
-`description` varchar(255) DEFAULT NULL COMMENT '题目描述',
-`content` text NOT NULL COMMENT '题干内容',
-`answer` text NOT NULL COMMENT '标准答案',
-`difficulty` tinyint(1) DEFAULT '1' COMMENT '难度(1-5)',
-`score` int(11) NOT NULL DEFAULT '0' COMMENT '题目分值',
-`creator_id` int(11) NOT NULL COMMENT '创建者ID',
-`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-PRIMARY KEY (`id`),
-KEY `idx_creator` (`creator_id`),
-CONSTRAINT `fk_question_creator` FOREIGN KEY (`creator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-)  COMMENT='题目表';
+CREATE TABLE `base_question` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type`  tinyint NOT NULL COMMENT '题型(0:单选,1:多选,2:简答)',
+  `description` varchar(255) COMMENT '题目描述',
+  `content` text NOT NULL COMMENT '题干内容',
+  `difficulty`  tinyint DEFAULT 1 COMMENT '难度(1-5)',
+  `score` int NOT NULL DEFAULT 0 COMMENT '分值',
+  `creator_id` int NOT NULL COMMENT '创建人',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_type` (`type`)
+) COMMENT='基础题目表';
+-- 选择题扩展表
+CREATE TABLE `choice_question` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `question_id` int NOT NULL COMMENT '关联基础题目ID',
+  `is_multi` boolean DEFAULT FALSE COMMENT '是否多选题',
+  `options` json NOT NULL COMMENT '选项配置',
+  `correct_answer` varchar(20) NOT NULL COMMENT '正确答案',
+  `analysis` text COMMENT '答案解析',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_question` (`question_id`),
+  CONSTRAINT `fk_cq_question` FOREIGN KEY (`question_id`)
+    REFERENCES `base_question` (`id`) ON DELETE CASCADE
+) COMMENT='选择题表';
+-- 选项JSON示例：
+-- {
+--   "A": "TCP协议",
+--   "B": "HTTP协议",
+--   "C": "FTP协议",
+--   "D": "UDP协议"
+-- }
+-- 答案示例："A"
+-- 简答题扩展表
+CREATE TABLE `subjective_question` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `question_id` int NOT NULL COMMENT '关联基础题目ID',
+  `reference_answer` text NOT NULL COMMENT '参考答案',
+  `word_limit` int COMMENT '字数限制',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_question` (`question_id`),
+  CONSTRAINT `fk_sq_question` FOREIGN KEY (`question_id`)
+    REFERENCES `base_question` (`id`) ON DELETE CASCADE
+) COMMENT='主观题表';
+
 
 -- 练习表
 CREATE TABLE `exercise` (
@@ -67,7 +98,7 @@ CREATE TABLE `exercise` (
 `course_id` int(11) NOT NULL COMMENT '所属课程ID',
 `start_time` datetime NOT NULL COMMENT '开始时间',
 `end_time` datetime NOT NULL COMMENT '截止时间',
-`status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态(0:未开始,1:进行中,2:已结束)',
+`status`  tinyint(1) NOT NULL DEFAULT '0' COMMENT '状态(0:未开始,1:进行中,2:已结束)',
 `creator_id` int(11) NOT NULL COMMENT '创建者ID',
 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -132,7 +163,7 @@ PRIMARY KEY (`id`),
 UNIQUE KEY `uk_exercise_question` (`exercise_id`,`question_id`),
 KEY `idx_question` (`question_id`),
 CONSTRAINT `fk_eq_exercise` FOREIGN KEY (`exercise_id`) REFERENCES `exercise` (`id`) ON DELETE CASCADE,
-CONSTRAINT `fk_eq_question` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE
+CONSTRAINT `fk_eq_question` FOREIGN KEY (`question_id`) REFERENCES `base_question` (`id`) ON DELETE CASCADE
 )  COMMENT='练习题目关联表';
 
 -- 学生答题记录表
@@ -143,7 +174,7 @@ CREATE TABLE `student_answer` (
 `question_id` int(11) NOT NULL COMMENT '题目ID',
 `answer` text COMMENT '提交答案',
 `score` int(11) DEFAULT NULL COMMENT '得分',
-`correct_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '批改状态(0:未批改,1:已批改)',
+`correct_status`  tinyint(1) NOT NULL DEFAULT '0' COMMENT '批改状态(0:未批改,1:已批改)',
 `correct_comment` varchar(255) DEFAULT NULL COMMENT '批改备注',
 `correct_time` datetime DEFAULT NULL COMMENT '批改时间',
 `submit_time` datetime DEFAULT NULL COMMENT '提交时间',
@@ -154,7 +185,7 @@ UNIQUE KEY `uk_student_exercise_question` (`student_id`,`exercise_id`,`question_
 KEY `idx_exercise` (`exercise_id`),
 KEY `idx_question` (`question_id`),
 CONSTRAINT `fk_sa_exercise` FOREIGN KEY (`exercise_id`) REFERENCES `exercise` (`id`) ON DELETE CASCADE,
-CONSTRAINT `fk_sa_question` FOREIGN KEY (`question_id`) REFERENCES `question` (`id`) ON DELETE CASCADE,
+CONSTRAINT `fk_sa_question` FOREIGN KEY (`question_id`) REFERENCES `base_question` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_sa_student` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 )  COMMENT='学生答题记录表';
 
