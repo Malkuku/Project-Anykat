@@ -183,7 +183,7 @@ public class DispatcherController extends HttpServlet {
             }
 
             // 处理 @KatRequestParam 注解参数
-            KatRequestParam requestParam = findAnnotation(paramAnnotations[i], KatRequestParam.class);
+            KatRequestParam requestParam = findAnnotation(paramAnnotations[i], KatRequestParam.class); //TODO 也许能通过缓存来避免重复查找
             if (requestParam != null) {
                 args[i] = resolveRequestParam(requestParam,method.getParameters()[i], paramTypes[i], req);
                 continue;
