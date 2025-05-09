@@ -29,4 +29,11 @@ public class TestController {
             @KatRequestBody() Movie movie){
         return "test4: " + movie;
     }
+
+    @KatRequestMapping(path = "/test5/{userId}",method = "GET")
+    public String test5(
+            @KatRequestParam("id") Integer id,
+            @KatRequestBody() Movie movie){
+        return "test5: " + movie + " " + id;
+    }
 }
