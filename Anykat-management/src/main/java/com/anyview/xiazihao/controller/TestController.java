@@ -4,6 +4,8 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.*;
 import com.anyview.xiazihao.entity.test.Movie;
 
+import java.util.List;
+
 @KatComponent
 @KatController
 @KatRequestMapping(path = "/api/test")
@@ -35,5 +37,11 @@ public class TestController {
             @KatRequestParam("id") Integer id,
             @KatRequestBody() Movie movie){
         return "test5: " + movie + " " + id;
+    }
+
+    @KatRequestMapping(path = "/test6",method = "GET")
+    public String test6(
+            @KatRequestParam("ids") String ids){
+        return "test6: " + ids;
     }
 }
