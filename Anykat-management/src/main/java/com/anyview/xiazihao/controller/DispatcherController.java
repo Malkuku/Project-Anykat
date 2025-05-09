@@ -1,12 +1,10 @@
 package com.anyview.xiazihao.controller;
 
 import com.anyview.xiazihao.containerFactory.ContainerFactory;
-import com.anyview.xiazihao.controller.annotation.KatController;
-import com.anyview.xiazihao.controller.annotation.KatPathVariable;
-import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
-import com.anyview.xiazihao.controller.annotation.KatRequestParam;
+import com.anyview.xiazihao.controller.annotation.*;
 import com.anyview.xiazihao.entity.result.Result;
 import com.anyview.xiazihao.sampleFlatMapper.TypeConverter;
+import com.anyview.xiazihao.utils.JsonUtils;
 import com.anyview.xiazihao.utils.PathUtils;
 import com.anyview.xiazihao.utils.ServletUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -172,16 +170,48 @@ public class DispatcherController extends HttpServlet {
                 continue;
             }
 
+            // 处理 @KatRequestBody 注解参数
+            KatRequestBody requestBody = findAnnotation(paramAnnotations[i], KatRequestBody.class);
+            if (requestBody != null) {
+                args[i] = resolveRequestBody(paramTypes[i], req, requestBody);
+                continue;
+            }
+
             // 处理 HttpServletRequest/HttpServletResponse 参数
             if (paramTypes[i].equals(HttpServletRequest.class)) {
                 args[i] = req;
             } else if (paramTypes[i].equals(HttpServletResponse.class)) {
                 args[i] = resp;
             }
-            // 可以添加其他参数类型的支持
         }
 
         return method.invoke(handler.controllerInstance(), args);
+    }
+
+    private Object resolveRequestBody(Class<?> paramType,
+                                      HttpServletRequest req,
+                                      KatRequestBody annotation) throws IOException {
+        // 检查请求体是否为空
+        if (req.getContentLength() == 0) {
+            if (annotation.required()) {
+                throw new IllegalArgumentException("Required request body is missing");
+            }
+            return null;
+        }
+
+        try {
+            String requestBody = ServletUtils.getRequestBody(req);
+
+            // 如果是String类型，直接返回
+            if (paramType.equals(String.class)) {
+                return requestBody;
+            }
+
+            // 构建对象
+            return JsonUtils.parseJson(requestBody, paramType);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to parse request body", e);
+        }
     }
 
     private Object resolvePathVariable(KatPathVariable annotation,
