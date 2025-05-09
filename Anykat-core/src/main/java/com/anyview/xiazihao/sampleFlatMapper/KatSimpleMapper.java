@@ -100,7 +100,7 @@ public final class KatSimpleMapper {
      */
     private static <T> BiFunction<ResultSet, Integer, T> createMapper(Class<T> targetClass) {
         // 处理不可变类型（如 Integer、String 等）
-        if (isImmutableType(targetClass)) {
+        if (TypeConverter.isImmutableType(targetClass)) {
             return createImmutableMapper(targetClass);
         }
 
@@ -130,7 +130,7 @@ public final class KatSimpleMapper {
                             Object value = rs.getObject(columnName);
                             if (value != null) {
                                 Class<?> fieldType = fieldTypes.get(fieldName);
-                                Object convertedValue = convertType(value, fieldType);
+                                Object convertedValue = TypeConverter.convertValue(value, fieldType);
                                 setter.invoke(instance, convertedValue);
                             }
                         } catch (SQLException e) {
@@ -148,21 +148,6 @@ public final class KatSimpleMapper {
     }
 
     /**
-     * 判断是否为不可变类型
-     */
-    private static boolean isImmutableType(Class<?> clazz) {
-        return clazz == Integer.class || clazz == int.class ||
-                clazz == Long.class || clazz == long.class ||
-                clazz == Double.class || clazz == double.class ||
-                clazz == Float.class || clazz == float.class ||
-                clazz == Short.class || clazz == short.class ||
-                clazz == Byte.class || clazz == byte.class ||
-                clazz == Boolean.class || clazz == boolean.class ||
-                clazz == Character.class || clazz == char.class ||
-                clazz == String.class;
-    }
-
-    /**
      * 创建不可变类型的映射器
      */
     private static <T> BiFunction<ResultSet, Integer, T> createImmutableMapper(Class<T> targetClass) {
@@ -172,7 +157,7 @@ public final class KatSimpleMapper {
                 if (value == null) {
                     return null;
                 }
-                return (T) convertType(value, targetClass);
+                return (T) TypeConverter.convertValue(value, targetClass);
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to map immutable type: " + targetClass.getName(), e);
             }
@@ -230,69 +215,6 @@ public final class KatSimpleMapper {
             fieldTypes.put(field.getName(), field.getType());
         }
         return Collections.unmodifiableMap(fieldTypes);
-    }
-
-    /**
-     * 类型转换方法
-     */
-    private static Object convertType(Object value, Class<?> targetType) {
-        if (value == null){
-            if(targetType == Number.class){ // Number类型检查
-                return 0;
-            }else return null;
-        }
-        if (targetType.isInstance(value)) return value;
-
-        // 数值类型转换
-        if (value instanceof Number number) {
-            if (targetType == Double.class || targetType == double.class) {
-                return number.doubleValue();
-            }
-            if (targetType == Float.class || targetType == float.class) {
-                return number.floatValue();
-            }
-            if (targetType == Integer.class || targetType == int.class) {
-                return number.intValue();
-            }
-            if (targetType == Long.class || targetType == long.class) {
-                return number.longValue();
-            }
-            if (targetType == Short.class || targetType == short.class) {
-                return number.shortValue();
-            }
-        }
-
-        // 日期类型转换
-        if (value instanceof java.sql.Date sqlDate) {
-            if (targetType == LocalDate.class) {
-                return sqlDate.toLocalDate();
-            }
-            if (targetType == LocalDateTime.class) {
-                return sqlDate.toLocalDate().atStartOfDay();
-            }
-        }
-
-        // 布尔类型转换
-        if (value instanceof Boolean bool) {
-            if (targetType == Integer.class || targetType == int.class) {
-                return bool ? 1 : 0;
-            }
-            if (targetType == Double.class || targetType == double.class) {
-                return bool ? 1.0 : 0.0;
-            }
-        }
-
-        // 时间戳转换
-        if (value instanceof Timestamp timestamp) {
-            if (targetType == LocalDateTime.class) {
-                return timestamp.toLocalDateTime();
-            }
-            if (targetType == LocalDate.class) {
-                return timestamp.toLocalDateTime().toLocalDate();
-            }
-        }
-        log.warn("Unknown type to convert{} ", value);
-        return value;
     }
 
     /**
