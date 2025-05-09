@@ -4,6 +4,7 @@ import com.anyview.xiazihao.containerFactory.ContainerFactory;
 import com.anyview.xiazihao.controller.annotation.KatController;
 import com.anyview.xiazihao.controller.annotation.KatPathVariable;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
+import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.result.Result;
 import com.anyview.xiazihao.sampleFlatMapper.TypeConverter;
 import com.anyview.xiazihao.utils.PathUtils;
@@ -157,10 +158,17 @@ public class DispatcherController extends HttpServlet {
 
         for (int i = 0; i < paramTypes.length; i++) {
             // 处理 @KatPathVariable 注解参数
-            KatPathVariable pathVar = findAnnotation(paramAnnotations[i]);
+            KatPathVariable pathVar = findAnnotation(paramAnnotations[i],KatPathVariable.class);
             if (pathVar != null) {
                 args[i] = resolvePathVariable(pathVar, method.getParameters()[i],
                         paramTypes[i], req);
+                continue;
+            }
+
+            // 处理 @KatRequestParam 注解参数
+            KatRequestParam requestParam = findAnnotation(paramAnnotations[i], KatRequestParam.class);
+            if (requestParam != null) {
+                args[i] = resolveRequestParam(requestParam,method.getParameters()[i], paramTypes[i], req);
                 continue;
             }
 
@@ -204,10 +212,45 @@ public class DispatcherController extends HttpServlet {
         }
     }
 
+    private Object resolveRequestParam(KatRequestParam annotation,
+                                       java.lang.reflect.Parameter parameter,
+                                       Class<?> paramType,
+                                       HttpServletRequest req) {
+        // 获取参数名，优先使用注解值，其次使用参数名
+        String paramName = annotation.value().isEmpty()
+                ? parameter.getName()
+                : annotation.value();
+
+        String paramValue = req.getParameter(paramName);
+
+        // 处理参数缺失情况
+        if (paramValue == null || paramValue.isEmpty()) {
+            if (annotation.required()) {
+                throw new IllegalArgumentException("Required request parameter '" + paramName + "' is not present");
+            }
+            if (!annotation.defaultValue().isEmpty()) {
+                paramValue = annotation.defaultValue();
+            } else {
+                return null; // 非必需且无默认值，返回null
+            }
+        }
+
+        try {
+            // 使用 TypeConverter 进行类型转换
+            return TypeConverter.convertValue(paramValue, paramType);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    String.format("Failed to convert request parameter '%s' value '%s' to type %s",
+                            paramName, paramValue, paramType.getName()),
+                    e
+            );
+        }
+    }
+
     @SuppressWarnings("unchecked")
-    private <T extends Annotation> T findAnnotation(Annotation[] annotations) {
+    private <T extends Annotation> T findAnnotation(Annotation[] annotations, Class<T> annotationClass) {
         for (Annotation ann : annotations) {
-            if (ann instanceof KatPathVariable) {
+            if (annotationClass.isInstance(ann)) {
                 return (T) ann;
             }
         }
