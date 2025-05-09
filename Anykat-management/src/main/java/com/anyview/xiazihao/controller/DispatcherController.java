@@ -114,13 +114,18 @@ public class DispatcherController extends HttpServlet {
         // 查找匹配的路由
         RouteKey matchedKey = null;
         HandlerMethod handler = null;
+        int bestMatchScore = -1; // 用于记录最佳匹配分数
 
         for (Map.Entry<RouteKey, HandlerMethod> entry : routeMappings.entrySet()) {
             RouteKey key = entry.getKey();
             if (key.httpMethod().equals(method) && key.matches(path)) {
-                matchedKey = key;
-                handler = entry.getValue();
-                break;
+                int currentScore = calculateMatchScore(key.pathPattern(), path);
+
+                if (currentScore > bestMatchScore) {
+                    bestMatchScore = currentScore;
+                    matchedKey = key;
+                    handler = entry.getValue();
+                }
             }
         }
         if (handler == null) {
@@ -144,6 +149,20 @@ public class DispatcherController extends HttpServlet {
         } catch (Exception e) {
             handleError(resp, e);
         }
+    }
+
+    // 计算路径匹配分数
+    private int calculateMatchScore(String pattern, String path) {
+        if (pattern.equals(path)) {
+            return 100; // 精确匹配最高分
+        }
+        if (pattern.contains("{") && pattern.contains("}")) {
+            return 50;  // 路径变量匹配中等分数
+        }
+        if (pattern.contains("*")) {
+            return 10;  // 通配符匹配最低分
+        }
+        return 0;
     }
 
     private Object invokeHandlerMethod(HandlerMethod handler,
@@ -298,5 +317,6 @@ public class DispatcherController extends HttpServlet {
         );
 
         ServletUtils.sendResponse(resp, Result.error(objectMapper.writeValueAsString(error)));
+        log.error(e.getMessage(), e);
     }
 }
