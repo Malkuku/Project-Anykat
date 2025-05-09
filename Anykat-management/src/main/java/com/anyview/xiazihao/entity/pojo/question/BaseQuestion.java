@@ -18,4 +18,6 @@ public class BaseQuestion {
     private Integer creatorId;     // 创建人ID
     private LocalDateTime createdAt; // 创建时间
     private LocalDateTime updatedAt; // 更新时间
+
+    private Object detail; //  题目详情
 }
