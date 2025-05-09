@@ -5,6 +5,7 @@ import com.anyview.xiazihao.controller.annotation.KatController;
 import com.anyview.xiazihao.controller.annotation.KatPathVariable;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.entity.result.Result;
+import com.anyview.xiazihao.sampleFlatMapper.TypeConverter;
 import com.anyview.xiazihao.utils.PathUtils;
 import com.anyview.xiazihao.utils.ServletUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -191,24 +192,16 @@ public class DispatcherController extends HttpServlet {
             throw new IllegalArgumentException("Path variable '" + paramName + "' not found");
         }
 
-        // 类型转换
-        return convertValue(value, paramType);
-    }
-
-    private Object convertValue(String value, Class<?> targetType) {
-        if (targetType.equals(String.class)) {
-            return value;
-        } else if (targetType.equals(Integer.class) || targetType.equals(int.class)) {
-            return Integer.parseInt(value);
-        } else if (targetType.equals(Long.class) || targetType.equals(long.class)) {
-            return Long.parseLong(value);
-        } else if (targetType.equals(Double.class) || targetType.equals(double.class)) {
-            return Double.parseDouble(value);
-        } else if (targetType.equals(Boolean.class) || targetType.equals(boolean.class)) {
-            return Boolean.parseBoolean(value);
+        try {
+            // 使用 TypeConverter 进行类型转换
+            return TypeConverter.convertValue(value, paramType);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    String.format("Failed to convert path variable '%s' value '%s' to type %s",
+                            paramName, value, paramType.getName()),
+                    e
+            );
         }
-        // 可以添加更多类型转换
-        throw new IllegalArgumentException("Unsupported parameter type: " + targetType.getName());
     }
 
     @SuppressWarnings("unchecked")
