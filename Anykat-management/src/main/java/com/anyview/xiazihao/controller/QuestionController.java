@@ -22,6 +22,13 @@ public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
 
+    //添加选择题信息
+    @KatRequestMapping(path = "/choice", method = "POST")
+    public void addChoiceQuestion(
+            @KatRequestBody ChoiceQuestion question) throws SQLException, FileNotFoundException {
+        questionService.addChoiceQuestion(question);
+    }
+
     //根据题目ID查询选择题信息
     @KatRequestMapping(path = "/choice/{questionId}", method = "GET")
     public ChoiceQuestion selectChoiceQuestionByQuestionId(

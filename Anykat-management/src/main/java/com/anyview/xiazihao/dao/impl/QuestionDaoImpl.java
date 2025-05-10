@@ -8,10 +8,13 @@ import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.utils.JdbcUtils;
+import com.anyview.xiazihao.utils.JsonUtils;
+import com.google.gson.annotations.JsonAdapter;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 @KatComponent
 @KatSingleton
@@ -115,5 +118,15 @@ public class QuestionDaoImpl implements QuestionDao {
             WHERE question_id = ?""";
         List<ChoiceQuestion> questions = JdbcUtils.executeQuery(sql, ChoiceQuestion.class, questionId);
         return questions.isEmpty() ? null : questions.get(0);
+    }
+
+    @Override
+    public void addChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException {
+        String sql = """
+            INSERT INTO choice_question
+                (question_id, is_multi, options, correct_answer, analysis)
+            VALUES
+                (#{questionId}, #{isMulti}, #{options}, #{correctAnswer}, #{analysis})""";
+        JdbcUtils.executeUpdate(sql, question,"options", JsonUtils.toJson(question.getOptions()));
     }
 }
