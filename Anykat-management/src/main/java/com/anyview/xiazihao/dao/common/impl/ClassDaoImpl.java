@@ -1,10 +1,10 @@
-package com.anyview.xiazihao.dao.teacher.impl;
+package com.anyview.xiazihao.dao.common.impl;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
-import com.anyview.xiazihao.dao.teacher.CourseDao;
-import com.anyview.xiazihao.entity.param.CourseQueryParam;
-import com.anyview.xiazihao.entity.pojo.Course;
+import com.anyview.xiazihao.dao.common.ClassDao;
+import com.anyview.xiazihao.entity.param.ClassQueryParam;
+import com.anyview.xiazihao.entity.pojo.Class;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
 import java.io.FileNotFoundException;
@@ -13,15 +13,14 @@ import java.util.List;
 
 @KatComponent
 @KatSingleton
-public class CourseDaoImpl implements CourseDao {
+public class ClassDaoImpl implements ClassDao {
     @Override
-    public Integer selectCourseCount(CourseQueryParam param) throws SQLException, FileNotFoundException {
+    public Integer selectClassCount(ClassQueryParam param) throws FileNotFoundException, SQLException {
         String sql = """
         SELECT COUNT(*)
-        FROM course
+        FROM class
         WHERE 1=1\s
             AND (#{name} IS NULL OR name LIKE CONCAT('%', #{name}, '%'))
-            AND (#{semesterId} IS NULL OR semester_id = #{semesterId})
         """;
         List<Integer> total = JdbcUtils.executeQuery(
                 sql,
@@ -32,30 +31,29 @@ public class CourseDaoImpl implements CourseDao {
     }
 
     @Override
-    public List<Course> selectCourseByPage(CourseQueryParam param) throws SQLException, FileNotFoundException {
+    public List<Class> selectClassByPage(ClassQueryParam param) throws SQLException, FileNotFoundException {
         String sql = """
         SELECT *
-        FROM course
+        FROM class
         WHERE 1=1\s
             AND (#{name} IS NULL OR name LIKE CONCAT('%', #{name}, '%'))
-            AND (#{semesterId} IS NULL OR semester_id = #{semesterId})
         ORDER BY updated_at DESC
         LIMIT #{pageSize} OFFSET #{offset}
         """;
         return JdbcUtils.executeQuery(
                 sql,
-                Course.class,
+                Class.class,
                 param
         );
     }
 
     @Override
-    public Course selectCourseById(Integer id) throws SQLException, FileNotFoundException {
+    public Class selectClassById(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
         SELECT *
-        FROM course
+        FROM class
         WHERE id = ?""";
-        List<Course> courses = JdbcUtils.executeQuery(sql, Course.class, id);
-        return courses.isEmpty() ? null : courses.get(0);
+        List<Class> classes = JdbcUtils.executeQuery(sql, Class.class, id);
+        return classes.isEmpty() ? null : classes.get(0);
     }
 }

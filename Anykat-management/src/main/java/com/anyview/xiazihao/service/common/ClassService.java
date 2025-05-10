@@ -1,4 +1,4 @@
-package com.anyview.xiazihao.service.teacher;
+package com.anyview.xiazihao.service.common;
 
 import com.anyview.xiazihao.entity.param.ClassQueryParam;
 import com.anyview.xiazihao.entity.pojo.Class;
