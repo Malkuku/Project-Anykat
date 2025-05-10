@@ -9,10 +9,13 @@ import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.QuestionService;
+import com.anyview.xiazihao.utils.ServletUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 
+@Slf4j
 @KatComponent
 @KatController
 @KatRequestMapping(path = "/questions")
@@ -20,10 +23,18 @@ public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
 
+    //批量删除题目
+    @KatRequestMapping(path = "", method = "DELETE")
+    public void deleteQuestionsByIds(
+            @KatRequestParam("ids") String ids) throws SQLException, FileNotFoundException {
+        log.debug("ids: {}", (Object) ids.split(","));
+        questionService.deleteQuestionsByIds(ServletUtils.parseStringToList(ids, Integer.class));
+    }
+
     //条件分页查询问题信息
     @KatRequestMapping(path = "", method = "GET")
     public PageResult<BaseQuestion> selectQuestionByPage(
             @KatRequestParam("param") QuestionQueryParam param) throws SQLException, FileNotFoundException {
-            return questionService.selectQuestionByPage(param);
+        return questionService.selectQuestionByPage(param);
     }
 }

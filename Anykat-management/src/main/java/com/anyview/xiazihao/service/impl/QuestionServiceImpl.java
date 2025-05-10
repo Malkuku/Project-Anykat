@@ -27,4 +27,9 @@ public class QuestionServiceImpl implements QuestionService {
         List<BaseQuestion> questions = questionDao.selectQuestionByPage(param);
         return new PageResult<>(total, questions);
     }
+
+    @Override
+    public void deleteQuestionsByIds(List<Integer> ids) throws SQLException, FileNotFoundException {
+        questionDao.deleteQuestionsByIds(ids);
+    }
 }

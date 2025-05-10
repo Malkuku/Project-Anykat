@@ -62,4 +62,12 @@ public class QuestionDaoImpl implements QuestionDao {
                 param
         );
     }
+
+    @Override
+    public void deleteQuestionsByIds(List<Integer> ids) throws SQLException, FileNotFoundException {
+        String sql = "DELETE FROM base_question WHERE id IN (" +
+                String.join(",", ids.stream().map(id -> "?").toArray(String[]::new)) +
+                ")";
+        JdbcUtils.executeUpdate(sql,ids.toArray());
+    }
 }

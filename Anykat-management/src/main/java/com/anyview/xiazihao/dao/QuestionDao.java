@@ -8,7 +8,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface QuestionDao {
+    // 查询题目数量
     Integer selectQuestionCount(QuestionQueryParam param) throws SQLException, FileNotFoundException;
-
+    //  查询题目
     List<BaseQuestion> selectQuestionByPage(QuestionQueryParam param) throws SQLException, FileNotFoundException;
+    // 删除题目
+    void deleteQuestionsByIds(List<Integer> ids) throws SQLException, FileNotFoundException;
 }
