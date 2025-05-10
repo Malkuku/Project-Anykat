@@ -58,4 +58,9 @@ public class QuestionServiceImpl implements QuestionService {
     public void addChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException {
         questionDao.addChoiceQuestion(question);
     }
+
+    @Override
+    public void updateChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException {
+        questionDao.updateChoiceQuestion(question);
+    }
 }

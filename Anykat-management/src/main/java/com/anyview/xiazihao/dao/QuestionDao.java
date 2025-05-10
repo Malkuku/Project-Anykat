@@ -25,4 +25,6 @@ public interface QuestionDao {
     ChoiceQuestion selectChoiceQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException;
     // 添加选择题
     void addChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException;
+    // 更新选择题
+    void updateChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException;
 }

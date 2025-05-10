@@ -22,6 +22,13 @@ public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
 
+    //修改选择题信息
+    @KatRequestMapping(path = "/choice", method = "PUT")
+    public void updateChoiceQuestion(
+            @KatRequestBody ChoiceQuestion question) throws SQLException, FileNotFoundException {
+        questionService.updateChoiceQuestion(question);
+    }
+
     //添加选择题信息
     @KatRequestMapping(path = "/choice", method = "POST")
     public void addChoiceQuestion(
