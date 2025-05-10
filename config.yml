@@ -30,7 +30,7 @@ container:
 
 # 数据库连接池相关设置
 hakimi:
-  url: "jdbc:mysql://localhost:3306/movie_tix"
+  url: "jdbc:mysql://localhost:3306/anykat"
   username: "root"
   password: "pin666"
   maxSize: 10
