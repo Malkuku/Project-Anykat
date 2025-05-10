@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.sampleFlatMapper;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.invoke.MethodHandle;
@@ -167,7 +168,7 @@ public final class KatSimpleMapper {
     /**
      * 创建并缓存setter和getter方法句柄
      */
-    private static <T> Map<String, MethodHandle[]> createAccessors(Class<T> targetClass) {
+    public static <T> Map<String, MethodHandle[]> createAccessors(Class<T> targetClass) {
         try {
             Map<String, MethodHandle[]> accessors = new HashMap<>();
             MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -266,7 +267,7 @@ public final class KatSimpleMapper {
     /**
      * 从混合参数中查找值（优先级：键值对 > Map > 实体类字段）
      */
-    private static Object findParamValue(String paramName, Object[] params) {
+    public static Object findParamValue(String paramName, Object[] params) {
         // 1：查找显式键值对（如 "id", 123）
         for (int i = 0; i < params.length; i++) {
             if (params[i] instanceof String key && i + 1 < params.length) {
@@ -380,5 +381,9 @@ public final class KatSimpleMapper {
      */
     private static String camelToSnake(String str) {
         return str.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+    }
+
+    public static Map<Class<?>, Map<String, MethodHandle[]>> getAccessorCache(){
+        return Cache.ACCESSOR_CACHE;
     }
 }

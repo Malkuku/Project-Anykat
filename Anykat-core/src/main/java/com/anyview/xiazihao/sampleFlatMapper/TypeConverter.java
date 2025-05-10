@@ -29,6 +29,17 @@ public class TypeConverter {
                 clazz == String.class;
     }
 
+    // 判断是否为简单类型
+    public static boolean isSimpleType(Class<?> type) {
+        return type.isPrimitive() ||
+                type.equals(String.class) ||
+                Number.class.isAssignableFrom(type) ||
+                type.equals(Boolean.class) ||
+                type.equals(Character.class) ||
+                type.equals(java.util.Date.class) ||
+                type.equals(java.time.temporal.Temporal.class);
+    }
+
     /**
      * 类型转换方法
      */

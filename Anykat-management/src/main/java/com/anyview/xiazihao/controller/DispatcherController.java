@@ -3,6 +3,7 @@ package com.anyview.xiazihao.controller;
 import com.anyview.xiazihao.containerFactory.ContainerFactory;
 import com.anyview.xiazihao.controller.annotation.*;
 import com.anyview.xiazihao.entity.result.Result;
+import com.anyview.xiazihao.sampleFlatMapper.KatSimpleMapper;
 import com.anyview.xiazihao.sampleFlatMapper.TypeConverter;
 import com.anyview.xiazihao.utils.JsonUtils;
 import com.anyview.xiazihao.utils.PathUtils;
@@ -16,10 +17,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 @Slf4j
 @WebServlet("/*")
@@ -271,30 +276,85 @@ public class DispatcherController extends HttpServlet {
                 : annotation.value();
 
         String paramValue = req.getParameter(paramName);
-
-        // 处理参数缺失情况
-        if (paramValue == null || paramValue.isEmpty()) {
-            if (annotation.required()) {
-                throw new IllegalArgumentException("Required request parameter '" + paramName + "' is not present");
+        if (TypeConverter.isSimpleType(paramType)) {
+            // 处理参数缺失情况
+            if (paramValue == null || paramValue.isEmpty()) {
+                if (annotation.required()) {
+                    throw new IllegalArgumentException("Required request parameter '" + paramName + "' is not present");
+                }
+                if (!annotation.defaultValue().isEmpty()) {
+                    paramValue = annotation.defaultValue();
+                } else {
+                    return null; // 非必需且无默认值，返回null
+                }
             }
-            if (!annotation.defaultValue().isEmpty()) {
-                paramValue = annotation.defaultValue();
-            } else {
-                return null; // 非必需且无默认值，返回null
-            }
-        }
 
-        try {
-            // 使用 TypeConverter 进行类型转换
-            return TypeConverter.convertValue(paramValue, paramType);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(
-                    String.format("Failed to convert request parameter '%s' value '%s' to type %s",
-                            paramName, paramValue, paramType.getName()),
-                    e
-            );
+            try {
+                // 使用 TypeConverter 进行类型转换
+                return TypeConverter.convertValue(paramValue, paramType);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(
+                        String.format("Failed to convert request parameter '%s' value '%s' to type %s",
+                                paramName, paramValue, paramType.getName()),
+                        e
+                );
+            }
+        } else {
+            try {
+                return bindObjectFromRequest(paramType, req);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Failed to bind request parameters to " + paramType.getName(), e);
+            }
         }
     }
+
+    private Object bindObjectFromRequest(Class<?> targetClass, HttpServletRequest request) throws Exception {
+        // 将请求参数转换为Map
+        Map<String, String[]> parameterMap = request.getParameterMap();
+        Map<String, Object> params = new HashMap<>();
+
+        for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+            // 对于多值参数，只取第一个值
+            params.put(entry.getKey(), entry.getValue()[0]);
+        }
+
+        // 使用KatSimpleMapper的机制创建对象并绑定参数
+        Constructor<?> constructor = targetClass.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Object instance = constructor.newInstance();
+
+        // 获取访问器缓存
+        Map<String, MethodHandle[]> accessors = KatSimpleMapper.getAccessorCache()
+                .computeIfAbsent(targetClass, KatSimpleMapper::createAccessors);
+
+        // 绑定参数
+        for (Map.Entry<String, MethodHandle[]> entry : accessors.entrySet()) {
+            String fieldName = entry.getKey();
+            MethodHandle setter = entry.getValue()[1]; // [1]是setter
+
+            // 查找参数值
+            Object value = params.get(fieldName);
+
+            if (value != null) {
+                try {
+                    // 获取字段类型
+                    Class<?> fieldType = setter.type().parameterType(1);
+                    // 类型转换
+                    Object convertedValue = TypeConverter.convertValue(value, fieldType);
+                    // 设置值
+                    setter.invoke(instance, convertedValue);
+                } catch (Throwable e) {
+                    throw new IllegalArgumentException(
+                            String.format("Failed to set field '%s' with value '%s'",
+                                    fieldName, value), e);
+                }
+            }
+        }
+
+        return instance;
+    }
+
+
 
     @SuppressWarnings("unchecked")
     private <T extends Annotation> T findAnnotation(Annotation[] annotations, Class<T> annotationClass) {
@@ -312,7 +372,7 @@ public class DispatcherController extends HttpServlet {
 
         Map<String, String> error = Map.of(
                 "error", e.getClass().getSimpleName(),
-                "message", e.getMessage(),
+                "message", e.getMessage() == null ? "Unknown error" : e.getMessage(),
                 "timestamp", Instant.now().toString()
         );
 
