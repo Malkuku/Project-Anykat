@@ -8,6 +8,7 @@ import com.anyview.xiazihao.dao.QuestionDao;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
+import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.QuestionService;
 
@@ -62,5 +63,10 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public void updateChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException {
         questionDao.updateChoiceQuestion(question);
+    }
+
+    @Override
+    public SubjectiveQuestion selectSubjectiveQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException {
+        return questionDao.selectSubjectiveQuestionByQuestionId(questionId);
     }
 }

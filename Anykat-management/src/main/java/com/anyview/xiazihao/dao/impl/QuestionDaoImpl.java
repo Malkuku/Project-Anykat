@@ -7,6 +7,7 @@ import com.anyview.xiazihao.dao.QuestionDao;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
+import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;
 import com.anyview.xiazihao.utils.JdbcUtils;
 import com.anyview.xiazihao.utils.JsonUtils;
 import com.google.gson.annotations.JsonAdapter;
@@ -145,5 +146,15 @@ public class QuestionDaoImpl implements QuestionDao {
         JdbcUtils.executeUpdate(sql,
                 question,
                 "options", question.getOptions() == null ? null : JsonUtils.toJson(question.getOptions()));
+    }
+
+    @Override
+    public SubjectiveQuestion selectSubjectiveQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT *
+            FROM subjective_question
+            WHERE question_id = ?""";
+        List<SubjectiveQuestion> questions = JdbcUtils.executeQuery(sql, SubjectiveQuestion.class, questionId);
+        return questions.isEmpty() ? null : questions.get(0);
     }
 }

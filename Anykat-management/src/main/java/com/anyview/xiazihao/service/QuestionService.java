@@ -3,6 +3,7 @@ package com.anyview.xiazihao.service;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
+import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
 
 import java.io.FileNotFoundException;
@@ -33,4 +34,7 @@ public interface QuestionService {
 
     //  更新选择题
     void updateChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException;
+
+    //  查询简答题
+    SubjectiveQuestion selectSubjectiveQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException;
 }
