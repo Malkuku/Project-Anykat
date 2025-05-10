@@ -34,12 +34,12 @@ public class ServletUtils {
         return stringBuilder.toString();
     }
     // 封装将请求头参数转成List的方法
-    public static <T> List<T> parseReqToList(String[] values, Class<T> clazz) {
+    public static <T> List<T> parseStringToList(String value, Class<T> clazz) {
         List<T> list = new ArrayList<>();
-        if (values != null && values.length > 0) {
-            String[] idArray = values[0].split(",");
+        if (value != null) {
+            String[] idArray = value.split(",");
             for (String id_str : idArray) {
-                log.info("处理ID:{}", id_str);
+                log.debug("处理ID:{}", id_str);
                 try {
                     if (clazz == Integer.class) {
                         list.add(clazz.cast(Integer.parseInt(id_str)));
