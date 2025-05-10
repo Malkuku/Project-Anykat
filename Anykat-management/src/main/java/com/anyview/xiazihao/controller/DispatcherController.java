@@ -134,7 +134,8 @@ public class DispatcherController extends HttpServlet {
             }
         }
         if (handler == null) {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            log.error("No matching route found for {} {}", req.getMethod(), path);
+            ServletUtils.sendResponse(resp, Result.error("404 Not Found"));
             return;
         }
 
