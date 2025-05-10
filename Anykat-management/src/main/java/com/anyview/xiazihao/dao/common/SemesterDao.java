@@ -1,6 +1,6 @@
 package com.anyview.xiazihao.dao.common;
 
-import com.anyview.xiazihao.entity.param.SemesterQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.SemesterQueryParam;
 import com.anyview.xiazihao.entity.pojo.Semester;
 
 import java.io.FileNotFoundException;

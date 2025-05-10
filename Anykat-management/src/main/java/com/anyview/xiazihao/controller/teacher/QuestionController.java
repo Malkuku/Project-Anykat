@@ -3,7 +3,7 @@ package com.anyview.xiazihao.controller.teacher;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.*;
-import com.anyview.xiazihao.entity.param.QuestionQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;

@@ -1,6 +1,6 @@
 package com.anyview.xiazihao.service.common;
 
-import com.anyview.xiazihao.entity.param.ClassQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.ClassQueryParam;
 import com.anyview.xiazihao.entity.pojo.Class;
 import com.anyview.xiazihao.entity.result.PageResult;
 

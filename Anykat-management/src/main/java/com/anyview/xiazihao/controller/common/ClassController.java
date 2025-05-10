@@ -6,7 +6,7 @@ import com.anyview.xiazihao.controller.annotation.KatController;
 import com.anyview.xiazihao.controller.annotation.KatPathVariable;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
-import com.anyview.xiazihao.entity.param.ClassQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.ClassQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.common.ClassService;
 import com.anyview.xiazihao.entity.pojo.Class;

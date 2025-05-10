@@ -4,7 +4,7 @@ package com.anyview.xiazihao.dao.teacher.impl;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.teacher.QuestionDao;
-import com.anyview.xiazihao.entity.param.QuestionQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;

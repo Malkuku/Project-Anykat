@@ -4,7 +4,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.common.CourseDao;
-import com.anyview.xiazihao.entity.param.CourseQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.CourseQueryParam;
 import com.anyview.xiazihao.entity.pojo.Course;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.common.CourseService;

@@ -1,6 +1,6 @@
 package com.anyview.xiazihao.dao.teacher;
 
-import com.anyview.xiazihao.entity.param.QuestionQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;

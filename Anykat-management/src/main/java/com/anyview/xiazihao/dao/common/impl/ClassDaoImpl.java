@@ -3,7 +3,7 @@ package com.anyview.xiazihao.dao.common.impl;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.common.ClassDao;
-import com.anyview.xiazihao.entity.param.ClassQueryParam;
+import com.anyview.xiazihao.entity.param.pojo.ClassQueryParam;
 import com.anyview.xiazihao.entity.pojo.Class;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
