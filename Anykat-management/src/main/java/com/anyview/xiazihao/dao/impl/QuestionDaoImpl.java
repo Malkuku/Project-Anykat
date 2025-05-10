@@ -157,4 +157,14 @@ public class QuestionDaoImpl implements QuestionDao {
         List<SubjectiveQuestion> questions = JdbcUtils.executeQuery(sql, SubjectiveQuestion.class, questionId);
         return questions.isEmpty() ? null : questions.get(0);
     }
+
+    @Override
+    public void addSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException {
+        String sql = """
+            INSERT INTO subjective_question
+                (question_id, reference_answer, word_limit)
+            VALUES
+                (#{questionId}, #{referenceAnswer}, #{wordLimit})""";
+        JdbcUtils.executeUpdate(sql, question);
+    }
 }

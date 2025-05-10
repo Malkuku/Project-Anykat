@@ -23,6 +23,13 @@ public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
 
+    //添加简答题信息
+    @KatRequestMapping(path = "/subjective", method = "POST")
+    public void addSubjectiveQuestion(
+            @KatRequestBody SubjectiveQuestion question) throws SQLException, FileNotFoundException {
+        questionService.addSubjectiveQuestion(question);
+    }
+
     //根据题目ID查询简答题信息
     @KatRequestMapping(path = "/subjective/{questionId}", method = "GET")
     public SubjectiveQuestion selectSubjectiveQuestionByQuestionId(

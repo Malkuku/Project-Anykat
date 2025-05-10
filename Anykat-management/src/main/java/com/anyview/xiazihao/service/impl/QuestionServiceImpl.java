@@ -57,6 +57,8 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public void addChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException {
+        BaseQuestion baseQuestion = questionDao.selectQuestionById(question.getQuestionId());
+        if(baseQuestion.getType() != 1 && baseQuestion.getType() != 0) throw new RuntimeException("试题类型错误");
         questionDao.addChoiceQuestion(question);
     }
 
@@ -68,5 +70,12 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public SubjectiveQuestion selectSubjectiveQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException {
         return questionDao.selectSubjectiveQuestionByQuestionId(questionId);
+    }
+
+    @Override
+    public void addSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException {
+        BaseQuestion baseQuestion = questionDao.selectQuestionById(question.getQuestionId());
+        if(baseQuestion.getType() != 2) throw new RuntimeException("试题类型错误");
+        questionDao.addSubjectiveQuestion(question);
     }
 }

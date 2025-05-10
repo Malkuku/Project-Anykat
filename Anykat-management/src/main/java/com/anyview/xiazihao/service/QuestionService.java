@@ -37,4 +37,7 @@ public interface QuestionService {
 
     //  查询简答题
     SubjectiveQuestion selectSubjectiveQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException;
+
+    //   添加简答题
+    void addSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException;
 }
