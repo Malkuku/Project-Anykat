@@ -37,4 +37,9 @@ public class QuestionServiceImpl implements QuestionService {
     public void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException {
         questionDao.addQuestion(question);
     }
+
+    @Override
+    public void updateQuestion(BaseQuestion question) throws SQLException, FileNotFoundException {
+        questionDao.updateQuestion(question);
+    }
 }

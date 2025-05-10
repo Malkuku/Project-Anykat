@@ -16,4 +16,6 @@ public interface QuestionDao {
     void deleteQuestionsByIds(List<Integer> ids) throws SQLException, FileNotFoundException;
     // 添加题目
     void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
+    //  更新题目
+    void updateQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
 }

@@ -17,4 +17,7 @@ public interface QuestionService {
 
     //  添加题目
     void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
+
+    //  更新题目
+    void updateQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
 }

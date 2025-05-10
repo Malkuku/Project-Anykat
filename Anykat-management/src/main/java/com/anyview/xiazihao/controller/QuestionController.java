@@ -24,6 +24,13 @@ public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
 
+    //修改题目信息
+    @KatRequestMapping(path = "", method = "PUT")
+    public void updateQuestion(
+            @KatRequestBody BaseQuestion question) throws SQLException, FileNotFoundException {
+        questionService.updateQuestion(question);
+    }
+
     //添加题目
     @KatRequestMapping(path = "", method = "POST")
     public void addQuestion(

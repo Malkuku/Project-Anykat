@@ -80,4 +80,19 @@ public class QuestionDaoImpl implements QuestionDao {
                 (#{type}, #{description}, #{content}, #{difficulty}, #{score}, #{creatorId})""";
         JdbcUtils.executeUpdate(sql, question);
     }
+
+    @Override
+    public void updateQuestion(BaseQuestion question) throws SQLException, FileNotFoundException {
+        String sql = """
+            UPDATE base_question
+            SET
+                type = COALESCE(#{type}, type),
+                description = COALESCE(#{description}, description),
+                content = COALESCE(#{content}, content),
+                difficulty = COALESCE(#{difficulty}, difficulty),
+                score = COALESCE(#{score}, score),
+                updated_at = NOW()
+            WHERE id = #{id}""";
+        JdbcUtils.executeUpdate(sql, question);
+    }
 }
