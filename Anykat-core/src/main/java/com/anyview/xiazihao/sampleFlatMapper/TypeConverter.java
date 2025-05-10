@@ -1,15 +1,18 @@
 package com.anyview.xiazihao.sampleFlatMapper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
 public class TypeConverter {
-
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private TypeConverter() {
         // 私有构造器防止实例化
     }
@@ -52,6 +55,16 @@ public class TypeConverter {
         }
         if (targetType.isInstance(value)) {
             return value;
+        }
+
+        // 特殊处理JSON字符串到Map的转换
+        if (value instanceof String && Map.class.isAssignableFrom(targetType)) {
+            try {
+                return objectMapper.readValue((String) value,
+                        new TypeReference<Map<String, String>>() {});
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Cannot convert JSON string to Map: " + value, e);
+            }
         }
 
         // 数值类型转换
@@ -126,6 +139,8 @@ public class TypeConverter {
                 return timestamp.toLocalDateTime().toLocalDate();
             }
         }
+
+
 
         log.warn("Cannot convert value '{}' of type {} to target type {}",
                 value, value.getClass().getName(), targetType.getName());
