@@ -2,10 +2,7 @@ package com.anyview.xiazihao.controller;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
-import com.anyview.xiazihao.controller.annotation.KatController;
-import com.anyview.xiazihao.controller.annotation.KatRequestBody;
-import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
-import com.anyview.xiazihao.controller.annotation.KatRequestParam;
+import com.anyview.xiazihao.controller.annotation.*;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
@@ -23,6 +20,13 @@ import java.sql.SQLException;
 public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
+
+    //根据ID查询题目
+    @KatRequestMapping(path = "/{id}", method = "GET")
+    public BaseQuestion selectQuestionById(
+            @KatPathVariable("id") Integer id) throws SQLException, FileNotFoundException {
+        return questionService.selectQuestionById(id);
+    }
 
     //修改题目信息
     @KatRequestMapping(path = "", method = "PUT")

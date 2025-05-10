@@ -95,4 +95,14 @@ public class QuestionDaoImpl implements QuestionDao {
             WHERE id = #{id}""";
         JdbcUtils.executeUpdate(sql, question);
     }
+
+    @Override
+    public BaseQuestion selectQuestionById(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT *
+            FROM base_question
+            WHERE id = ?""";
+        List<BaseQuestion> questions = JdbcUtils.executeQuery(sql, BaseQuestion.class, id);
+        return questions.isEmpty() ? null : questions.get(0);
+    }
 }

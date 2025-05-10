@@ -20,4 +20,7 @@ public interface QuestionService {
 
     //  更新题目
     void updateQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
+
+    //  id查询题目
+    BaseQuestion selectQuestionById(Integer id) throws SQLException, FileNotFoundException;
 }

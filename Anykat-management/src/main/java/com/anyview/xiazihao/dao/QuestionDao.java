@@ -18,4 +18,6 @@ public interface QuestionDao {
     void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
     //  更新题目
     void updateQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
+    //  查询题目
+    BaseQuestion selectQuestionById(Integer id) throws SQLException, FileNotFoundException;
 }
