@@ -3,5 +3,6 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/Anykat-management/src/main/resources/anykat测试数据.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/Anykat-management/src/main/resources/anykat表单.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/Anykat-utils/src/main/java/com/anyview/xiazihao/utils/JdbcUtils.java" dialect="MySQL" />
   </component>
 </project>

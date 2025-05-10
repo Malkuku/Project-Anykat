@@ -6,10 +6,7 @@ import com.anyview.xiazihao.sampleFlatMapper.KatSimpleMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -118,6 +115,18 @@ public class JdbcUtils {
                 conn.close();
             }
         }
+    }
+
+    // 获取当前连接中最后插入的ID
+    public static Integer getLastInsertId() throws SQLException, FileNotFoundException {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT LAST_INSERT_ID()")) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        throw new SQLException("无法获取最后插入ID");
     }
 
     // 设置参数
