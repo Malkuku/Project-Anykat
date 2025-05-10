@@ -1,22 +1,20 @@
-package com.anyview.xiazihao.dao.impl;
+package com.anyview.xiazihao.dao.teacher.impl;
 
 
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
-import com.anyview.xiazihao.dao.QuestionDao;
+import com.anyview.xiazihao.dao.teacher.QuestionDao;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;
 import com.anyview.xiazihao.utils.JdbcUtils;
 import com.anyview.xiazihao.utils.JsonUtils;
-import com.google.gson.annotations.JsonAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @KatComponent

@@ -1,4 +1,4 @@
-package com.anyview.xiazihao.controller;
+package com.anyview.xiazihao.controller.teacher;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
@@ -8,7 +8,7 @@ import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
-import com.anyview.xiazihao.service.QuestionService;
+import com.anyview.xiazihao.service.teacher.QuestionService;
 import com.anyview.xiazihao.utils.ServletUtils;
 import lombok.extern.slf4j.Slf4j;
 

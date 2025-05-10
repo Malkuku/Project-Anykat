@@ -1,8 +1,8 @@
-package com.anyview.xiazihao.dao.impl;
+package com.anyview.xiazihao.dao.teacher.impl;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
-import com.anyview.xiazihao.dao.SemesterDao;
+import com.anyview.xiazihao.dao.teacher.SemesterDao;
 import com.anyview.xiazihao.entity.param.SemesterQueryParam;
 import com.anyview.xiazihao.entity.pojo.Semester;
 import com.anyview.xiazihao.utils.JdbcUtils;

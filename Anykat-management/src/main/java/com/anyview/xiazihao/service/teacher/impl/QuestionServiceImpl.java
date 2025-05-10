@@ -1,16 +1,15 @@
-package com.anyview.xiazihao.service.impl;
+package com.anyview.xiazihao.service.teacher.impl;
 
-import com.anyview.xiazihao.annotation.KatTransactional;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
-import com.anyview.xiazihao.dao.QuestionDao;
+import com.anyview.xiazihao.dao.teacher.QuestionDao;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
-import com.anyview.xiazihao.service.QuestionService;
+import com.anyview.xiazihao.service.teacher.QuestionService;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;

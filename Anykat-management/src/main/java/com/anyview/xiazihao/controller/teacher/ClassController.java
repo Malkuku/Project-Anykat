@@ -1,4 +1,4 @@
-package com.anyview.xiazihao.controller;
+package com.anyview.xiazihao.controller.teacher;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
@@ -8,7 +8,7 @@ import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.param.ClassQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
-import com.anyview.xiazihao.service.ClassService;
+import com.anyview.xiazihao.service.teacher.ClassService;
 import com.anyview.xiazihao.entity.pojo.Class;
 
 import java.io.FileNotFoundException;
