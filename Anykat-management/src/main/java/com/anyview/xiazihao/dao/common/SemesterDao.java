@@ -1,4 +1,4 @@
-package com.anyview.xiazihao.dao.teacher;
+package com.anyview.xiazihao.dao.common;
 
 import com.anyview.xiazihao.entity.param.SemesterQueryParam;
 import com.anyview.xiazihao.entity.pojo.Semester;
