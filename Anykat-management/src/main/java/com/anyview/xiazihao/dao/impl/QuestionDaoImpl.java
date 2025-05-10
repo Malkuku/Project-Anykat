@@ -167,4 +167,15 @@ public class QuestionDaoImpl implements QuestionDao {
                 (#{questionId}, #{referenceAnswer}, #{wordLimit})""";
         JdbcUtils.executeUpdate(sql, question);
     }
+
+    @Override
+    public void updateSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException {
+        String sql = """
+            UPDATE subjective_question
+            SET
+                reference_answer = COALESCE(#{referenceAnswer}, reference_answer),
+                word_limit = COALESCE(#{wordLimit}, word_limit)
+            WHERE id = #{id}""";
+        JdbcUtils.executeUpdate(sql, question);
+    }
 }

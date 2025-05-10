@@ -40,4 +40,7 @@ public interface QuestionService {
 
     //   添加简答题
     void addSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException;
+
+    //   更新简答题
+    void updateSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException;
 }

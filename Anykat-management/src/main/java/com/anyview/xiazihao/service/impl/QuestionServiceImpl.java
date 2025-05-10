@@ -78,4 +78,9 @@ public class QuestionServiceImpl implements QuestionService {
         if(baseQuestion.getType() != 2) throw new RuntimeException("试题类型错误");
         questionDao.addSubjectiveQuestion(question);
     }
+
+    @Override
+    public void updateSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException {
+        questionDao.updateSubjectiveQuestion(question);
+    }
 }

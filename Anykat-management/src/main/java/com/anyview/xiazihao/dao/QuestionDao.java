@@ -32,4 +32,6 @@ public interface QuestionDao {
     SubjectiveQuestion selectSubjectiveQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException;
     // 添加主观题
     void addSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException;
+    // 更新主观题
+    void updateSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException;
 }
