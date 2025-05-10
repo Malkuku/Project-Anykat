@@ -72,6 +72,11 @@
             <groupId>com.anyview</groupId>
             <artifactId>Anykat-core</artifactId>
         </dependency>
+        <!-- 实体类 -->
+        <dependency>
+            <groupId>com.anyview</groupId>
+            <artifactId>Anykat-entity</artifactId>
+        </dependency>
 
     </dependencies>
 
