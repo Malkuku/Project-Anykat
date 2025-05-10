@@ -3,6 +3,7 @@ package com.anyview.xiazihao.controller;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.KatController;
+import com.anyview.xiazihao.controller.annotation.KatRequestBody;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
@@ -22,6 +23,14 @@ import java.sql.SQLException;
 public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
+
+    //添加题目
+    @KatRequestMapping(path = "", method = "POST")
+    public void addQuestion(
+            @KatRequestBody BaseQuestion question) throws SQLException, FileNotFoundException {
+        log.debug("接收到的题目信息:{}", question);
+        questionService.addQuestion(question);
+    }
 
     //批量删除题目
     @KatRequestMapping(path = "", method = "DELETE")

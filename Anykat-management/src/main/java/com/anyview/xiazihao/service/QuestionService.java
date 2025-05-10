@@ -12,6 +12,9 @@ public interface QuestionService {
     //  分页查询
     PageResult<BaseQuestion> selectQuestionByPage(QuestionQueryParam param) throws SQLException, FileNotFoundException;
 
-    //  删除
+    //  删除题目
     void deleteQuestionsByIds(List<Integer> ids) throws SQLException, FileNotFoundException;
+
+    //  添加题目
+    void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
 }

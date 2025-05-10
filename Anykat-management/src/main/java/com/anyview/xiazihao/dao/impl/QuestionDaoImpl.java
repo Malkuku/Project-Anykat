@@ -70,4 +70,14 @@ public class QuestionDaoImpl implements QuestionDao {
                 ")";
         JdbcUtils.executeUpdate(sql,ids.toArray());
     }
+
+    @Override
+    public void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException {
+        String sql = """
+            INSERT INTO base_question
+                (type, description, content, difficulty, score, creator_id)
+            VALUES
+                (#{type}, #{description}, #{content}, #{difficulty}, #{score}, #{creatorId})""";
+        JdbcUtils.executeUpdate(sql, question);
+    }
 }

@@ -32,4 +32,9 @@ public class QuestionServiceImpl implements QuestionService {
     public void deleteQuestionsByIds(List<Integer> ids) throws SQLException, FileNotFoundException {
         questionDao.deleteQuestionsByIds(ids);
     }
+
+    @Override
+    public void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException {
+        questionDao.addQuestion(question);
+    }
 }
