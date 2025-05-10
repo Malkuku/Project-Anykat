@@ -6,6 +6,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.QuestionDao;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
+import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
 import java.io.FileNotFoundException;
@@ -103,6 +104,16 @@ public class QuestionDaoImpl implements QuestionDao {
             FROM base_question
             WHERE id = ?""";
         List<BaseQuestion> questions = JdbcUtils.executeQuery(sql, BaseQuestion.class, id);
+        return questions.isEmpty() ? null : questions.get(0);
+    }
+
+    @Override
+    public ChoiceQuestion selectChoiceQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT *
+            FROM choice_question
+            WHERE question_id = ?""";
+        List<ChoiceQuestion> questions = JdbcUtils.executeQuery(sql, ChoiceQuestion.class, questionId);
         return questions.isEmpty() ? null : questions.get(0);
     }
 }

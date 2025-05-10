@@ -7,6 +7,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.QuestionDao;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
+import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.QuestionService;
 
@@ -46,5 +47,10 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public BaseQuestion selectQuestionById(Integer id) throws SQLException, FileNotFoundException {
         return questionDao.selectQuestionById(id);
+    }
+
+    @Override
+    public ChoiceQuestion selectChoiceQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException {
+        return questionDao.selectChoiceQuestionByQuestionId(questionId);
     }
 }

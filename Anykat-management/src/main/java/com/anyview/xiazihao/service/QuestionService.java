@@ -2,6 +2,7 @@ package com.anyview.xiazihao.service;
 
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
+import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
 
 import java.io.FileNotFoundException;
@@ -23,4 +24,7 @@ public interface QuestionService {
 
     //  id查询题目
     BaseQuestion selectQuestionById(Integer id) throws SQLException, FileNotFoundException;
+
+    //  查询选择题
+    ChoiceQuestion selectChoiceQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException;
 }

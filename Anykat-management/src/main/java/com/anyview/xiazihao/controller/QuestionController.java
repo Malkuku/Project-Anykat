@@ -5,6 +5,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.*;
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
+import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.QuestionService;
 import com.anyview.xiazihao.utils.ServletUtils;
@@ -20,6 +21,13 @@ import java.sql.SQLException;
 public class QuestionController {
     @KatAutowired
     private QuestionService questionService;
+
+    //根据题目ID查询选择题信息
+    @KatRequestMapping(path = "/choice/{questionId}", method = "GET")
+    public ChoiceQuestion selectChoiceQuestionByQuestionId(
+            @KatPathVariable("questionId") Integer questionId) throws SQLException, FileNotFoundException {
+        return questionService.selectChoiceQuestionByQuestionId(questionId);
+    }
 
     //根据ID查询题目
     @KatRequestMapping(path = "/{id}", method = "GET")

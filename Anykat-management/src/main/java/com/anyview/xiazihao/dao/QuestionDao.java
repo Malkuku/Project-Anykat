@@ -2,6 +2,7 @@ package com.anyview.xiazihao.dao;
 
 import com.anyview.xiazihao.entity.param.QuestionQueryParam;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
+import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
@@ -20,4 +21,6 @@ public interface QuestionDao {
     void updateQuestion(BaseQuestion question) throws SQLException, FileNotFoundException;
     //  查询题目
     BaseQuestion selectQuestionById(Integer id) throws SQLException, FileNotFoundException;
+    // 查询选择题
+    ChoiceQuestion selectChoiceQuestionByQuestionId(Integer questionId) throws SQLException, FileNotFoundException;
 }
