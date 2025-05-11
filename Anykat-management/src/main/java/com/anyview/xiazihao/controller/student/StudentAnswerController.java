@@ -5,6 +5,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.KatController;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
+import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
 import com.anyview.xiazihao.service.student.StudentAnswerService;
 
@@ -26,5 +27,14 @@ public class StudentAnswerController {
             @KatRequestParam("studentId") Integer studentId,
             @KatRequestParam("courseId") Integer courseId) throws SQLException, FileNotFoundException {
         return studentAnswerService.selectExerciseQuestions(exerciseId, studentId, courseId);
+    }
+
+    // 查询学生答题记录
+    @KatRequestMapping(path = "", method = "GET")
+    public StudentAnswer getStudentAnswer(
+            @KatRequestParam("studentId") Integer studentId,
+            @KatRequestParam("exerciseId") Integer exerciseId,
+            @KatRequestParam("questionId") Integer questionId) throws SQLException, FileNotFoundException {
+        return studentAnswerService.selectStudentAnswer(studentId, exerciseId, questionId);
     }
 }

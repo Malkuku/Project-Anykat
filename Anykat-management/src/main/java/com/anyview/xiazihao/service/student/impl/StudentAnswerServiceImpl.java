@@ -4,6 +4,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.student.StudentAnswerDao;
+import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
 import com.anyview.xiazihao.service.student.StudentAnswerService;
 
@@ -20,6 +21,11 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
     @Override
     public List<StudentExerciseQuestion> selectExerciseQuestions(Integer exerciseId, Integer studentId, Integer courseId) throws SQLException, FileNotFoundException {
         return studentAnswerDao.selectExerciseQuestions(exerciseId, studentId, courseId);
+    }
+
+    @Override
+    public StudentAnswer selectStudentAnswer(Integer studentId, Integer exerciseId, Integer questionId) throws SQLException, FileNotFoundException {
+        return studentAnswerDao.selectStudentAnswer(studentId, exerciseId, questionId);
     }
 
 }
