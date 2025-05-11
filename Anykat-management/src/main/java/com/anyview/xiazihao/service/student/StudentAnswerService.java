@@ -13,4 +13,7 @@ public interface StudentAnswerService {
 
     // 获取学生答案
     StudentAnswer selectStudentAnswer(Integer studentId, Integer exerciseId, Integer questionId) throws SQLException, FileNotFoundException;
+
+    // 提交学生答案
+    void submitStudentAnswers(List<StudentAnswer> answers) throws SQLException, FileNotFoundException;
 }

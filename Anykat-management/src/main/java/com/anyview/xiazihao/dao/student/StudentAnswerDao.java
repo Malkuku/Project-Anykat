@@ -13,4 +13,10 @@ public interface StudentAnswerDao {
 
     // 查询学生答案
     StudentAnswer selectStudentAnswer(Integer studentId, Integer exerciseId, Integer questionId) throws FileNotFoundException, SQLException;
+
+    // 插入学生答案
+    void insertStudentAnswer(StudentAnswer answer) throws SQLException, FileNotFoundException;
+
+    // 更新学生答案
+    void updateStudentAnswer(StudentAnswer answer) throws SQLException, FileNotFoundException;
 }

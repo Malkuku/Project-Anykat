@@ -3,11 +3,13 @@ package com.anyview.xiazihao.controller.student;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.KatController;
+import com.anyview.xiazihao.controller.annotation.KatRequestBody;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
 import com.anyview.xiazihao.service.student.StudentAnswerService;
+import com.anyview.xiazihao.utils.JsonUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
@@ -36,5 +38,13 @@ public class StudentAnswerController {
             @KatRequestParam("exerciseId") Integer exerciseId,
             @KatRequestParam("questionId") Integer questionId) throws SQLException, FileNotFoundException {
         return studentAnswerService.selectStudentAnswer(studentId, exerciseId, questionId);
+    }
+
+    // 批量提交答题记录
+    @KatRequestMapping(path = "", method = "POST")
+    public void submitStudentAnswers(
+            @KatRequestBody String answers) throws SQLException, FileNotFoundException {
+        System.out.println(answers);
+        studentAnswerService.submitStudentAnswers(JsonUtils.parseJsonToList(answers, StudentAnswer.class));
     }
 }

@@ -48,4 +48,43 @@ public class StudentAnswerDaoImpl implements StudentAnswerDao {
         );
         return answers.isEmpty() ? null : answers.get(0);
     }
+
+    @Override
+    public void insertStudentAnswer(StudentAnswer answer) throws SQLException, FileNotFoundException {
+        String sql = """
+            INSERT INTO student_answer (
+                student_id, exercise_id, question_id,
+                answer,correct_status,submit_time
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            """;
+        JdbcUtils.executeUpdate(
+                sql,
+                answer.getStudentId(),
+                answer.getExerciseId(),
+                answer.getQuestionId(),
+                answer.getAnswer(),
+                answer.getCorrectStatus(),
+                answer.getSubmitTime()
+        );
+    }
+
+    @Override
+    public void updateStudentAnswer(StudentAnswer answer) throws SQLException, FileNotFoundException {
+        String sql = """
+            UPDATE student_answer SET
+                answer = ?,
+                correct_status = ?,
+                WHERE student_id = ?
+                AND exercise_id = ?
+                AND question_id = ?
+            """;
+        JdbcUtils.executeUpdate(
+                sql,
+                answer.getAnswer(),
+                answer.getCorrectStatus(),
+                answer.getStudentId(),
+                answer.getExerciseId(),
+                answer.getQuestionId()
+        );
+    }
 }
