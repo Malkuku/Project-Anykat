@@ -232,3 +232,49 @@ LEFT JOIN
 GROUP BY
     e.id, c.id, u.id;
 
+
+-- 简单批改信息
+CREATE OR REPLACE VIEW v_teacher_grading_questions AS
+SELECT
+    sa.question_id,
+    bq.content AS question_name,
+    sa.correct_status
+FROM
+    student_answer sa
+JOIN
+    base_question bq ON sa.question_id = bq.id
+JOIN
+    exercise_question eq ON sa.exercise_id = eq.exercise_id
+                       AND sa.question_id = eq.question_id
+ORDER BY
+    eq.sort_order;
+
+
+-- 学生答题详情视图（教师用）
+CREATE OR REPLACE VIEW v_teacher_grading_question_details AS
+SELECT
+    -- 必要ID
+    sa.exercise_id,
+    sa.student_id,
+    sa.question_id,
+
+    -- 批改核心内容
+    bq.content AS question_content,
+    eq.score AS max_score,
+    sa.answer AS student_answer,
+    sa.score AS current_score,
+    sq.reference_answer,
+
+    -- 系统记录
+    sa.id AS answer_id  -- 用于更新操作
+FROM
+    student_answer sa
+JOIN
+    base_question bq ON sa.question_id = bq.id
+JOIN
+    exercise_question eq ON sa.exercise_id = eq.exercise_id
+                       AND sa.question_id = eq.question_id
+JOIN
+    subjective_question sq ON bq.id = sq.question_id
+WHERE
+    bq.type = 2;  -- 仅主观题
