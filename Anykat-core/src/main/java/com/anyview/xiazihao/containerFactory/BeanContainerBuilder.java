@@ -255,9 +255,14 @@ public class BeanContainerBuilder {
     }
 
     private boolean shouldProxy(Class<?> targetClass) {
-        // 不是切面类 && 有匹配的切面逻辑
+        // 不是切面类 && (类级别有切面 || 任何方法有切面)
         return !targetClass.isAnnotationPresent(KatAspect.class) &&
-                aspectProcessor.hasMatchingAdvice(targetClass);
+                (aspectProcessor.hasMatchingAdvice(targetClass) ||
+                        hasAnyMethodWithMatchingAdvice(targetClass));
+    }
+    private boolean hasAnyMethodWithMatchingAdvice(Class<?> targetClass) {
+        return Arrays.stream(targetClass.getMethods())
+                .anyMatch(aspectProcessor::hasMatchingAdvice);
     }
 
     // 查找@KatAutowired构造器

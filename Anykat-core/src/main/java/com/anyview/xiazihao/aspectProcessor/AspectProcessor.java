@@ -2,6 +2,7 @@ package com.anyview.xiazihao.aspectProcessor;
 
 import com.anyview.xiazihao.aspectProcessor.annotation.KatAround;
 import com.anyview.xiazihao.aspectProcessor.annotation.KatOrder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 public class AspectProcessor {
     // 缓存切点表达式与对应通知方法的映射
     private final Map<String, ConcurrentSkipListSet<AdviceWrapper>> aspectCache = new ConcurrentHashMap<>();
@@ -161,9 +162,8 @@ public class AspectProcessor {
 
     // 检查方法是否有匹配的切面
     public boolean hasMatchingAdvice(Method method) {
-        String methodSignature = buildMethodSignature(method);
         return aspectCache.keySet().stream()
-                .anyMatch(pointcut -> matchesPointcut(pointcut, methodSignature));
+                .anyMatch(pointcut -> matchesPointcut(pointcut, method));
     }
 
     // 检查切点是否匹配签名
@@ -180,12 +180,16 @@ public class AspectProcessor {
         // 注解匹配逻辑
         if (pointcut.startsWith("@annotation(")) {
             String annotationName = pointcut.substring("@annotation(".length(), pointcut.length() - 1);
+            log.debug("Checking annotation match: {} on method {}", annotationName, method.getName());
             return hasAnnotation(method, annotationName);
         }
 
         // 原有方法签名匹配
         String methodSignature = buildMethodSignature(method);
-        return matchesPointcut(pointcut, methodSignature);
+        Pattern pattern = compiledPatterns.computeIfAbsent(pointcut, this::compilePointcut);
+        boolean signatureMatch = pattern.matcher(methodSignature).matches();
+        log.debug("Signature match for {}: {}", pointcut, signatureMatch);
+        return signatureMatch;
     }
 
     // 检查方法是否带有指定注解
@@ -209,6 +213,7 @@ public class AspectProcessor {
 
     // 执行切面逻辑
     public Object applyAspects(Object target, Method method, Object[] args) throws Throwable {
+        log.debug("Applying aspects for method: {}", method.getName());
         // 优先检查注解匹配
         List<AdviceWrapper> matchedAdvices = aspectCache.entrySet().stream()
                 .filter(entry -> matchesPointcut(entry.getKey(), method))

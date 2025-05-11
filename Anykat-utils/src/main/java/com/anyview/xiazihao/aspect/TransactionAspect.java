@@ -6,9 +6,11 @@ import com.anyview.xiazihao.aspectProcessor.annotation.KatAspect;
 import com.anyview.xiazihao.aspectProcessor.annotation.KatOrder;
 import com.anyview.xiazihao.connectionPool.HakimiConnectionPool;
 import com.anyview.xiazihao.connectionPool.ConnectionContext;
+import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 
 import java.sql.Connection;
 
+@KatComponent
 @KatAspect
 public class TransactionAspect {
 
