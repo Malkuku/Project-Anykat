@@ -26,3 +26,117 @@ WHERE
     u.role = 0  -- 学生角色
 GROUP BY
     u.id, c.id, s.id;
+
+-- 学生练习视图
+CREATE OR REPLACE VIEW v_student_exercises AS
+SELECT
+    e.id AS exercise_id,
+    e.name AS exercise_name,
+    e.course_id,
+    c.name AS course_name,
+    e.start_time,
+    e.end_time,
+    e.status,
+    e.creator_id,
+    u.name AS creator_name,
+    s.id AS semester_id,
+    s.name AS semester_name,
+    sc.student_id,
+    COUNT(DISTINCT eq.question_id) AS total_question_count,
+    SUM(bq.score) AS total_exercise_score,
+    COUNT(DISTINCT sa.question_id) AS completed_question_count,
+    SUM(COALESCE(sa.score, 0)) AS student_total_score
+FROM
+    exercise e
+JOIN
+    course c ON e.course_id = c.id
+JOIN
+    semester s ON c.semester_id = s.id
+JOIN
+    exercise_class ec ON e.id = ec.exercise_id
+JOIN
+    student_class sc ON ec.class_id = sc.class_id
+JOIN
+    user u ON e.creator_id = u.id
+LEFT JOIN
+    exercise_question eq ON e.id = eq.exercise_id
+LEFT JOIN
+    base_question bq ON eq.question_id = bq.id
+LEFT JOIN
+    student_answer sa ON e.id = sa.exercise_id
+                     AND sc.student_id = sa.student_id
+                     AND eq.question_id = sa.question_id
+GROUP BY
+    e.id, e.name, e.course_id, c.name, e.start_time, e.end_time,
+    e.status, e.creator_id, u.name, s.id, s.name, sc.student_id;
+
+
+-- 学生查看练习题目列表
+CREATE OR REPLACE VIEW v_student_exercise_questions AS
+SELECT
+    eq.exercise_id,
+    e.name AS exercise_name,
+    e.course_id,
+    c.name AS course_name,
+    e.start_time,
+    e.end_time,
+    e.status AS exercise_status,
+    bq.id AS question_id,
+    bq.type AS question_type,
+    bq.description AS question_description,
+    bq.content AS question_content,
+    bq.difficulty,
+    bq.score,
+    eq.sort_order,
+    sa.student_id,
+    u.name AS student_name,
+    sa.answer AS student_answer,
+    sa.score AS student_score,
+    sa.correct_status,
+    sa.correct_comment,
+    sa.submit_time,
+    -- 根据批改状态决定是否显示正确答案
+    CASE
+        WHEN sa.correct_status = 2 THEN cq.correct_answer  -- 已批改显示答案
+        WHEN sa.correct_status = 1 THEN NULL               -- 未批改不显示
+        ELSE NULL                                         -- 其他情况不显示
+    END AS correct_answer,
+    -- 根据批改状态决定是否显示答案解析
+    CASE
+        WHEN sa.correct_status = 2 THEN cq.analysis       -- 已批改显示解析
+        WHEN sa.correct_status = 1 THEN NULL              -- 未批改不显示
+        ELSE NULL                                        -- 其他情况不显示
+    END AS answer_analysis,
+    -- 选择题选项
+    CASE
+        WHEN bq.type IN (0, 1) THEN cq.options
+        ELSE NULL
+    END AS question_options,
+    -- 主观题参考信息
+    CASE
+        WHEN bq.type = 2 THEN sq.reference_answer
+        ELSE NULL
+    END AS reference_answer,
+    CASE
+        WHEN bq.type = 2 THEN sq.word_limit
+        ELSE NULL
+    END AS word_limit,
+    eq.created_at,
+    eq.updated_at
+FROM
+    exercise_question eq
+JOIN
+    exercise e ON eq.exercise_id = e.id
+JOIN
+    course c ON e.course_id = c.id
+JOIN
+    base_question bq ON eq.question_id = bq.id
+LEFT JOIN
+    student_answer sa ON eq.exercise_id = sa.exercise_id
+                     AND eq.question_id = sa.question_id
+LEFT JOIN
+    user u ON sa.student_id = u.id
+LEFT JOIN
+    choice_question cq ON bq.id = cq.question_id AND bq.type IN (0, 1)
+LEFT JOIN
+    subjective_question sq ON bq.id = sq.question_id AND bq.type = 2;

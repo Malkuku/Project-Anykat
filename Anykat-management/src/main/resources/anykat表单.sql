@@ -174,7 +174,7 @@ CREATE TABLE `student_answer` (
 `question_id` int(11) NOT NULL COMMENT '题目ID',
 `answer` text COMMENT '提交答案',
 `score` int(11) DEFAULT NULL COMMENT '得分',
-`correct_status`  tinyint(1) NOT NULL DEFAULT '0' COMMENT '批改状态(0:未批改,1:已批改)',
+`correct_status`  tinyint(1) NOT NULL DEFAULT '0' COMMENT '批改状态(0:保存未提交,1:未批改,2:已批改)',
 `correct_comment` varchar(255) DEFAULT NULL COMMENT '批改备注',
 `correct_time` datetime DEFAULT NULL COMMENT '批改时间',
 `submit_time` datetime DEFAULT NULL COMMENT '提交时间',
