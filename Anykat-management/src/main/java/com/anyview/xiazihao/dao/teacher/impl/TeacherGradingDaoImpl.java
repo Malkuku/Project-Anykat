@@ -5,6 +5,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.teacher.TeacherGradingDao;
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
+import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestions;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
@@ -70,5 +71,24 @@ public class TeacherGradingDaoImpl implements TeacherGradingDao {
                exerciseId,
                  studentId
         );
+    }
+
+    @Override
+    public TeacherGradingQuestionDetails selectGradingQuestionDetails(Integer exerciseId, Integer studentId, Integer questionId) throws SQLException, FileNotFoundException {
+        String sql = """
+        SELECT *
+        FROM v_teacher_grading_question_details
+        WHERE exercise_id = ?
+            AND student_id = ?
+            AND question_id = ?
+        """;
+        List<TeacherGradingQuestionDetails> details = JdbcUtils.executeQuery(
+                sql,
+                TeacherGradingQuestionDetails.class,
+                exerciseId,
+                studentId,
+                questionId
+        );
+        return details.isEmpty() ? null : details.get(0);
     }
 }

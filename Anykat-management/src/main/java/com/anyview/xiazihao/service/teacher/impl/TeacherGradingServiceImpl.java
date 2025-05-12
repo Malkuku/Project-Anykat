@@ -7,6 +7,7 @@ import com.anyview.xiazihao.dao.teacher.TeacherGradingDao;
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
+import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestions;
 import com.anyview.xiazihao.service.teacher.TeacherGradingService;
 
@@ -31,5 +32,10 @@ public class TeacherGradingServiceImpl implements TeacherGradingService{
     @Override
     public List<TeacherGradingQuestions> selectGradingQuestions(Integer exerciseId, Integer studentId) throws SQLException, FileNotFoundException {
         return teacherGradingDao.selectGradingQuestions(exerciseId, studentId);
+    }
+
+    @Override
+    public TeacherGradingQuestionDetails selectGradingQuestionDetails(Integer exerciseId, Integer studentId, Integer questionId) throws SQLException, FileNotFoundException {
+        return teacherGradingDao.selectGradingQuestionDetails(exerciseId, studentId, questionId);
     }
 }

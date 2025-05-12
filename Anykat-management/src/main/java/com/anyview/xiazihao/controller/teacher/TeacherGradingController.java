@@ -8,6 +8,7 @@ import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
+import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestions;
 import com.anyview.xiazihao.service.teacher.TeacherGradingService;
 
@@ -21,6 +22,15 @@ import java.util.List;
 public class TeacherGradingController {
     @KatAutowired
     private TeacherGradingService teacherGradingService;
+
+    //学生答题详情查询
+    @KatRequestMapping(path = "/question-details", method = "GET")
+    public TeacherGradingQuestionDetails selectGradingQuestionDetails(
+            @KatRequestParam("exerciseId") Integer exerciseId,
+            @KatRequestParam("studentId") Integer studentId,
+            @KatRequestParam("questionId") Integer questionId) throws SQLException, FileNotFoundException {
+        return teacherGradingService.selectGradingQuestionDetails(exerciseId, studentId, questionId);
+    }
 
     //简单批改信息查询
     @KatRequestMapping(path = "/questions", method = "GET")
