@@ -4,6 +4,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.student.StudentAnswerDao;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
+import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
@@ -54,17 +55,15 @@ public class StudentAnswerDaoImpl implements StudentAnswerDao {
         String sql = """
             INSERT INTO student_answer (
                 student_id, exercise_id, question_id,
-                answer,correct_status,submit_time
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                answer,correct_status,submit_time,
+                correct_time,score,correct_comment
+            ) VALUES (#{studentId}, #{exerciseId}, #{questionId},
+                    #{answer}, #{correctStatus}, #{submitTime},
+                    #{correctTime},#{score},#{correctComment})
             """;
         JdbcUtils.executeUpdate(
                 sql,
-                answer.getStudentId(),
-                answer.getExerciseId(),
-                answer.getQuestionId(),
-                answer.getAnswer(),
-                answer.getCorrectStatus(),
-                answer.getSubmitTime()
+                answer
         );
     }
 
@@ -72,19 +71,48 @@ public class StudentAnswerDaoImpl implements StudentAnswerDao {
     public void updateStudentAnswer(StudentAnswer answer) throws SQLException, FileNotFoundException {
         String sql = """
             UPDATE student_answer SET
-                answer = ?,
-                correct_status = ?,
-                WHERE student_id = ?
-                AND exercise_id = ?
-                AND question_id = ?
+                correct_status = COALESCE(#{correctStatus},correct_status),
+                submit_time = COALESCE(#{submitTime},submit_time),
+                correct_time = COALESCE(#{correctTime},correct_time),
+                score = COALESCE(#{score},score),
+                correct_comment = COALESCE(#{correctComment},correct_comment),
+                answer = COALESCE(#{answer},answer)
+                WHERE student_id = #{studentId}
+                AND exercise_id = #{exerciseId}
+                AND question_id = #{questionId}
             """;
         JdbcUtils.executeUpdate(
                 sql,
-                answer.getAnswer(),
-                answer.getCorrectStatus(),
-                answer.getStudentId(),
-                answer.getExerciseId(),
-                answer.getQuestionId()
+                answer
         );
+    }
+
+    @Override
+    public ChoiceQuestion selectChoiceQuestion(Integer questionId) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT *
+            FROM choice_question
+            WHERE question_id = ?
+            """;
+        List<ChoiceQuestion> questions =JdbcUtils.executeQuery(
+                sql,
+                ChoiceQuestion.class,
+                questionId
+        );
+        return questions.isEmpty() ? null : questions.get(0);
+    }
+
+    @Override
+    public Integer findCurrentScore(Integer questionId) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT score
+            FROM base_question
+            WHERE id = ?
+            """;
+        return JdbcUtils.executeQuery(
+                sql,
+                Integer.class,
+                questionId
+        ).get(0);
     }
 }

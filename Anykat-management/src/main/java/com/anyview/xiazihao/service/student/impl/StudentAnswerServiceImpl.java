@@ -8,13 +8,16 @@ import com.anyview.xiazihao.dao.student.StudentAnswerDao;
 import com.anyview.xiazihao.entity.exception.IncompleteParameterException;
 import com.anyview.xiazihao.entity.exception.PermissionDeniedException;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
+import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
+import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
+import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
 import com.anyview.xiazihao.service.student.StudentAnswerService;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @KatComponent
 @KatSingleton
@@ -55,6 +58,57 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
         for (StudentAnswer answer : answers) {
             //尝试查询记录
             StudentAnswer oldAnswer = studentAnswerDao.selectStudentAnswer(answer.getStudentId(), answer.getExerciseId(), answer.getQuestionId());
+            //如果是选择题，且提交了答案，则自动批改选择题
+            if(answer.getCorrectStatus() == 1 && (oldAnswer == null || oldAnswer.getCorrectStatus() == 0)){
+                ChoiceQuestion choiceQuestion = studentAnswerDao.selectChoiceQuestion(answer.getQuestionId());
+                if(choiceQuestion != null){
+                    Integer currentScore = studentAnswerDao.findCurrentScore(answer.getQuestionId());
+                    //单选题
+                    if (!choiceQuestion.getIsMulti()){
+                        if(choiceQuestion.getCorrectAnswer().equals(answer.getAnswer())){
+                            answer.setScore(currentScore);
+                            answer.setCorrectStatus(2);
+                            answer.setCorrectComment("答案正确");
+                        }else{
+                            answer.setScore(0);
+                            answer.setCorrectStatus(2);
+                            answer.setCorrectComment("答案错误");
+                        }
+                    }
+                    //多选题
+                    else {
+                        // 获取正确答案和用户答案
+                        String[] correctAnswers = choiceQuestion.getCorrectAnswer().split(",");
+                        String[] userAnswers = answer.getAnswer().split(",");
+
+                        // 转换为Set方便比较
+                        Set<String> correctSet = new HashSet<>(Arrays.asList(correctAnswers));
+                        Set<String> userSet = new HashSet<>(Arrays.asList(userAnswers));
+
+                        // 完全正确
+                        if (correctSet.equals(userSet)) {
+                            answer.setScore(currentScore);
+                            answer.setCorrectStatus(2);
+                            answer.setCorrectComment("答案完全正确");
+                        }
+                        // 部分正确
+                        else if (!Collections.disjoint(correctSet, userSet)) {
+                            // 计算得分（四舍五入）
+                            double score = currentScore * 0.5;
+                            answer.setScore((int) Math.round(score));
+                            answer.setCorrectStatus(2);
+                            answer.setCorrectComment("答案部分正确");
+                        }
+                        // 完全错误
+                        else {
+                            answer.setScore(0);
+                            answer.setCorrectStatus(2);
+                            answer.setCorrectComment("答案错误");
+                        }
+                    }
+                }
+            }
+
             //如果不存在，插入
             if (oldAnswer == null) {
                 studentAnswerDao.insertStudentAnswer(answer);
@@ -65,6 +119,7 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
                 }
                 studentAnswerDao.updateStudentAnswer(answer);
             }
+
         }
     }
 
