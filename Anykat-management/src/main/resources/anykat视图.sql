@@ -259,28 +259,23 @@ ORDER BY
 -- 学生答题详情视图（教师用）
 CREATE OR REPLACE VIEW v_teacher_grading_question_details AS
 SELECT
-    -- 必要ID
     sa.exercise_id,
     sa.student_id,
     sa.question_id,
-
-    -- 批改核心内容
     bq.content AS question_content,
+    bq.type AS question_type,
     eq.score AS max_score,
     sa.answer AS student_answer,
     sa.score AS current_score,
-    sq.reference_answer,
-
-    -- 系统记录
-    sa.id AS answer_id  -- 用于更新操作
+    CASE
+        WHEN bq.type = 2 THEN (SELECT reference_answer FROM subjective_question WHERE question_id = bq.id)
+        WHEN bq.type IN (0,1) THEN (SELECT correct_answer FROM choice_question WHERE question_id = bq.id)
+    END AS reference_answer,
+    sa.id AS answer_id
 FROM
     student_answer sa
 JOIN
     base_question bq ON sa.question_id = bq.id
 JOIN
     exercise_question eq ON sa.exercise_id = eq.exercise_id
-                       AND sa.question_id = eq.question_id
-JOIN
-    subjective_question sq ON bq.id = sq.question_id
-WHERE
-    bq.type = 2;  -- 仅主观题
+                       AND sa.question_id = eq.question_id;

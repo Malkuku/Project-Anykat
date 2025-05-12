@@ -14,6 +14,7 @@ public class TeacherGradingQuestionDetails {
     private Integer questionId;      // 题目ID
 
     // 批改核心内容
+    private Integer questionType; //  题目类型(0:单选,1:多选,2:简答)
     private String questionContent;  // 题目内容
     private Integer maxScore;        // 题目满分值
     private String studentAnswer;    // 学生答案
