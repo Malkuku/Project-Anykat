@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -370,14 +370,20 @@ public class DispatcherController extends HttpServlet {
 
 
     private void handleError(HttpServletResponse resp, Exception e) throws IOException {
+        // 解析原始异常
+        Throwable rootCause = extractRootCause(e);
+        ServletUtils.sendResponse(resp, Result.error(rootCause.getMessage()));
+        log.error(rootCause.getMessage(), e);
+    }
 
-        Map<String, String> error = Map.of(
-                "error", e.getClass().getSimpleName(),
-                "message", e.getMessage() == null ? "Unknown error" : e.getMessage(),
-                "timestamp", Instant.now().toString()
-        );
-
-        ServletUtils.sendResponse(resp, Result.error(objectMapper.writeValueAsString(error)));
-        log.error(e.getMessage(), e);
+    /**
+     * 解析异常链，找到最底层的原始异常
+     */
+    private Throwable extractRootCause(Throwable e) {
+        Throwable rootCause = e;
+        while (rootCause instanceof InvocationTargetException && rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+        return rootCause;
     }
 }

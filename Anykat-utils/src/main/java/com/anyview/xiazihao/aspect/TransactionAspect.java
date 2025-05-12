@@ -7,9 +7,12 @@ import com.anyview.xiazihao.aspectProcessor.annotation.KatOrder;
 import com.anyview.xiazihao.connectionPool.HakimiConnectionPool;
 import com.anyview.xiazihao.connectionPool.ConnectionContext;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
+import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 
+@Slf4j
 @KatComponent
 @KatAspect
 public class TransactionAspect {
@@ -36,6 +39,9 @@ public class TransactionAspect {
         } catch (Throwable e) {
             // 5. 回滚事务
             if (conn != null) conn.rollback();
+            if (e instanceof InvocationTargetException) {
+                log.error("事务回滚:",  ((InvocationTargetException) e).getTargetException());
+            }
             throw e;
         } finally {
             // 6. 清理资源
