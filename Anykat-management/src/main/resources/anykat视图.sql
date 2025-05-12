@@ -188,9 +188,10 @@ GROUP BY
     e.id, c.id, s.id, cl.id, u.id;
 
 
--- 教师批改视图
 CREATE OR REPLACE VIEW `v_teacher_grading_details` AS
 SELECT
+    tc.teacher_id AS teacher_id,
+    (SELECT name FROM user WHERE id = tc.teacher_id) AS teacher_name,
     e.id AS exercise_id,
     e.name AS exercise_name,
     c.id AS class_id,
@@ -220,6 +221,8 @@ SELECT
 FROM
     exercise e
 JOIN
+    teacher_course tc ON tc.course_id = e.course_id
+JOIN
     exercise_class ec ON ec.exercise_id = e.id
 JOIN
     class c ON ec.class_id = c.id
@@ -230,7 +233,7 @@ JOIN
 LEFT JOIN
     student_answer sa ON sa.student_id = u.id AND sa.exercise_id = e.id
 GROUP BY
-    e.id, c.id, u.id;
+    tc.teacher_id, e.id, c.id, u.id;
 
 
 -- 简单批改信息
