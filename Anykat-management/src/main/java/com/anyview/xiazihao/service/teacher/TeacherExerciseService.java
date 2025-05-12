@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.service.teacher;
 
+import com.anyview.xiazihao.entity.exception.NoDatabaseContentException;
 import com.anyview.xiazihao.entity.param.view.TeacherExerciseQueryParam;
 import com.anyview.xiazihao.entity.pojo.Exercise;
 import com.anyview.xiazihao.entity.result.PageResult;
@@ -14,4 +15,7 @@ public interface TeacherExerciseService {
 
     // 添加练习
     void addExercise(Exercise exercise) throws SQLException, FileNotFoundException;
+
+    // 更新练习状态
+    void updateExerciseStatus(Integer id, Integer status) throws NoDatabaseContentException, SQLException, FileNotFoundException;
 }

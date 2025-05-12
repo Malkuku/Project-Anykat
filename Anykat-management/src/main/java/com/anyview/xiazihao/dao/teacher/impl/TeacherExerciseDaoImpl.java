@@ -159,4 +159,32 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
                 params.toArray()
         );
     }
+
+    @Override
+    public int checkExerciseId(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT COUNT(*)
+            FROM `exercise`
+            WHERE id = ?
+            """;
+        return JdbcUtils.executeQuery(
+                sql,
+                Integer.class,
+                id
+        ).get(0);
+    }
+
+    @Override
+    public void updateExerciseStatus(Integer id, Integer status) throws SQLException, FileNotFoundException {
+        String sql = """
+            UPDATE `exercise`
+            SET status = ?
+            WHERE id = ?
+            """;
+        JdbcUtils.executeUpdate(
+                sql,
+                status,
+                id
+        );
+    }
 }

@@ -22,6 +22,13 @@ public class TeacherExerciseController {
     @KatAutowired
     private TeacherExerciseService teacherExerciseService;
 
+    // 修改练习状态
+    @KatRequestMapping(path = "/status", method = "PUT")
+    public void updateExerciseStatus(
+            @KatRequestBody Exercise exercise) throws SQLException, FileNotFoundException {
+        teacherExerciseService.updateExerciseStatus(exercise.getId(), exercise.getStatus());
+    }
+
     // 添加练习
     @KatRequestMapping(path = "", method = "POST")
     public void addExercise(

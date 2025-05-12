@@ -26,4 +26,8 @@ public interface TeacherExerciseDao {
     void addExerciseClasses(Integer exerciseId, List<Integer> classIds) throws SQLException, FileNotFoundException;
     // 添加练习题目
     void addExerciseQuestions(Integer exerciseId, List<Integer> questionIds, List<Integer> questionScores) throws SQLException, FileNotFoundException;
+    //  检查练习id
+    int checkExerciseId(Integer id) throws SQLException, FileNotFoundException;
+    // 更新练习状态
+    void updateExerciseStatus(Integer id, Integer status) throws SQLException, FileNotFoundException;
 }

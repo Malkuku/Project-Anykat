@@ -6,6 +6,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.teacher.TeacherExerciseDao;
 import com.anyview.xiazihao.entity.exception.IncompleteParameterException;
+import com.anyview.xiazihao.entity.exception.NoDatabaseContentException;
 import com.anyview.xiazihao.entity.exception.PermissionDeniedException;
 import com.anyview.xiazihao.entity.param.view.TeacherExerciseQueryParam;
 import com.anyview.xiazihao.entity.pojo.Exercise;
@@ -61,5 +62,14 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
         teacherExerciseDao.addExerciseClasses(exerciseId, exercise.getClassIds());
         //添加练习题目关联表
         teacherExerciseDao.addExerciseQuestions(exerciseId, exercise.getQuestionIds(), exercise.getQuestionScores());
+    }
+
+    @Override
+    public void updateExerciseStatus(Integer id, Integer status) throws SQLException, FileNotFoundException {
+        //检查练习id是否存在
+        if(teacherExerciseDao.checkExerciseId(id) < 1){
+            throw new NoDatabaseContentException("练习不存在");
+        }
+        teacherExerciseDao.updateExerciseStatus(id, status);
     }
 }
