@@ -1,6 +1,7 @@
 package com.anyview.xiazihao.service.teacher;
 
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
+import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
@@ -19,4 +20,7 @@ public interface TeacherGradingService {
 
     // 获取详细批改题目信息
     TeacherGradingQuestionDetails selectGradingQuestionDetails(Integer exerciseId, Integer studentId, Integer questionId) throws SQLException, FileNotFoundException;
+
+    // 批改学生答题状态
+    void updateStudentAnswerCorrection(StudentAnswer studentAnswer) throws SQLException, FileNotFoundException;
 }

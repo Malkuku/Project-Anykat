@@ -1,6 +1,7 @@
 package com.anyview.xiazihao.dao.teacher;
 
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
+import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestions;
@@ -18,4 +19,8 @@ public interface TeacherGradingDao {
     List<TeacherGradingQuestions> selectGradingQuestions(Integer exerciseId, Integer studentId) throws SQLException, FileNotFoundException;
     // 获取详细批改题目信息
     TeacherGradingQuestionDetails selectGradingQuestionDetails(Integer exerciseId, Integer studentId, Integer questionId) throws SQLException, FileNotFoundException;
+    //批改学生答题状态
+    void updateStudentAnswerCorrection(StudentAnswer studentAnswer) throws SQLException, FileNotFoundException;
+    // 根据id查询学生答题
+    StudentAnswer selectStudentAnswerById(Integer id) throws SQLException, FileNotFoundException;
 }

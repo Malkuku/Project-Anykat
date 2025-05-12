@@ -3,9 +3,11 @@ package com.anyview.xiazihao.controller.teacher;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.KatController;
+import com.anyview.xiazihao.controller.annotation.KatRequestBody;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
+import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
@@ -22,6 +24,13 @@ import java.util.List;
 public class TeacherGradingController {
     @KatAutowired
     private TeacherGradingService teacherGradingService;
+
+    //修改批改状态
+    @KatRequestMapping(path = "/correction", method = "POST")
+    public void updateStudentAnswerCorrection(
+            @KatRequestBody StudentAnswer studentAnswer) throws SQLException, FileNotFoundException {
+        teacherGradingService.updateStudentAnswerCorrection(studentAnswer);
+    }
 
     //学生答题详情查询
     @KatRequestMapping(path = "/question-details", method = "GET")

@@ -4,6 +4,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.teacher.TeacherGradingDao;
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
+import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
 import com.anyview.xiazihao.entity.view.TeacherGradingQuestions;
@@ -90,5 +91,38 @@ public class TeacherGradingDaoImpl implements TeacherGradingDao {
                 questionId
         );
         return details.isEmpty() ? null : details.get(0);
+    }
+
+    @Override
+    public void updateStudentAnswerCorrection(StudentAnswer studentAnswer) throws SQLException, FileNotFoundException {
+        String sql = """
+            UPDATE student_answer
+            SET correct_status = ?,
+                correct_comment = ?,
+                correct_time = ?
+            WHERE id = ?
+            """;
+        JdbcUtils.executeUpdate(
+                sql,
+                studentAnswer.getCorrectStatus(),
+                studentAnswer.getCorrectComment(),
+                studentAnswer.getCorrectTime(),
+                studentAnswer.getId()
+        );
+    }
+
+    @Override
+    public StudentAnswer selectStudentAnswerById(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT *
+            FROM student_answer
+            WHERE id = ?
+            """;
+       List<StudentAnswer> answers = JdbcUtils.executeQuery(
+                sql,
+                StudentAnswer.class,
+                id
+        );
+       return answers.isEmpty() ? null : answers.get(0);
     }
 }
