@@ -20,19 +20,19 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public Integer selectTeacherExerciseCount(TeacherExerciseQueryParam param) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT COUNT(*)
-            FROM v_teacher_exercises
-            WHERE teacher_id = #{teacherId}
-                AND (#{semesterId} IS NULL OR semester_id = #{semesterId})
-                AND (#{exerciseName} IS NULL OR exercise_name LIKE CONCAT('%', #{exerciseName}, '%'))
-                AND (#{courseName} IS NULL OR course_name LIKE CONCAT('%', #{courseName}, '%'))
-                AND (#{className} IS NULL OR class_name LIKE CONCAT('%', #{className}, '%'))
-                AND (#{startTime} IS NULL OR start_time >= #{startTime})
-                AND (#{endTime} IS NULL OR end_time <= #{endTime})
-                AND (#{status} IS NULL OR status = #{status})
-                AND (#{minQuestionCount} IS NULL OR question_count >= #{minQuestionCount})
-                AND (#{maxQuestionCount} IS NULL OR question_count <= #{maxQuestionCount})
-            """;
+                SELECT COUNT(*)
+                FROM v_teacher_exercises
+                WHERE teacher_id = #{teacherId}
+                    AND (#{semesterId} IS NULL OR semester_id = #{semesterId})
+                    AND (#{exerciseName} IS NULL OR exercise_name LIKE CONCAT('%', #{exerciseName}, '%'))
+                    AND (#{courseName} IS NULL OR course_name LIKE CONCAT('%', #{courseName}, '%'))
+                    AND (#{className} IS NULL OR class_name LIKE CONCAT('%', #{className}, '%'))
+                    AND (#{startTime} IS NULL OR start_time >= #{startTime})
+                    AND (#{endTime} IS NULL OR end_time <= #{endTime})
+                    AND (#{status} IS NULL OR status = #{status})
+                    AND (#{minQuestionCount} IS NULL OR question_count >= #{minQuestionCount})
+                    AND (#{maxQuestionCount} IS NULL OR question_count <= #{maxQuestionCount})
+                """;
         List<Integer> total = JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
@@ -44,21 +44,21 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public List<TeacherExercise> selectTeacherExercisesByPage(TeacherExerciseQueryParam param) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT *
-            FROM v_teacher_exercises
-            WHERE teacher_id = #{teacherId}
-                AND (#{semesterId} IS NULL OR semester_id = #{semesterId})
-                AND (#{exerciseName} IS NULL OR exercise_name LIKE CONCAT('%', #{exerciseName}, '%'))
-                AND (#{courseName} IS NULL OR course_name LIKE CONCAT('%', #{courseName}, '%'))
-                AND (#{className} IS NULL OR class_name LIKE CONCAT('%', #{className}, '%'))
-                AND (#{startTime} IS NULL OR start_time >= #{startTime})
-                AND (#{endTime} IS NULL OR end_time <= #{endTime})
-                AND (#{status} IS NULL OR status = #{status})
-                AND (#{minQuestionCount} IS NULL OR question_count >= #{minQuestionCount})
-                AND (#{maxQuestionCount} IS NULL OR question_count <= #{maxQuestionCount})
-            ORDER BY start_time DESC
-            LIMIT #{pageSize} OFFSET #{offset}
-            """;
+                SELECT *
+                FROM v_teacher_exercises
+                WHERE teacher_id = #{teacherId}
+                    AND (#{semesterId} IS NULL OR semester_id = #{semesterId})
+                    AND (#{exerciseName} IS NULL OR exercise_name LIKE CONCAT('%', #{exerciseName}, '%'))
+                    AND (#{courseName} IS NULL OR course_name LIKE CONCAT('%', #{courseName}, '%'))
+                    AND (#{className} IS NULL OR class_name LIKE CONCAT('%', #{className}, '%'))
+                    AND (#{startTime} IS NULL OR start_time >= #{startTime})
+                    AND (#{endTime} IS NULL OR end_time <= #{endTime})
+                    AND (#{status} IS NULL OR status = #{status})
+                    AND (#{minQuestionCount} IS NULL OR question_count >= #{minQuestionCount})
+                    AND (#{maxQuestionCount} IS NULL OR question_count <= #{maxQuestionCount})
+                ORDER BY start_time DESC
+                LIMIT #{pageSize} OFFSET #{offset}
+                """;
         return JdbcUtils.executeQuery(
                 sql,
                 TeacherExercise.class,
@@ -69,25 +69,25 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public User selectUserById(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT *
-            FROM user
-            WHERE id = ?
-            """;
+                SELECT *
+                FROM user
+                WHERE id = ?
+                """;
         List<User> userList = JdbcUtils.executeQuery(
                 sql,
                 User.class,
                 id
-            );
+        );
         return userList.isEmpty() ? null : userList.get(0);
     }
 
     @Override
     public Integer selectSemesterIdByCourseId(Integer courseId) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT semester_id
-            FROM course
-            WHERE id = ?
-            """;
+                SELECT semester_id
+                FROM course
+                WHERE id = ?
+                """;
         List<Integer> semesterIds = JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
@@ -99,15 +99,15 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public int checkExerciseName(Integer semesterId, Integer classId, Integer creatorId, String name) throws SQLException, FileNotFoundException {
         String sql = """
-                SELECT COUNT(*)
-                FROM `exercise` e
-                JOIN `course` c ON e.course_id = c.id
-                JOIN `exercise_class` ec ON e.id = ec.exercise_id
-                WHERE c.semester_id = ?
-                  AND ec.class_id = ?
-                  AND e.creator_id = ?
-                  AND e.name = ?;
-            """;
+                    SELECT COUNT(*)
+                    FROM `exercise` e
+                    JOIN `course` c ON e.course_id = c.id
+                    JOIN `exercise_class` ec ON e.id = ec.exercise_id
+                    WHERE c.semester_id = ?
+                      AND ec.class_id = ?
+                      AND e.creator_id = ?
+                      AND e.name = ?;
+                """;
         return JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
@@ -118,9 +118,9 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public void addExercise(Exercise exercise) throws SQLException, FileNotFoundException {
         String sql = """
-            INSERT INTO `exercise` (name, course_id, start_time, end_time, status, creator_id)
-            VALUES(#{name},#{courseId},#{startTime},#{endTime},#{status},#{creatorId})
-            """;
+                INSERT INTO `exercise` (name, course_id, start_time, end_time, status, creator_id)
+                VALUES(#{name},#{courseId},#{startTime},#{endTime},#{status},#{creatorId})
+                """;
         JdbcUtils.executeUpdate(
                 sql,
                 exercise
@@ -129,7 +129,7 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
 
     @Override
     public void addExerciseClasses(Integer exerciseId, List<Integer> classIds) throws SQLException, FileNotFoundException {
-        String sql = "INSERT INTO `exercise_class` (exercise_id, class_id)"+
+        String sql = "INSERT INTO `exercise_class` (exercise_id, class_id)" +
                 "VALUES " +
                 String.join(",", classIds.stream().map(id -> "(?,?)").toArray(String[]::new));
         List<Integer> params = new ArrayList<>();
@@ -145,11 +145,11 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
 
     @Override
     public void addExerciseQuestions(Integer exerciseId, List<Integer> questionIds, List<Integer> questionScores) throws SQLException, FileNotFoundException {
-        String sql ="INSERT INTO `exercise_question` (exercise_id,question_id,score)"+
+        String sql = "INSERT INTO `exercise_question` (exercise_id,question_id,score)" +
                 "VALUES " +
                 String.join(",", questionIds.stream().map(id -> "(?,?,?)").toArray(String[]::new));
         List<Integer> params = new ArrayList<>();
-        for(int i = 0; i < questionIds.size(); i++){
+        for (int i = 0; i < questionIds.size(); i++) {
             params.add(exerciseId);
             params.add(questionIds.get(i));
             params.add(questionScores.get(i));
@@ -163,10 +163,10 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public int checkExerciseId(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT COUNT(*)
-            FROM `exercise`
-            WHERE id = ?
-            """;
+                SELECT COUNT(*)
+                FROM `exercise`
+                WHERE id = ?
+                """;
         return JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
@@ -177,10 +177,10 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public void updateExerciseStatus(Integer id, Integer status) throws SQLException, FileNotFoundException {
         String sql = """
-            UPDATE `exercise`
-            SET status = ?
-            WHERE id = ?
-            """;
+                UPDATE `exercise`
+                SET status = ?
+                WHERE id = ?
+                """;
         JdbcUtils.executeUpdate(
                 sql,
                 status,
@@ -191,9 +191,9 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public void deleteExercise(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
-            DELETE FROM `exercise`
-            WHERE id = ?
-            """;
+                DELETE FROM `exercise`
+                WHERE id = ?
+                """;
         JdbcUtils.executeUpdate(
                 sql,
                 id
@@ -203,10 +203,10 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public Exercise selectExerciseById(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT *
-            FROM `exercise`
-            WHERE id = ?
-            """;
+                SELECT *
+                FROM `exercise`
+                WHERE id = ?
+                """;
         List<Exercise> exercises = JdbcUtils.executeQuery(
                 sql,
                 Exercise.class,
@@ -218,10 +218,10 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public List<Integer> selectExerciseClassIds(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT class_id
-            FROM `exercise_class`
-            WHERE exercise_id = ?
-            """;
+                SELECT class_id
+                FROM `exercise_class`
+                WHERE exercise_id = ?
+                """;
         return JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
@@ -232,10 +232,10 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public List<Integer> selectExerciseQuestionIds(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT question_id
-            FROM `exercise_question`
-            WHERE exercise_id = ?
-            """;
+                SELECT question_id
+                FROM `exercise_question`
+                WHERE exercise_id = ?
+                """;
         return JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
@@ -246,14 +246,58 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
     @Override
     public List<Integer> selectExerciseQuestionScores(Integer id) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT score
-            FROM `exercise_question`
-            WHERE exercise_id = ?
-            """;
+                SELECT score
+                FROM `exercise_question`
+                WHERE exercise_id = ?
+                """;
         return JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
                 id
+        );
+    }
+
+    @Override
+    public void deleteClassByIds(Integer exerciseId, List<Integer> oldClassIds) throws SQLException, FileNotFoundException {
+        String sql = """
+                DELETE FROM `exercise_class`
+                WHERE exercise_id = ?
+                  AND class_id IN (""" +
+                String.join(",", oldClassIds.stream().map(id -> "?").toArray(String[]::new)) +
+                ")";
+        List<Integer> params = new ArrayList<>();
+        params.add(exerciseId);
+        params.addAll(oldClassIds);
+        JdbcUtils.executeUpdate(sql, params.toArray());
+    }
+
+    @Override
+    public void deleteQuestionByIds(Integer exerciseId, List<Integer> oldQuestionIds) throws SQLException, FileNotFoundException {
+        String sql = """
+                DELETE FROM `exercise_question`
+                WHERE exercise_id = ?
+                  AND question_id IN (""" +
+                String.join(",", oldQuestionIds.stream().map(id -> "?").toArray(String[]::new)) +
+                ")";
+        List<Integer> params = new ArrayList<>();
+        params.add(exerciseId);
+        params.addAll(oldQuestionIds);
+        JdbcUtils.executeUpdate(sql, params.toArray());
+    }
+
+    @Override
+    public void updateExercise(Exercise exercise) throws SQLException, FileNotFoundException {
+        String sql = """
+                UPDATE `exercise`
+                SET name = COALESCE(#{name},name),
+                    course_id = COALESCE(#{courseId},course_id),
+                    start_time = COALESCE(#{startTime},start_time),
+                    end_time = COALESCE(#{endTime},end_time)
+                WHERE id = #{id}
+                """;
+        JdbcUtils.executeUpdate(
+                sql,
+                exercise
         );
     }
 }

@@ -24,4 +24,7 @@ public interface TeacherExerciseService {
 
     // 根据id查询练习
     Exercise selectExerciseById(Integer id) throws SQLException, FileNotFoundException;
+
+    //  更新练习
+    void updateExercise(Exercise exercise) throws SQLException, FileNotFoundException;
 }

@@ -40,4 +40,10 @@ public interface TeacherExerciseDao {
     List<Integer> selectExerciseQuestionIds(Integer id) throws SQLException, FileNotFoundException;
     // 查询练习题目分数
     List<Integer> selectExerciseQuestionScores(Integer id) throws SQLException, FileNotFoundException;
+    // 批量删除练习班级
+    void deleteClassByIds(Integer exerciseId, List<Integer> oldClassIds) throws SQLException, FileNotFoundException;
+    // 批量删除练习题目
+    void deleteQuestionByIds(Integer exerciseId, List<Integer> oldQuestionIds) throws SQLException, FileNotFoundException;
+    // 更新练习
+    void updateExercise(Exercise exercise) throws SQLException, FileNotFoundException;
 }

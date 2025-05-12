@@ -18,7 +18,10 @@ import com.anyview.xiazihao.utils.JdbcUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @KatComponent
 @KatSingleton
@@ -39,12 +42,15 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
     public void addExercise(Exercise exercise) throws SQLException, FileNotFoundException {
         //检查权限
         if(exercise.getCreatorId() == null
-        || exercise.getQuestionIds().size() != exercise.getQuestionScores().size()){
+                || exercise.getCourseId() == null
+                || exercise.getStartTime() == null
+                || exercise.getEndTime() == null
+                || exercise.getQuestionIds().size() != exercise.getQuestionScores().size()){
             throw new IncompleteParameterException("参数不完整 "+ exercise);
         }
         User user = teacherExerciseDao.selectUserById(exercise.getCreatorId());
         if(user == null || user.getRole() == 0){
-            throw new PermissionDeniedException("没有权限");
+            throw new PermissionDeniedException("没有操作权限");
         }else if(user.getRole() == 1){
             //查看单学期，单班级是否已经存在相同练习名称
             // 获取课程对应的学期ID
@@ -79,6 +85,11 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
         if(teacherExerciseDao.checkExerciseId(id) < 1){
             throw new NoDatabaseContentException("练习不存在");
         }
+        //获取旧练习
+        Exercise oldExercise = teacherExerciseDao.selectExerciseById(id);
+        if(oldExercise.getStatus() == 1){
+            throw new PermissionDeniedException("已发布的练习不可删除");
+        }
         teacherExerciseDao.deleteExercise(id);
     }
 
@@ -96,5 +107,56 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
         //查询题目分数
         exercise.setQuestionScores(teacherExerciseDao.selectExerciseQuestionScores(id));
         return exercise;
+    }
+
+    @Override
+    @KatTransactional
+    public void updateExercise(Exercise exercise) throws SQLException, FileNotFoundException {
+        //检查参数
+        if(exercise.getCreatorId() == null
+                || exercise.getId() == null
+                || exercise.getQuestionIds().size() != exercise.getQuestionScores().size()){
+            throw new IncompleteParameterException("参数不完整 "+ exercise);
+        }
+        //检查id
+        if(teacherExerciseDao.checkExerciseId(exercise.getId()) < 1){
+            throw new NoDatabaseContentException("练习不存在");
+        }
+        //获取旧练习
+        Exercise oldExercise = teacherExerciseDao.selectExerciseById(exercise.getId());
+        if(oldExercise.getStatus() == 1){
+            throw new PermissionDeniedException("已发布的练习不可修改");
+        }
+        //补全信息
+        exercise.setCourseId(oldExercise.getCourseId());
+
+        //检查权限
+        User user = teacherExerciseDao.selectUserById(exercise.getCreatorId());
+        if(user.getRole() != 2 && !Objects.equals(oldExercise.getCreatorId(), exercise.getCreatorId())){
+            throw new PermissionDeniedException("没有操作权限");
+        }else if(user.getRole() == 1){
+            //查看单学期，单班级是否已经存在相同练习名称
+            // 获取课程对应的学期ID
+            Integer semesterId = teacherExerciseDao.selectSemesterIdByCourseId(exercise.getCourseId());
+            for(Integer classId : exercise.getClassIds()) {
+                if (teacherExerciseDao.checkExerciseName(semesterId, classId, exercise.getCreatorId(), exercise.getName()) > 0) {
+                    throw new PermissionDeniedException("同一学期，同一班级的练习名称不可重复");
+                }
+            }
+        }
+        //更新练习表
+        teacherExerciseDao.updateExercise(exercise);
+
+        //获取旧练习的相关数组
+        List<Integer> oldClassIds = teacherExerciseDao.selectExerciseClassIds(exercise.getId());
+        List<Integer> oldQuestionIds = teacherExerciseDao.selectExerciseQuestionIds(exercise.getId());
+
+        //删除旧数据
+        teacherExerciseDao.deleteClassByIds(exercise.getId(), oldClassIds);
+        teacherExerciseDao.deleteQuestionByIds(exercise.getId(), oldQuestionIds);
+
+        //添加新数据
+        teacherExerciseDao.addExerciseClasses(exercise.getId(), exercise.getClassIds());
+        teacherExerciseDao.addExerciseQuestions(exercise.getId(), exercise.getQuestionIds(), exercise.getQuestionScores());
     }
 }
