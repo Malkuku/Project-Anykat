@@ -239,6 +239,8 @@ GROUP BY
 -- 简单批改信息
 CREATE OR REPLACE VIEW v_teacher_grading_questions AS
 SELECT
+    sa.exercise_id,
+    sa.student_id,
     sa.question_id,
     bq.content AS question_name,
     sa.correct_status,
