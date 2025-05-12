@@ -21,4 +21,7 @@ public interface TeacherExerciseService {
 
     //  删除练习
     void deleteExercise(Integer id) throws SQLException, FileNotFoundException;
+
+    // 根据id查询练习
+    Exercise selectExerciseById(Integer id) throws SQLException, FileNotFoundException;
 }

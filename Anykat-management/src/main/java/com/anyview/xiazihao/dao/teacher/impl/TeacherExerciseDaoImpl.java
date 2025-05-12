@@ -199,4 +199,61 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
                 id
         );
     }
+
+    @Override
+    public Exercise selectExerciseById(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT *
+            FROM `exercise`
+            WHERE id = ?
+            """;
+        List<Exercise> exercises = JdbcUtils.executeQuery(
+                sql,
+                Exercise.class,
+                id
+        );
+        return exercises.isEmpty() ? null : exercises.get(0);
+    }
+
+    @Override
+    public List<Integer> selectExerciseClassIds(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT class_id
+            FROM `exercise_class`
+            WHERE exercise_id = ?
+            """;
+        return JdbcUtils.executeQuery(
+                sql,
+                Integer.class,
+                id
+        );
+    }
+
+    @Override
+    public List<Integer> selectExerciseQuestionIds(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT question_id
+            FROM `exercise_question`
+            WHERE exercise_id = ?
+            """;
+        return JdbcUtils.executeQuery(
+                sql,
+                Integer.class,
+                id
+        );
+    }
+
+    @Override
+    public List<Integer> selectExerciseQuestionScores(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT score
+            FROM `exercise_question`
+            WHERE exercise_id = ?
+            """;
+        return JdbcUtils.executeQuery(
+                sql,
+                Integer.class,
+                id
+        );
+    }
 }

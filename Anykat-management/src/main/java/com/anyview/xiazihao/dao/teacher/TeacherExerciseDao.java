@@ -32,4 +32,12 @@ public interface TeacherExerciseDao {
     void updateExerciseStatus(Integer id, Integer status) throws SQLException, FileNotFoundException;
     // 删除练习
     void deleteExercise(Integer id) throws SQLException, FileNotFoundException;
+    // 查询练习
+    Exercise selectExerciseById(Integer id) throws SQLException, FileNotFoundException;
+    // 查询练习班级id
+    List<Integer> selectExerciseClassIds(Integer id) throws SQLException, FileNotFoundException;
+    // 查询练习题目id
+    List<Integer> selectExerciseQuestionIds(Integer id) throws SQLException, FileNotFoundException;
+    // 查询练习题目分数
+    List<Integer> selectExerciseQuestionScores(Integer id) throws SQLException, FileNotFoundException;
 }

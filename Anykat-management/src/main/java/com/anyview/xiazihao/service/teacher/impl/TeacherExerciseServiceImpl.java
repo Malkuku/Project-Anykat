@@ -81,4 +81,20 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
         }
         teacherExerciseDao.deleteExercise(id);
     }
+
+    @Override
+    public Exercise selectExerciseById(Integer id) throws SQLException, FileNotFoundException {
+        if(teacherExerciseDao.checkExerciseId(id) < 1){
+            throw new NoDatabaseContentException("练习不存在");
+        }
+        //查询练习
+        Exercise exercise = teacherExerciseDao.selectExerciseById(id);
+        //查询班级列表
+        exercise.setClassIds(teacherExerciseDao.selectExerciseClassIds(id));
+        //查询题目列表
+        exercise.setQuestionIds(teacherExerciseDao.selectExerciseQuestionIds(id));
+        //查询题目分数
+        exercise.setQuestionScores(teacherExerciseDao.selectExerciseQuestionScores(id));
+        return exercise;
+    }
 }

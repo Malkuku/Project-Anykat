@@ -19,6 +19,13 @@ public class TeacherExerciseController {
     @KatAutowired
     private TeacherExerciseService teacherExerciseService;
 
+    //根据id查询练习详情
+    @KatRequestMapping(path = "/{id}", method = "GET")
+    public Exercise selectExerciseById(
+            @KatPathVariable("id") Integer id) throws SQLException, FileNotFoundException {
+        return teacherExerciseService.selectExerciseById(id);
+    }
+
     //删除练习
     @KatRequestMapping(path = "/{id}", method = "DELETE")
     public void deleteExercise(
