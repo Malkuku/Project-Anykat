@@ -1,0 +1,15 @@
+package com.anyview.xiazihao.dao.teacher;
+
+import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
+import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
+
+import java.io.FileNotFoundException;
+import java.sql.SQLException;
+import java.util.List;
+
+public interface TeacherGradingDao {
+    // 查询练习批改总数
+    Integer selectGradingDetailCount(TeacherGradingDetailQueryParam param) throws SQLException, FileNotFoundException;
+    // 练习批改分页查询
+    List<TeacherGradingDetail> selectGradingDetailsByPage(TeacherGradingDetailQueryParam param) throws SQLException, FileNotFoundException;
+}
