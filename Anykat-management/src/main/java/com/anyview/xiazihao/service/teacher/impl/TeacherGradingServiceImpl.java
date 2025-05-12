@@ -7,6 +7,7 @@ import com.anyview.xiazihao.dao.teacher.TeacherGradingDao;
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.entity.view.TeacherGradingDetail;
+import com.anyview.xiazihao.entity.view.TeacherGradingQuestions;
 import com.anyview.xiazihao.service.teacher.TeacherGradingService;
 
 import java.io.FileNotFoundException;
@@ -25,5 +26,10 @@ public class TeacherGradingServiceImpl implements TeacherGradingService{
         param.setOffset((param.getPage() - 1) * param.getPageSize());
         List<TeacherGradingDetail> details = teacherGradingDao.selectGradingDetailsByPage(param);
         return new PageResult<>(total, details);
+    }
+
+    @Override
+    public List<TeacherGradingQuestions> selectGradingQuestions(Integer exerciseId, Integer studentId) throws SQLException, FileNotFoundException {
+        return teacherGradingDao.selectGradingQuestions(exerciseId, studentId);
     }
 }
