@@ -72,4 +72,13 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
         }
         teacherExerciseDao.updateExerciseStatus(id, status);
     }
+
+    @Override
+    public void deleteExercise(Integer id) throws SQLException, FileNotFoundException {
+        //检查练习id是否存在
+        if(teacherExerciseDao.checkExerciseId(id) < 1){
+            throw new NoDatabaseContentException("练习不存在");
+        }
+        teacherExerciseDao.deleteExercise(id);
+    }
 }

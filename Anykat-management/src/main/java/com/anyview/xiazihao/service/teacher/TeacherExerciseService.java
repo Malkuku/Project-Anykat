@@ -18,4 +18,7 @@ public interface TeacherExerciseService {
 
     // 更新练习状态
     void updateExerciseStatus(Integer id, Integer status) throws NoDatabaseContentException, SQLException, FileNotFoundException;
+
+    //  删除练习
+    void deleteExercise(Integer id) throws SQLException, FileNotFoundException;
 }

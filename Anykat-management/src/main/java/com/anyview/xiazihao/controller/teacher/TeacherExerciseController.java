@@ -2,10 +2,7 @@ package com.anyview.xiazihao.controller.teacher;
 
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
-import com.anyview.xiazihao.controller.annotation.KatController;
-import com.anyview.xiazihao.controller.annotation.KatRequestBody;
-import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
-import com.anyview.xiazihao.controller.annotation.KatRequestParam;
+import com.anyview.xiazihao.controller.annotation.*;
 import com.anyview.xiazihao.entity.param.view.TeacherExerciseQueryParam;
 import com.anyview.xiazihao.entity.pojo.Exercise;
 import com.anyview.xiazihao.entity.result.PageResult;
@@ -21,6 +18,13 @@ import java.sql.SQLException;
 public class TeacherExerciseController {
     @KatAutowired
     private TeacherExerciseService teacherExerciseService;
+
+    //删除练习
+    @KatRequestMapping(path = "/{id}", method = "DELETE")
+    public void deleteExercise(
+            @KatPathVariable("id") Integer id) throws SQLException, FileNotFoundException {
+        teacherExerciseService.deleteExercise(id);
+    }
 
     // 修改练习状态
     @KatRequestMapping(path = "/status", method = "PUT")

@@ -187,4 +187,16 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
                 id
         );
     }
+
+    @Override
+    public void deleteExercise(Integer id) throws SQLException, FileNotFoundException {
+        String sql = """
+            DELETE FROM `exercise`
+            WHERE id = ?
+            """;
+        JdbcUtils.executeUpdate(
+                sql,
+                id
+        );
+    }
 }
