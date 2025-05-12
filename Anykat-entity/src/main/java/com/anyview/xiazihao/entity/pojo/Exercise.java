@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,4 +20,8 @@ public class Exercise {
     private Integer creatorId; // 创建者ID
     private LocalDateTime createdAt; // 创建时间
     private LocalDateTime updatedAt; // 更新时间
+
+    private List<Integer> classIds; //班级列表
+    private List<Integer> questionIds; //问题列表
+    private List<Integer> questionScores; //分数列表
 }

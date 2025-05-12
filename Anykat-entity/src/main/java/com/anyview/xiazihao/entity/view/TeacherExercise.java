@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -33,4 +34,5 @@ public class TeacherExercise {
     private Integer questionCount;      // 题目数量
     private Integer classCount;         // 参与班级数量
     private Integer submittedStudentCount; // 已提交学生数量
+
 }
