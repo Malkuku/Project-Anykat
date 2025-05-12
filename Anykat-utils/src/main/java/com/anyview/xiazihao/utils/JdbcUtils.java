@@ -119,14 +119,21 @@ public class JdbcUtils {
 
     // 获取当前连接中最后插入的ID
     public static Integer getLastInsertId() throws SQLException, FileNotFoundException {
-        try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT LAST_INSERT_ID()")) {
+        Connection conn = getConnection();
+        boolean isTxActive = ConnectionContext.isActive();
+        try (Statement stmt = conn.createStatement()){
+            ResultSet rs = stmt.executeQuery("SELECT LAST_INSERT_ID()");
             if (rs.next()) {
                 return rs.getInt(1);
             }
+        }catch (SQLException e){
+            throw new SQLException("无法获取最后插入ID");
+        }finally {
+            if (conn != null && !isTxActive) {
+                conn.close();
+            }
         }
-        throw new SQLException("无法获取最后插入ID");
+        return null;
     }
 
     // 设置参数
