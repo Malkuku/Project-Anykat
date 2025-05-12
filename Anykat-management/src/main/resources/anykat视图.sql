@@ -238,7 +238,8 @@ CREATE OR REPLACE VIEW v_teacher_grading_questions AS
 SELECT
     sa.question_id,
     bq.content AS question_name,
-    sa.correct_status
+    sa.correct_status,
+    sa.score AS grading_score
 FROM
     student_answer sa
 JOIN
