@@ -17,4 +17,6 @@ public class User {
     private Integer role; // 身份标识(0:学生,1:老师,2:管理员)
     private LocalDateTime createdAt; // 创建时间
     private LocalDateTime updatedAt; // 更新时间
+
+    private String token; // token
 }

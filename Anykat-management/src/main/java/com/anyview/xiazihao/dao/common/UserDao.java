@@ -12,4 +12,6 @@ public interface UserDao {
     Integer selectUserCount(UserQueryParam param) throws SQLException, FileNotFoundException, SQLException;
     //  分页查询用户
     List<User> selectUserByPage(UserQueryParam param) throws SQLException, FileNotFoundException;
+    //  根据用户名查询用户
+    User selectUserByUsername(String username) throws SQLException, FileNotFoundException;
 }

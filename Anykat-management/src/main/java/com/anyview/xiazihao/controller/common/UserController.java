@@ -3,6 +3,7 @@ package com.anyview.xiazihao.controller.common;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.KatController;
+import com.anyview.xiazihao.controller.annotation.KatRequestBody;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.param.pojo.UserQueryParam;
@@ -19,6 +20,14 @@ import java.sql.SQLException;
 public class UserController {
     @KatAutowired
     private UserService userService;
+
+    //用户登录
+    @KatRequestMapping(path = "/login", method = "POST")
+    public User login(
+            @KatRequestBody User user) throws SQLException, FileNotFoundException {
+        return userService.login(user.getUsername(), user.getPassword());
+    }
+
 
     // 条件分页查询用户信息
     @KatRequestMapping(path = "", method = "GET")

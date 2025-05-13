@@ -48,4 +48,19 @@ public class UserDaoImpl implements UserDao {
                 param
         );
     }
+
+    @Override
+    public User selectUserByUsername(String username) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT *
+            FROM user
+            WHERE username = ?
+        """;
+        List<User> users = JdbcUtils.executeQuery(
+                sql,
+                User.class,
+                username
+        );
+        return users.isEmpty() ? null : users.get(0);
+    }
 }
