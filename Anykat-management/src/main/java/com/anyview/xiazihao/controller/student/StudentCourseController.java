@@ -5,6 +5,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.KatController;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
+import com.anyview.xiazihao.entity.context.UserContext;
 import com.anyview.xiazihao.entity.param.view.StudentCourseQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.entity.view.StudentCourseView;
@@ -28,6 +29,13 @@ public class StudentCourseController {
             @KatRequestParam(value = "semesterId", required = false) Integer semesterId,
             @KatRequestParam(value = "page", defaultValue = "1") Integer page,
             @KatRequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                studentId = UserContext.getUser().getId();
+            }finally{
+                UserContext.clear();
+            }
+        }
 
         StudentCourseQueryParam param = new StudentCourseQueryParam();
         param.setStudentId(studentId);
