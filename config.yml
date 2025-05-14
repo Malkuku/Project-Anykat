@@ -40,3 +40,9 @@ hakimi:
   maxWaitThreads: 3
   #空闲连接超时时间（默认30分钟）
   idleTimeoutMillis: 1800000
+
+# 安全设置
+security:
+  filterOpen: true #是否打开过滤器
+  authOpen: true  #是否打开用户身份验证
+  pgetUserInfoOpen: false #是否允许获取用户信息
