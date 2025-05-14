@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @KatComponent
 @KatSingleton
@@ -46,6 +45,16 @@ public class UserServiceImpl implements UserService {
         map.put("role", user.getRole());
         String token = JwtUtils.createToken(map);
         user.setToken(token);
+
+        //如果是管理员，则计算管理员token
+        if(user.getRole() == 2) {
+            map.put("username", user.getUsername());
+            map.put("password", user.getPassword());
+            map.put("role", user.getRole());
+            String adminToken = JwtUtils.createAdminToken(map);
+            user.setAdminToken(adminToken);
+        }
+
         return user;
     }
 }

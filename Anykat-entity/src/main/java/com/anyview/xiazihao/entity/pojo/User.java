@@ -19,4 +19,5 @@ public class User {
     private LocalDateTime updatedAt; // 更新时间
 
     private String token; // token
+    private String adminToken; // 管理员token
 }

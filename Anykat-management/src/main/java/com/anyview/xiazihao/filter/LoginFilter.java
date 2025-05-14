@@ -1,6 +1,7 @@
 package com.anyview.xiazihao.filter;
 
 import com.anyview.xiazihao.config.AppConfig;
+import com.anyview.xiazihao.entity.context.AdminContext;
 import com.anyview.xiazihao.entity.context.UserContext;
 import com.anyview.xiazihao.entity.pojo.User;
 import com.anyview.xiazihao.utils.JwtUtils;
@@ -21,9 +22,9 @@ public class LoginFilter implements Filter {
     private static final boolean GET_USER_INFO_OPEN;
     static {
         try {
-            FILTER_OPEN = AppConfig.getInstance().getSecurity().filterOpen;
-            AUTH_OPEN = AppConfig.getInstance().getSecurity().authOpen;
-            GET_USER_INFO_OPEN = AppConfig.getInstance().getSecurity().getUserInfoOpen;
+            FILTER_OPEN = AppConfig.getInstance().getSecurity().isFilterOpen();
+            AUTH_OPEN = AppConfig.getInstance().getSecurity().isAuthOpen();
+            GET_USER_INFO_OPEN = AppConfig.getInstance().getSecurity().isGetUserInfoOpen();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -84,9 +85,32 @@ public class LoginFilter implements Filter {
              UserContext.setUser(user);
          }
 
-         //TODO管理员验证
+        //如果是管理员，验证管理员Token
+        String adminToken = httpRequest.getHeader("adminToken");
+        log.info("adminToken:{}", adminToken);
+        //验证Token
+        if (adminToken == null || adminToken.isEmpty()) {
+            throw new ServletException("adminToken不能为空");
+        }
+        try {
+            claims = JwtUtils.parseToken(adminToken);
+        } catch (Exception e) {
+            throw new ServletException("adminToken错误");
+        }
+        //放行请求
+        log.info("adminToken验证通过");
 
-         chain.doFilter(request, response);
+        if(AUTH_OPEN){
+            User user = new User();
+            user.setId((Integer) claims.get("id"));
+            user.setUsername((String) claims.get("username"));
+            user.setRole((Integer) claims.get("role"));
+            AdminContext.setUser(user);
+        }
+
+
+
+        chain.doFilter(request, response);
     }
 
     @Override
