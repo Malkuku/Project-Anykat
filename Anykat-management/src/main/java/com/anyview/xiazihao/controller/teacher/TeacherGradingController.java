@@ -6,6 +6,7 @@ import com.anyview.xiazihao.controller.annotation.KatController;
 import com.anyview.xiazihao.controller.annotation.KatRequestBody;
 import com.anyview.xiazihao.controller.annotation.KatRequestMapping;
 import com.anyview.xiazihao.controller.annotation.KatRequestParam;
+import com.anyview.xiazihao.entity.context.UserContext;
 import com.anyview.xiazihao.entity.param.view.TeacherGradingDetailQueryParam;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.result.PageResult;
@@ -53,6 +54,13 @@ public class TeacherGradingController {
     @KatRequestMapping(path = "/details", method = "GET")
     public PageResult<TeacherGradingDetail> selectGradingDetailsByPage(
             @KatRequestParam("param") TeacherGradingDetailQueryParam param) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                param.setTeacherId(UserContext.getUser().getId());
+            }finally{
+                UserContext.clear();
+            }
+        }
         return teacherGradingService.selectGradingDetailsByPage(param);
     }
 }

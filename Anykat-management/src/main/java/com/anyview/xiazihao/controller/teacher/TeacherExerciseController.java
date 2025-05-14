@@ -3,6 +3,7 @@ package com.anyview.xiazihao.controller.teacher;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.controller.annotation.*;
+import com.anyview.xiazihao.entity.context.UserContext;
 import com.anyview.xiazihao.entity.param.view.TeacherExerciseQueryParam;
 import com.anyview.xiazihao.entity.pojo.Exercise;
 import com.anyview.xiazihao.entity.result.PageResult;
@@ -23,6 +24,13 @@ public class TeacherExerciseController {
     @KatRequestMapping(path = "", method = "PUT")
     public void updateExercise(
             @KatRequestBody Exercise exercise) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                exercise.setCreatorId(UserContext.getUser().getId());
+            }finally{
+                UserContext.clear();
+            }
+        }
         teacherExerciseService.updateExercise(exercise);
     }
 
@@ -51,6 +59,13 @@ public class TeacherExerciseController {
     @KatRequestMapping(path = "", method = "POST")
     public void addExercise(
             @KatRequestBody Exercise exercise) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                exercise.setCreatorId(UserContext.getUser().getId());
+            }finally{
+                UserContext.clear();
+            }
+        }
         teacherExerciseService.addExercise(exercise);
     }
 
@@ -58,6 +73,13 @@ public class TeacherExerciseController {
     @KatRequestMapping(path = "", method = "GET")
     public PageResult<TeacherExercise> selectTeacherExercisesByPage(
             @KatRequestParam("param") TeacherExerciseQueryParam param) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                param.setTeacherId(UserContext.getUser().getId());
+            }finally{
+                UserContext.clear();
+            }
+        }
         return teacherExerciseService.selectTeacherExercisesByPage(param);
     }
 }

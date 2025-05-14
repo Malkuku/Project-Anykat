@@ -84,7 +84,9 @@ public class LoginFilter implements Filter {
              UserContext.setUser(user);
          }
 
-        chain.doFilter(request, response);
+         //TODO管理员验证
+
+         chain.doFilter(request, response);
     }
 
     @Override
