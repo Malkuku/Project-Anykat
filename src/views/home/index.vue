@@ -4,7 +4,14 @@ import { User, Avatar } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
-import {loginApi, queryUsersApi} from '@/api/user'
+import { loginApi } from '@/api/user'
+
+import UserMessageDialog from "@/components/UserMessageDialog.vue";
+
+const userManagementVisible = ref(false);
+const showUserManagement = () => {
+  userManagementVisible.value = true;
+};
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -39,7 +46,19 @@ const showLoginForm = (role) => {
   activePanel.value = role;
   // 重置表单验证
   if (loginFormRef.value) {
-    loginFormRef.value.resetFields();
+    loginFormRef.value.clearValidate();
+  }
+};
+
+// 处理复制用户信息事件
+const handleCopyUser = (userInfo) => {
+  loginForm.value.username = userInfo.username;
+  loginForm.value.password = userInfo.password;
+  console.log('复制用户信息:', loginForm.value.username,  loginForm.value.password);
+
+  // 重置表单验证
+  if (loginFormRef.value) {
+    loginFormRef.value.clearValidate();
   }
 };
 
@@ -177,7 +196,21 @@ onMounted(() => {
     <div class="platform-title">
       <h1>Anykat实训平台</h1>
       <p class="subtitle">创新 · 实践 · 成长</p>
+      <el-button
+          type="text"
+          @click="showUserManagement"
+          style="color: #409eff; margin-top: 10px;"
+      >
+        不知道账号信息？
+      </el-button>
     </div>
+
+    <!-- 用户信息弹窗 -->
+    <UserMessageDialog
+        :visible="userManagementVisible"
+        @update:visible="userManagementVisible = $event"
+        @copy-user="handleCopyUser"
+    />
 
     <div class="panels-container">
       <!-- 学生面板 -->
