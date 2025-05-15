@@ -25,7 +25,7 @@ public class UserController {
     @KatRequestMapping(path = "/login", method = "POST")
     public User login(
             @KatRequestBody User user) throws SQLException, FileNotFoundException {
-        return userService.login(user.getUsername(), user.getPassword());
+        return userService.login(user.getUsername(), user.getPassword(),  user.getRole());
     }
 
 

@@ -11,5 +11,5 @@ public interface UserService {
     // 分页查询用户信息
     PageResult<User> selectUserByPage(UserQueryParam param) throws SQLException, SQLException, FileNotFoundException;
     //  用户登录
-    User login(String username, String password) throws SQLException, FileNotFoundException;
+    User login(String username, String password, Integer role) throws SQLException, FileNotFoundException;
 }

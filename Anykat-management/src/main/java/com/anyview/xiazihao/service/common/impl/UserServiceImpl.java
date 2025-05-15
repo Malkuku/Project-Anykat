@@ -5,6 +5,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.common.UserDao;
 import com.anyview.xiazihao.entity.exception.NoDatabaseContentException;
+import com.anyview.xiazihao.entity.exception.PermissionDeniedException;
 import com.anyview.xiazihao.entity.param.pojo.UserQueryParam;
 import com.anyview.xiazihao.entity.pojo.User;
 import com.anyview.xiazihao.entity.result.PageResult;
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @KatComponent
 @KatSingleton
@@ -32,11 +34,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(String username, String password) throws SQLException, FileNotFoundException {
+    public User login(String username, String password, Integer role) throws SQLException, FileNotFoundException {
         //验证信息
         User user = userDao.selectUserByUsername(username);
         if(user == null || !user.getPassword().equals(password)) {
             throw new NoDatabaseContentException("用户名或密码错误");
+        }
+        if(!Objects.equals(user.getRole(), role)){
+            throw new PermissionDeniedException("身份验证错误");
         }
         //计算token
         Map<String, Object> map = new HashMap<>();
