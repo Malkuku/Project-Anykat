@@ -7,12 +7,15 @@ export const useUserStore = defineStore('user', () => {
         const token = ref('');
         const adminToken = ref('');
         const name = ref('');
+        const role = ref(null);
 
         const setUserInfo = (userInfo) => {
             id.value = userInfo.id;
             username.value = userInfo.username;
             token.value = userInfo.token;
             adminToken.value = userInfo.adminToken;
+            name.value = userInfo.name;
+            role.value = userInfo.role;
         };
 
         const clearUserInfo = () => {
@@ -21,6 +24,7 @@ export const useUserStore = defineStore('user', () => {
             token.value = '';
             adminToken.value = '';
             name.value = '';
+            role.value = null;
         };
 
         const isAuthenticated = () => {
@@ -32,6 +36,7 @@ export const useUserStore = defineStore('user', () => {
             username,
             token,
             adminToken,
+            role,
             setUserInfo,
             clearUserInfo,
             isAuthenticated

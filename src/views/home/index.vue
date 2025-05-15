@@ -1,23 +1,83 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { User, Avatar } from '@element-plus/icons-vue';
+import { useUserStore } from '@/stores/user';
+import { ElMessage } from 'element-plus';
+import { useRouter } from 'vue-router';
+import {loginApi, queryUsersApi} from '@/api/user'
+
+const router = useRouter();
+const userStore = useUserStore();
 
 const activePanel = ref(null);
 const loginForm = ref({
   username: '',
   password: '',
-  role: '' // 'student' or 'teacher'
+  role: null,
+  isAdminLogin: false // 是否以管理员身份登录
 });
 
-const showLoginForm = (role) => {
-  loginForm.value.role = role;
-  activePanel.value = role;
+const rules = {
+  username: [
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { min: 3, max: 20, message: '长度在3到20个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '长度在6到20个字符', trigger: 'blur' }
+  ]
 };
 
-const handleLogin = () => {
+const loginFormRef = ref();
+
+const showLoginForm = (role) => {
+  // 只有当点击的是面板本身时才执行，而不是点击表单元素
+  if (event.target.closest('.login-form')) return;
+
+  loginForm.value.role = role === 'student' ? 0 : 1; // 0表示学生，1表示教师
+  loginForm.value.isAdminLogin = false; // 重置管理员选项
+  activePanel.value = role;
+  // 重置表单验证
+  if (loginFormRef.value) {
+    loginFormRef.value.resetFields();
+  }
+};
+
+const handleLogin = async () => {
   console.log('登录信息:', loginForm.value);
-  // 这里可以添加统一的登录逻辑
-  // 根据 loginForm.value.role 区分学生/教师
+  if (!loginFormRef.value) return;
+
+  try {
+    // 表单验证
+    await loginFormRef.value.validate();
+
+    // 确定最终角色
+    const finalRole = loginForm.value.role === 1 && loginForm.value.isAdminLogin ? 2 : loginForm.value.role;
+
+    // 调用登录接口
+    let result = await loginApi({
+      username: loginForm.value.username,
+      password: loginForm.value.password,
+      role: finalRole
+    });
+
+    ElMessage.success('登录成功');
+
+    userStore.setUserInfo(result.data)
+
+    // 根据角色跳转到不同页面
+    if (userStore.role === 0) {
+      await router.push('/student/dashboard');
+    } else if (userStore.role === 1) {
+      await router.push('/teacher/dashboard');
+    }else if (userStore.role === 2) {
+      await router.push('/admin/dashboard');
+    }
+  } catch (error) {
+    if (error.message !== '表单验证不通过') {
+      ElMessage.error(error.message || '登录失败');
+    }
+  }
 };
 
 // 粒子效果代码
@@ -44,8 +104,8 @@ const initParticles = () => {
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       size: Math.random() * 3 + 1,
-      speedX: Math.random() * 1 - 0.5,
-      speedY: Math.random() * 1 - 0.5,
+      speedX: Math.random() - 0.5,
+      speedY: Math.random() - 0.5,
       color: `rgba(64, 158, 255, ${Math.random() * 0.5 + 0.1})`
     });
   }
@@ -135,15 +195,35 @@ onMounted(() => {
         </div>
 
         <transition name="slide">
-          <div class="login-form" v-show="activePanel === 'student'">
-            <el-form :model="loginForm" label-position="top">
-              <el-form-item label="学号">
-                <el-input v-model="loginForm.username" placeholder="请输入学号" />
+          <div class="login-form" v-show="activePanel === 'student'" @click.stop>
+            <el-form
+                :model="loginForm"
+                :rules="rules"
+                ref="loginFormRef"
+                label-position="top"
+            >
+              <el-form-item label="学号" prop="username">
+                <el-input v-model="loginForm.username"
+                          placeholder="请输入学号"
+                          autocomplete="new-password"
+                />
               </el-form-item>
-              <el-form-item label="密码">
-                <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password />
+              <el-form-item label="密码" prop="password">
+                <el-input
+                    v-model="loginForm.password"
+                    type="password"
+                    placeholder="请输入密码"
+                    show-password
+                    autocomplete="new-password"
+                />
               </el-form-item>
-              <el-button type="primary" @click="handleLogin" class="login-btn">登录</el-button>
+              <el-button
+                  type="primary"
+                  @click="handleLogin"
+                  class="login-btn"
+              >
+                登录
+              </el-button>
             </el-form>
           </div>
         </transition>
@@ -164,24 +244,56 @@ onMounted(() => {
         </div>
 
         <transition name="slide">
-          <div class="login-form" v-show="activePanel === 'teacher'">
-            <el-form :model="loginForm" label-position="top">
-              <el-form-item label="工号">
-                <el-input v-model="loginForm.username" placeholder="请输入工号" />
+          <div class="login-form" v-show="activePanel === 'teacher'" @click.stop>
+            <el-form
+                :model="loginForm"
+                :rules="rules"
+                label-position="top"
+                ref="loginFormRef"
+            >
+              <el-form-item label="工号" prop="username">
+                <el-input v-model="loginForm.username"
+                          placeholder="请输入工号"
+                          autocomplete="new-password"
+                />
               </el-form-item>
-              <el-form-item label="密码">
-                <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password />
+              <el-form-item label="密码" prop="password">
+                <el-input
+                    v-model="loginForm.password"
+                    type="password"
+                    placeholder="请输入密码"
+                    autocomplete="new-password"
+                    show-password
+                />
               </el-form-item>
-              <el-button type="primary" @click="handleLogin" class="login-btn">登录</el-button>
+              <el-form-item>
+                <el-checkbox v-model="loginForm.isAdminLogin">作为管理员登录</el-checkbox>
+              </el-form-item>
+              <el-button type="primary" @click="handleLogin" class="login-btn">
+                登录
+              </el-button>
             </el-form>
           </div>
         </transition>
       </div>
+
     </div>
   </div>
 </template>
 
 <style scoped>
+
+/* 表单验证错误提示样式 */
+.login-form :deep(.el-form-item__error) {
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 1;
+  padding-top: 4px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+}
+
 .home-container {
   display: flex;
   flex-direction: column;
@@ -308,9 +420,8 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255,255,255,0.2)' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
   background-size: cover;
-  background-repeat: no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255,255,255,0.2)' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat;
   z-index: 1;
   animation: wave 8s linear infinite;
 }
