@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user';
 import { queryStudentExercisesApi } from '@/api/student/studentExercise';
 import { ElMessage } from 'element-plus';
+import router from "@/router";
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -132,7 +133,7 @@ const calculateScoreRate = (exercise) => {
                   <el-button
                       type="primary"
                       size="small"
-                      @click="viewExerciseDetails(exercise.exerciseId)"
+                      @click="router.push(`/student/answer/${exercise.courseId}/${exercise.exerciseId}`)"
                       class="detail-btn"
                   >
                     查看做题情况
