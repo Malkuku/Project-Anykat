@@ -45,6 +45,7 @@ public class UserServiceImpl implements UserService {
         }
         //计算token
         Map<String, Object> map = new HashMap<>();
+        map.put("id", user.getId());
         map.put("username", user.getUsername());
         map.put("password", user.getPassword());
         map.put("role", user.getRole());
@@ -53,6 +54,7 @@ public class UserServiceImpl implements UserService {
 
         //如果是管理员，则计算管理员token
         if(user.getRole() == 2) {
+            map.put("id", user.getId());
             map.put("username", user.getUsername());
             map.put("password", user.getPassword());
             map.put("role", user.getRole());

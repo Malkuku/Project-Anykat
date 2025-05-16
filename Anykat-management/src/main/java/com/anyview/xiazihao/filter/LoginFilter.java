@@ -89,6 +89,10 @@ public class LoginFilter implements Filter {
                 user.setRole((Integer) claims.get("role"));
                 UserContext.setUser(user);
             }
+            if(UserContext.getUser().getRole() != 2){
+                chain.doFilter(request, response);
+                return;
+            }
 
             //如果是管理员，验证管理员Token
             String adminToken = httpRequest.getHeader("adminToken");
