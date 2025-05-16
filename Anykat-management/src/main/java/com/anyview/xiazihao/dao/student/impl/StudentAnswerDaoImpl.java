@@ -22,14 +22,13 @@ public class StudentAnswerDaoImpl implements StudentAnswerDao {
             SELECT *
             FROM v_student_exercise_questions
             WHERE exercise_id = ?
-                AND (student_id = ? OR student_id IS NULL)
                 AND course_id = ?
             ORDER BY sort_order
             """;
         return JdbcUtils.executeQuery(
                 sql,
                 StudentExerciseQuestion.class,
-                exerciseId, studentId, courseId
+                exerciseId, courseId
         );
     }
 

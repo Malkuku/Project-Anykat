@@ -26,8 +26,16 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
     private StudentAnswerDao studentAnswerDao;
 
     @Override
+    @KatTransactional
     public List<StudentExerciseQuestion> selectExerciseQuestions(Integer exerciseId, Integer studentId, Integer courseId) throws SQLException, FileNotFoundException {
-        return studentAnswerDao.selectExerciseQuestions(exerciseId, studentId, courseId);
+        List<StudentExerciseQuestion> questions = studentAnswerDao.selectExerciseQuestions(exerciseId, studentId, courseId);
+        //根据studentId查询问题列表
+        for (StudentExerciseQuestion question : questions) {
+            //根据questionId查询答题记录
+            StudentAnswer studentAnswer = studentAnswerDao.selectStudentAnswer(studentId, exerciseId, question.getQuestionId());
+            if(studentAnswer != null) question.setStudentAnswer(studentAnswer);
+        }
+        return questions;
     }
 
     @Override

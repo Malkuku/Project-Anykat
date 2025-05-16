@@ -88,6 +88,7 @@ SELECT
     bq.difficulty,
     eq.score,
     eq.sort_order,
+    -- 学生相关信息（只有当有答题记录时才显示）
     sa.student_id,
     u.name AS student_name,
     sa.answer AS student_answer,
@@ -97,14 +98,12 @@ SELECT
     sa.submit_time,
     -- 根据批改状态决定是否显示正确答案
     CASE
-        WHEN sa.correct_status = 2 THEN cq.correct_answer  -- 已批改显示答案
-        WHEN sa.correct_status = 1 THEN NULL               -- 未批改不显示
+        WHEN sa.id IS NOT NULL AND sa.correct_status = 2 THEN cq.correct_answer  -- 已批改显示答案
         ELSE NULL                                         -- 其他情况不显示
     END AS correct_answer,
     -- 根据批改状态决定是否显示答案解析
     CASE
-        WHEN sa.correct_status = 2 THEN cq.analysis       -- 已批改显示解析
-        WHEN sa.correct_status = 1 THEN NULL              -- 未批改不显示
+        WHEN sa.id IS NOT NULL AND sa.correct_status = 2 THEN cq.analysis       -- 已批改显示解析
         ELSE NULL                                        -- 其他情况不显示
     END AS answer_analysis,
     -- 选择题选项
@@ -134,12 +133,73 @@ JOIN
 LEFT JOIN
     student_answer sa ON eq.exercise_id = sa.exercise_id
                      AND eq.question_id = sa.question_id
+                     -- 添加学生ID条件，只有当查询特定学生时才关联
 LEFT JOIN
     user u ON sa.student_id = u.id
 LEFT JOIN
     choice_question cq ON bq.id = cq.question_id AND bq.type IN (0, 1)
 LEFT JOIN
     subjective_question sq ON bq.id = sq.question_id AND bq.type = 2;
+
+
+
+-- 纯粹的题目列表版本
+CREATE OR REPLACE VIEW v_student_exercise_questions AS
+SELECT
+    eq.exercise_id,
+    e.name AS exercise_name,
+    e.course_id,
+    c.name AS course_name,
+    e.start_time,
+    e.end_time,
+    e.status AS exercise_status,
+    bq.id AS question_id,
+    bq.type AS question_type,
+    bq.description AS question_description,
+    bq.content AS question_content,
+    bq.difficulty,
+    eq.score,
+    eq.sort_order,
+    -- 正确答案（总是显示，不依赖学生答题状态）
+    CASE
+        WHEN bq.type IN (0, 1) THEN cq.correct_answer  -- 选择题答案
+        WHEN bq.type = 2 THEN sq.reference_answer     -- 主观题参考答案
+        ELSE NULL
+    END AS correct_answer,
+    -- 答案解析
+    CASE
+        WHEN bq.type IN (0, 1) THEN cq.analysis       -- 选择题解析
+        ELSE NULL
+    END AS answer_analysis,
+    -- 选择题选项
+    CASE
+        WHEN bq.type IN (0, 1) THEN cq.options
+        ELSE NULL
+    END AS question_options,
+    -- 主观题参考信息
+    CASE
+        WHEN bq.type = 2 THEN sq.reference_answer
+        ELSE NULL
+    END AS reference_answer,
+    CASE
+        WHEN bq.type = 2 THEN sq.word_limit
+        ELSE NULL
+    END AS word_limit,
+    eq.created_at,
+    eq.updated_at
+FROM
+    exercise_question eq
+JOIN
+    exercise e ON eq.exercise_id = e.id
+JOIN
+    course c ON e.course_id = c.id
+JOIN
+    base_question bq ON eq.question_id = bq.id
+LEFT JOIN
+    choice_question cq ON bq.id = cq.question_id AND bq.type IN (0, 1)
+LEFT JOIN
+    subjective_question sq ON bq.id = sq.question_id AND bq.type = 2;
+
 
 
 -- 教师练习列表查询
