@@ -4,8 +4,10 @@ import { queryStudentCoursesApi } from '@/api/student/studentCourse';
 import { useUserStore } from '@/stores/user';
 import { ElMessage } from 'element-plus';
 import {Calendar, Collection, Document} from "@element-plus/icons-vue";
+import { useRouter } from 'vue-router';
 
 const userStore = useUserStore();
+const router = useRouter();
 
 // 查询参数
 const queryParams = ref({
@@ -142,7 +144,7 @@ const formatDate = (dateStr) => {
                 type="primary"
                 circle
                 class="play-btn"
-                @click="$router.push(`/course/${course.courseId}`)"
+                @click="router.push(`/student/exercise/${course.courseId}/${course.semesterId}`)"
             >
               <span class="play-icon"></span>
             </el-button>
