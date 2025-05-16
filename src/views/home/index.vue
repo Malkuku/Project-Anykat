@@ -42,7 +42,6 @@ const showLoginForm = (role) => {
   if (event.target.closest('.login-form')) return;
 
   loginForm.value.role = role === 'student' ? 0 : 1; // 0表示学生，1表示教师
-  loginForm.value.isAdminLogin = false; // 重置管理员选项
   activePanel.value = role;
   // 重置表单验证
   if (loginFormRef.value) {
@@ -86,7 +85,7 @@ const handleLogin = async () => {
 
     // 根据角色跳转到不同页面
     if (userStore.role === 0) {
-      await router.push('/student/dashboard');
+      await router.push('/student/course');
     } else if (userStore.role === 1) {
       await router.push('/teacher/dashboard');
     }else if (userStore.role === 2) {
