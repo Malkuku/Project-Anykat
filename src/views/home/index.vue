@@ -87,7 +87,7 @@ const handleLogin = async () => {
     if (userStore.role === 0) {
       await router.push('/student/course');
     } else if (userStore.role === 1) {
-      await router.push('/teacher/dashboard');
+      await router.push('/teacher/exercise');
     }else if (userStore.role === 2) {
       await router.push('/admin/dashboard');
     }
