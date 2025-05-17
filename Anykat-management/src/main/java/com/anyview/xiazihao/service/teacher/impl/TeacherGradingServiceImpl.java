@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.service.teacher.impl;
 
+import com.anyview.xiazihao.annotation.KatTransactional;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
@@ -27,6 +28,7 @@ public class TeacherGradingServiceImpl implements TeacherGradingService{
     private TeacherGradingDao teacherGradingDao;
 
     @Override
+    @KatTransactional
     public PageResult<TeacherGradingDetail> selectGradingDetailsByPage(TeacherGradingDetailQueryParam param) throws SQLException, FileNotFoundException {
         Integer total = teacherGradingDao.selectGradingDetailCount(param);
         param.setOffset((param.getPage() - 1) * param.getPageSize());
@@ -45,6 +47,7 @@ public class TeacherGradingServiceImpl implements TeacherGradingService{
     }
 
     @Override
+    @KatTransactional
     public void updateStudentAnswerCorrection(StudentAnswer studentAnswer) throws SQLException, FileNotFoundException {
         if(studentAnswer.getCorrectStatus() == 0) throw new PermissionDeniedException("没有操作权限");
         StudentAnswer oldStudentAnswer = teacherGradingDao.selectStudentAnswerById(studentAnswer.getId());

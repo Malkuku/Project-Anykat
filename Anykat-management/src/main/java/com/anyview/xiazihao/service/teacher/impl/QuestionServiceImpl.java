@@ -24,6 +24,7 @@ public class QuestionServiceImpl implements QuestionService {
     private QuestionDao questionDao;
 
     @Override
+    @KatTransactional
     public PageResult<BaseQuestion> selectQuestionByPage(QuestionQueryParam param) throws SQLException, FileNotFoundException {
         Integer total = questionDao.selectQuestionCount(param);
         param.setOffset((param.getPage() - 1) * param.getPageSize());
@@ -59,6 +60,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @KatTransactional
     public void addChoiceQuestion(ChoiceQuestion question) throws SQLException, FileNotFoundException {
         BaseQuestion baseQuestion = questionDao.selectQuestionById(question.getQuestionId());
         if(baseQuestion.getType() != 1 && baseQuestion.getType() != 0) throw new RuntimeException("试题类型错误");
@@ -76,6 +78,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @KatTransactional
     public void addSubjectiveQuestion(SubjectiveQuestion question) throws SQLException, FileNotFoundException {
         BaseQuestion baseQuestion = questionDao.selectQuestionById(question.getQuestionId());
         if(baseQuestion.getType() != 2) throw new RuntimeException("试题类型错误");

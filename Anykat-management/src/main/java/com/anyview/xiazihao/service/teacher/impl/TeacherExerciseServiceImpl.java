@@ -30,6 +30,7 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
     private TeacherExerciseDao teacherExerciseDao;
 
     @Override
+    @KatTransactional
     public PageResult<TeacherExercise> selectTeacherExercisesByPage(TeacherExerciseQueryParam param) throws SQLException, FileNotFoundException {
         Integer total = teacherExerciseDao.selectTeacherExerciseCount(param);
         param.setOffset((param.getPage() - 1) * param.getPageSize());
@@ -71,6 +72,7 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
     }
 
     @Override
+    @KatTransactional
     public void updateExerciseStatus(Integer id, Integer status) throws SQLException, FileNotFoundException {
         //检查练习id是否存在
         if(teacherExerciseDao.checkExerciseId(id) < 1){
@@ -80,6 +82,7 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
     }
 
     @Override
+    @KatTransactional
     public void deleteExercise(Integer id) throws SQLException, FileNotFoundException {
         //检查练习id是否存在
         if(teacherExerciseDao.checkExerciseId(id) < 1){
@@ -94,6 +97,7 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
     }
 
     @Override
+    @KatTransactional
     public Exercise selectExerciseById(Integer id) throws SQLException, FileNotFoundException {
         if(teacherExerciseDao.checkExerciseId(id) < 1){
             throw new NoDatabaseContentException("练习不存在");

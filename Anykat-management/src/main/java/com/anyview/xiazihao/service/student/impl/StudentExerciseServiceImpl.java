@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.service.student.impl;
 
+import com.anyview.xiazihao.annotation.KatTransactional;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
@@ -20,6 +21,7 @@ public class StudentExerciseServiceImpl implements StudentExerciseService {
     private StudentExerciseDao studentExerciseDao;
 
     @Override
+    @KatTransactional
     public PageResult<StudentExerciseView> selectStudentExercisesByPage(StudentExerciseQueryParam param) throws SQLException, FileNotFoundException {
         // 设置分页偏移量
         param.setOffset((param.getPage() - 1) * param.getPageSize());

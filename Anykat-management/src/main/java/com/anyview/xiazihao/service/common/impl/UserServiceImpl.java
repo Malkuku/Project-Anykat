@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.service.common.impl;
 
+import com.anyview.xiazihao.annotation.KatTransactional;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private UserDao userDao;
 
     @Override
+    @KatTransactional
     public PageResult<User> selectUserByPage(UserQueryParam param) throws SQLException, FileNotFoundException {
         Integer total = userDao.selectUserCount(param);
         param.setOffset((param.getPage() - 1) * param.getPageSize());

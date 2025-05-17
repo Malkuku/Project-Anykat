@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.service.common.impl;
 
+import com.anyview.xiazihao.annotation.KatTransactional;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
@@ -20,6 +21,7 @@ public class ClassServiceImpl implements ClassService {
     private ClassDao classDao;
 
     @Override
+    @KatTransactional
     public PageResult<Class> selectClassByPage(ClassQueryParam param) throws SQLException, FileNotFoundException {
         Integer total = classDao.selectClassCount(param);
         param.setOffset((param.getPage() - 1) * param.getPageSize());
