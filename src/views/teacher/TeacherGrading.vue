@@ -51,10 +51,39 @@ const search = async () => {
 
   const result = await queryGradingDetailsApi(params);
   if (result.code) {
-    gradingList.value = result.data.list;
+    // 分组处理：按学生ID分组
+    const groupedList = result.data.list.reduce((acc, item) => {
+      if (!acc[item.studentId]) {
+        acc[item.studentId] = {
+          ...item,
+          classNames: [item.className], // 存储所有班级名称
+          answeredQuestions: item.answeredQuestions,
+          totalQuestions: item.totalQuestions,
+          savedUnsubmittedCount: item.savedUnsubmittedCount,
+          submittedUncorrectedCount: item.submittedUncorrectedCount,
+          correctedCount: item.correctedCount,
+          currentScore: item.currentScore,
+          maxScore: item.maxScore,
+          lastSubmitTime: item.lastSubmitTime,
+          lastCorrectTime: item.lastCorrectTime
+        };
+      } else {
+        // 合并班级名称
+        acc[item.studentId].classNames.push(item.className);
+      }
+      return acc;
+    }, {});
+
+    // 将分组后的数据转换为数组
+    gradingList.value = Object.values(groupedList).map(item => ({
+      ...item,
+      className: item.classNames.length > 1 ? `${item.classNames[0]} 等${item.classNames.length}个班级` : item.classNames[0]
+    }));
+
     total.value = result.data.total;
   }
 };
+
 
 // 重置查询
 const resetQuery = () => {
@@ -93,7 +122,7 @@ const viewQuestions = async (student) => {
 
   const result = await queryGradingQuestionsApi(params);
   if (result.code) {
-    questionList.value = result.data;
+    questionList.value = result.data.filter(q => q.correctStatus !== 0);;
     questionDialogVisible.value = true;
   }
 };
@@ -121,7 +150,6 @@ const viewQuestionDetail = async (question) => {
     correctionForm.value = {
       id: result.data.answerId,
       score: result.data.currentScore || '',
-      correctStatus: question.correctStatus,
       correctComment: ''
     };
     detailDialogVisible.value = true;
@@ -135,7 +163,13 @@ const saveCorrection = async () => {
     return;
   }
 
-  const result = await updateCorrectionApi(correctionForm.value);
+  // 自动设置为已批改状态
+  const params = {
+    ...correctionForm.value,
+    correctStatus: 2  // 强制设置为已批改
+  };
+
+  const result = await updateCorrectionApi(params);
   if (result.code) {
     ElMessage.success('批改信息更新成功');
     detailDialogVisible.value = false;
@@ -288,12 +322,6 @@ onMounted(() => {
             placeholder="请输入分数"
         />
         <span style="margin-left: 10px;">/ {{ questionDetail.maxScore }}</span>
-      </el-form-item>
-      <el-form-item label="批改状态">
-        <el-radio-group v-model="correctionForm.correctStatus">
-          <el-radio :label="1">未批改</el-radio>
-          <el-radio :label="2">已批改</el-radio>
-        </el-radio-group>
       </el-form-item>
       <el-form-item label="批改备注">
         <el-input
