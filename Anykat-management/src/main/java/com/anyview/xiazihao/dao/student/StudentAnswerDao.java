@@ -3,7 +3,6 @@ package com.anyview.xiazihao.dao.student;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
-import com.anyview.xiazihao.entity.view.TeacherGradingQuestionDetails;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
@@ -26,4 +25,6 @@ public interface StudentAnswerDao {
     ChoiceQuestion selectChoiceQuestion(Integer questionId) throws SQLException, FileNotFoundException;
     // 查询当前题目的分数
     Integer findCurrentScore(Integer questionId) throws SQLException, FileNotFoundException;
+    // 查询当前练习状态
+    Integer selectExerciseStatus(Integer exerciseId) throws SQLException, FileNotFoundException;
 }

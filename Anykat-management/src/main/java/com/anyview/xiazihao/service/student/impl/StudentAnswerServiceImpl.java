@@ -62,6 +62,19 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
             //更新提交时间
             answer.setSubmitTime(LocalDateTime.now());
         }
+        //检查对应练习的状态
+        //统计练习id
+        Set<Integer> exerciseIds = new HashSet<>();
+        for (StudentAnswer answer : answers) {
+           exerciseIds.add(answer.getExerciseId());
+        }
+        for (Integer exerciseId : exerciseIds) {
+            Integer exerciseStatus = studentAnswerDao.selectExerciseStatus(exerciseId);
+            if(exerciseStatus == null) throw new IncompleteParameterException("练习不存在");
+            if(exerciseStatus == 0) throw new PermissionDeniedException("练习未开始");
+            if(exerciseStatus == 2) throw new PermissionDeniedException("练习已结束");
+        }
+
         //遍历提交
         for (StudentAnswer answer : answers) {
             //尝试查询记录

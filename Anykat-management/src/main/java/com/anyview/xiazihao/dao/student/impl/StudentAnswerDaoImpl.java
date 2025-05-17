@@ -114,4 +114,20 @@ public class StudentAnswerDaoImpl implements StudentAnswerDao {
                 questionId
         ).get(0);
     }
+
+    @Override
+    public Integer selectExerciseStatus(Integer exerciseId) throws SQLException, FileNotFoundException {
+        String sql = """
+            SELECT status
+            FROM exercise
+            WHERE id = ?
+            """;
+            List<Integer> statuses = JdbcUtils.executeQuery(
+                    sql,
+                    Integer.class,
+                    exerciseId
+            );
+
+        return statuses.isEmpty() ? null : statuses.get(0);
+    }
 }
