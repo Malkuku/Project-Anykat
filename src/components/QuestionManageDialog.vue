@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted, computed, defineProps, defineEmits, watch} from 'vue';
+import {ref, onMounted,defineProps, defineEmits, watch, nextTick} from 'vue';
 import {
   queryQuestionsApi,
   deleteQuestionsApi,
@@ -14,6 +14,11 @@ import {
   updateSubjectiveApi
 } from '@/api/teacher/question';
 import { ElMessage, ElMessageBox } from 'element-plus';
+
+// loading状态
+const loading = ref(false);
+const tableLoading = ref(false);
+const dialogLoading = ref(false);
 
 const props = defineProps({
   // 是否显示弹窗
@@ -72,13 +77,21 @@ const searchForm = ref({
 // 题目列表
 const questionList = ref([]);
 const total = ref(0);
+const questionTable = ref();
 
 // 查询题目
 const search = async () => {
-  const result = await queryQuestionsApi(searchForm.value);
-  if(result.code){
-    questionList.value = result.data.list;
-    total.value = result.data.total;
+  tableLoading.value = true;
+  try {
+    const result = await queryQuestionsApi(searchForm.value);
+    if(result.code){
+      questionList.value = result.data.list;
+      total.value = result.data.total;
+    }
+  } catch (error) {
+    ElMessage.error('获取题目列表失败');
+  } finally {
+    tableLoading.value = false;
   }
 };
 
@@ -209,25 +222,32 @@ const addQuestion = () => {
 
 // 编辑题目
 const editQuestion = async (id) => {
-  const result = await queryQuestionByIdApi(id);
-  if(result.code){
-    dialogFormVisible.value = true;
-    formTitle.value = '编辑题目';
-    activeTab.value = 'basic';
-    questionForm.value = result.data;
+  dialogLoading.value = true;
+  try {
+    const result = await queryQuestionByIdApi(id);
+    if(result.code){
+      dialogFormVisible.value = true;
+      formTitle.value = '编辑题目';
+      activeTab.value = 'basic';
+      questionForm.value = result.data;
 
-    // 根据题型加载扩展信息
-    if (result.data.type === 0 || result.data.type === 1) {
-      const choiceResult = await queryChoiceByQuestionIdApi(id);
-      if (choiceResult.code) {
-        choiceForm.value = choiceResult.data;
-      }
-    } else if (result.data.type === 2) {
-      const subjectiveResult = await querySubjectiveByQuestionIdApi(id);
-      if (subjectiveResult.code) {
-        subjectiveForm.value = subjectiveResult.data;
+      // 根据题型加载扩展信息
+      if (result.data.type === 0 || result.data.type === 1) {
+        const choiceResult = await queryChoiceByQuestionIdApi(id);
+        if (choiceResult.code) {
+          choiceForm.value = choiceResult.data;
+        }
+      } else if (result.data.type === 2) {
+        const subjectiveResult = await querySubjectiveByQuestionIdApi(id);
+        if (subjectiveResult.code) {
+          subjectiveForm.value = subjectiveResult.data;
+        }
       }
     }
+  } catch (error) {
+    ElMessage.error('获取题目详情失败');
+  } finally {
+    dialogLoading.value = false;
   }
 };
 
@@ -235,36 +255,43 @@ const editQuestion = async (id) => {
 const saveQuestion = async () => {
   if (!questionFormRef.value) return;
 
-  await questionFormRef.value.validate(async (valid) => {
-    if (valid) {
-      let result;
-      if (questionForm.value.id) {
-        // 更新题目
-        result = await updateQuestionApi(questionForm.value);
-      } else {
-        // 新增题目
-        questionForm.value.creatorId = props.teacherId;
-        result = await addQuestionApi(questionForm.value);
-      }
-
-      if (result.code) {
-        const questionId = questionForm.value.id || result.data.id;
-
-        // 根据题型保存扩展信息
-        if (questionForm.value.type === 0 || questionForm.value.type === 1) {
-          await saveChoice(questionId);
-        } else if (questionForm.value.type === 2) {
-          await saveSubjective(questionId);
+  dialogLoading.value = true;
+  try {
+    await questionFormRef.value.validate(async (valid) => {
+      if (valid) {
+        let result;
+        if (questionForm.value.id) {
+          // 更新题目
+          result = await updateQuestionApi(questionForm.value);
+        } else {
+          // 新增题目
+          questionForm.value.creatorId = props.teacherId;
+          result = await addQuestionApi(questionForm.value);
         }
 
-        ElMessage.success('操作成功');
-        dialogFormVisible.value = false;
-        await search();
-      } else {
-        ElMessage.error(result.msg);
+        if (result.code) {
+          const questionId = questionForm.value.id || result.data.id;
+
+          // 根据题型保存扩展信息
+          if (questionForm.value.type === 0 || questionForm.value.type === 1) {
+            await saveChoice(questionId);
+          } else if (questionForm.value.type === 2) {
+            await saveSubjective(questionId);
+          }
+
+          ElMessage.success('操作成功');
+          dialogFormVisible.value = false;
+          await search();
+        } else {
+          ElMessage.error(result.msg);
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    ElMessage.error('保存题目失败');
+  } finally {
+    dialogLoading.value = false;
+  }
 };
 
 // 保存选择题
@@ -321,11 +348,14 @@ const saveSubjective = async (questionId) => {
 
 // 删除题目
 const deleteQuestion = async (id) => {
-  ElMessageBox.confirm('确定删除该题目吗?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
+  loading.value = true;
+  try {
+    await ElMessageBox.confirm('确定删除该题目吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+
     const result = await deleteQuestionsApi(id);
     if (result.code) {
       ElMessage.success('删除成功');
@@ -333,9 +363,11 @@ const deleteQuestion = async (id) => {
     } else {
       ElMessage.error(result.msg);
     }
-  }).catch(() => {
+  } catch {
     ElMessage.info('已取消删除');
-  });
+  } finally {
+    loading.value = false;
+  }
 };
 
 // 多选
@@ -380,8 +412,37 @@ watch(() => props.visible, (val) => {
 });
 
 // 监听selectedQuestions变化
-watch(() => props.selectedQuestions, (val) => {
-  selectedQuestions.value = [...val];
+watch(() => props.selectedQuestions, (newVal) => {
+  if (questionList.value && questionList.value.length > 0) {
+    nextTick(() => {
+      // 清除所有选中状态
+      questionTable.value.clearSelection();
+
+      // 设置新的选中状态
+      questionList.value.forEach(row => {
+        if (newVal.includes(row.id)) {
+          questionTable.value.toggleRowSelection(row, true);
+        }
+      });
+    });
+  }
+}, { deep: true });
+
+// 监听questionList变化
+watch(() => questionList.value, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    nextTick(() => {
+      // 清除所有选中状态
+      questionTable.value.clearSelection();
+
+      // 设置新的选中状态
+      questionList.value.forEach(row => {
+        if (props.selectedQuestions.includes(row.id)) {
+          questionTable.value.toggleRowSelection(row, true);
+        }
+      });
+    });
+  }
 }, { deep: true });
 </script>
 
@@ -467,9 +528,27 @@ watch(() => props.selectedQuestions, (val) => {
 
     <!-- 操作按钮 -->
     <div class="container">
-      <el-button type="primary" @click="addQuestion">+ 新增题目</el-button>
-      <el-button type="danger" @click="deleteQuestion" :disabled="selectedQuestions.length === 0">删除选中</el-button>
-      <el-button type="success" @click="confirmSelection" :disabled="selectedQuestions.length === 0" style="float: right">
+      <el-button type="primary" @click="addQuestion" :loading="loading">
+        <template #loading>
+          <span>新增中...</span>
+        </template>
+        + 新增题目
+      </el-button>
+      <el-button
+          type="danger"
+          @click="deleteQuestion"
+          :disabled="selectedQuestions.length === 0"
+          :loading="loading"
+      >
+        删除选中
+      </el-button>
+      <el-button
+          type="success"
+          @click="confirmSelection"
+          :disabled="selectedQuestions.length === 0"
+          style="float: right"
+          :loading="loading"
+      >
         确认选择({{ selectedQuestions.length }})
       </el-button>
     </div>
@@ -481,6 +560,12 @@ watch(() => props.selectedQuestions, (val) => {
           border
           style="width: 100%"
           @selection-change="handleSelectionChange"
+          row-key="id"
+          ref="questionTable"
+          v-loading="tableLoading"
+          element-loading-text="加载中..."
+          element-loading-spinner="el-icon-loading"
+          element-loading-background="rgba(255, 255, 255, 0.7)"
       >
         <el-table-column v-if="props.multiple" type="selection" width="55" align="center" />
         <el-table-column prop="id" label="ID" width="80" align="center" />
@@ -523,7 +608,15 @@ watch(() => props.selectedQuestions, (val) => {
     </div>
 
     <!-- 新增/编辑对话框 -->
-    <el-dialog v-model="dialogFormVisible" :title="formTitle" width="80%">
+    <el-dialog
+        v-model="dialogFormVisible"
+        :title="formTitle"
+        width="80%"
+        v-loading="dialogLoading"
+        element-loading-text="处理中..."
+        element-loading-spinner="el-icon-loading"
+        element-loading-background="rgba(255, 255, 255, 0.7)"
+    >
       <el-tabs v-model="activeTab">
         <el-tab-pane label="基本信息" name="basic">
           <el-form
