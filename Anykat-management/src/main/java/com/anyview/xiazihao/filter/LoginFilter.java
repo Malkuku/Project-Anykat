@@ -65,6 +65,12 @@ public class LoginFilter implements Filter {
                 return;
             }
 
+            //如果没有开始用户验证，直接放行
+            if (!AUTH_OPEN) {
+                chain.doFilter(request, response);
+                return;
+            }
+
             //获取请求头的Token
             Map<String, Object> claims;
             String token = httpRequest.getHeader("token");
@@ -78,17 +84,14 @@ public class LoginFilter implements Filter {
             } catch (Exception e) {
                 throw new ValidationFailedException("Token错误");
             }
-            //放行请求
-            log.info("Token验证通过");
 
-            //如果开启用户验证，储存用户上下文
-            if (AUTH_OPEN) {
-                User user = new User();
-                user.setId((Integer) claims.get("id"));
-                user.setUsername((String) claims.get("username"));
-                user.setRole((Integer) claims.get("role"));
-                UserContext.setUser(user);
-            }
+            log.info("Token验证通过");
+            User user = new User();
+            user.setId((Integer) claims.get("id"));
+            user.setUsername((String) claims.get("username"));
+            user.setRole((Integer) claims.get("role"));
+            UserContext.setUser(user);
+
             if(UserContext.getUser().getRole() != 2){
                 chain.doFilter(request, response);
                 return;
@@ -106,17 +109,12 @@ public class LoginFilter implements Filter {
             } catch (Exception e) {
                 throw new ValidationFailedException("adminToken错误");
             }
-            //放行请求
+
             log.info("adminToken验证通过");
-
-            if (AUTH_OPEN) {
-                User user = new User();
-                user.setId((Integer) claims.get("id"));
-                user.setUsername((String) claims.get("username"));
-                user.setRole((Integer) claims.get("role"));
-                AdminContext.setUser(user);
-            }
-
+            user.setId((Integer) claims.get("id"));
+            user.setUsername((String) claims.get("username"));
+            user.setRole((Integer) claims.get("role"));
+            AdminContext.setUser(user);
 
             chain.doFilter(request, response);
         }catch (ValidationFailedException e){
