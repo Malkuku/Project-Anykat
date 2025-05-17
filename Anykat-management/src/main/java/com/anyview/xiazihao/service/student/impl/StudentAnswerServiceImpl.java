@@ -33,7 +33,13 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
         for (StudentExerciseQuestion question : questions) {
             //根据questionId查询答题记录
             StudentAnswer studentAnswer = studentAnswerDao.selectStudentAnswer(studentId, exerciseId, question.getQuestionId());
-            if(studentAnswer != null) question.setStudentAnswer(studentAnswer);
+            if(studentAnswer != null){
+                question.setStudentAnswer(studentAnswer);
+                //如果学生的答题状态为0，抹去正确答案
+                if(question.getStudentAnswer().getCorrectStatus() == 0){
+                    question.setCorrectAnswer(null);
+                }
+            }
         }
         return questions;
     }
