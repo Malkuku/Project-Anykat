@@ -13,7 +13,6 @@ const userStore = useUserStore();
 // 添加定时器实时更新倒计时
 const countdownTimer = ref(null);
 
-
 // 从路由和用户信息中获取参数
 const exerciseId = ref(route.params.exerciseId || route.query.exerciseId);
 const courseId = ref(route.params.courseId || route.query.courseId);
@@ -85,6 +84,25 @@ const getCountdownType = (endTime) => {
   return 'success'; // 大于1天
 };
 
+// 计算练习是否已结束
+const isExerciseEnded = computed(() => {
+  if (!questionList.value.length) return false;
+  const endTime = new Date(questionList.value[0].endTime);
+  return endTime < new Date();
+});
+
+// 计算练习是否未开始
+const isExerciseNotStarted = computed(() => {
+  if (!questionList.value.length) return false;
+  const startTime = new Date(questionList.value[0].startTime);
+  return startTime > new Date();
+});
+
+// 计算按钮是否应该禁用
+const isButtonsDisabled = computed(() => {
+  return isSubmitted.value || isExerciseEnded.value || isExerciseNotStarted.value;
+});
+
 //钩子
 onMounted(() => {
   search();
@@ -104,18 +122,28 @@ onUnmounted(() => {
 // 保存答案
 const saveAnswers = async (status) => {
   try {
-    // 准备要提交的答案数据
-    const answersToSubmit = questionList.value.map(question => {
-      const answer = answers.value[question.questionId] || { answer: '', correctStatus: 0 };
-      return {
-        studentId: studentId.value,
-        exerciseId: exerciseId.value,
-        questionId: question.questionId,
-        answer: answer.answer,
-        submitTime: new Date().toISOString(),
-        correctStatus: status
-      };
-    });
+    // 准备要提交的答案数据 - 只包含有答案的题目
+    const answersToSubmit = questionList.value
+        .filter(question => {
+          const answer = answers.value[question.questionId];
+          return answer && answer.answer.trim() !== '';
+        })
+        .map(question => {
+          const answer = answers.value[question.questionId] || { answer: '', correctStatus: 0 };
+          return {
+            studentId: studentId.value,
+            exerciseId: exerciseId.value,
+            questionId: question.questionId,
+            answer: answer.answer,
+            submitTime: new Date().toISOString(),
+            correctStatus: status
+          };
+        });
+
+    if (answersToSubmit.length === 0) {
+      ElMessage.warning('没有可提交的答案');
+      return;
+    }
 
     const result = await submitAnswersApi(answersToSubmit);
     if (result.code) {
@@ -202,9 +230,6 @@ const getCheckboxValues = computed(() => {
     <el-card v-if="questionList.length > 0" class="exercise-info">
       <div class="exercise-header">
         <h2>{{ questionList[0].exerciseName }}</h2>
-        <el-tag :type="questionList[0].exerciseStatus === 2 ? 'success' : 'warning'">
-          {{ formatCorrectStatus(questionList[0].exerciseStatus) }}
-        </el-tag>
       </div>
       <div class="exercise-meta">
         <p><span class="meta-label">课程:</span> {{ questionList[0].courseName }}</p>
@@ -220,15 +245,6 @@ const getCheckboxValues = computed(() => {
         </p>
       </div>
     </el-card>
-
-    <div class="action-buttons">
-      <el-button type="primary" @click="saveAnswers(0)" :disabled="isSubmitted">
-        <i class="el-icon-upload2"></i> 保存答案
-      </el-button>
-      <el-button type="success" @click="confirmSubmit" :disabled="isSubmitted">
-        <i class="el-icon-check"></i> 提交答案
-      </el-button>
-    </div>
 
     <div v-loading="loading" class="question-list">
       <el-card
@@ -261,9 +277,9 @@ const getCheckboxValues = computed(() => {
 
         <div class="question-content">
           <h3>{{ question.questionContent }}</h3>
-          <p v-if="question.questionDescription" class="question-desc">
+          <el-tag v-if="question.questionDescription" class="question-desc" type="info" size="small">
             {{ question.questionDescription }}
-          </p>
+          </el-tag>
         </div>
 
         <!-- 单选题 -->
@@ -338,17 +354,68 @@ const getCheckboxValues = computed(() => {
             <p><span class="detail-label">解析:</span> {{ question.answerAnalysis || '无' }}</p>
             <p><span class="detail-label">评语:</span> {{ question.studentAnswer?.correctComment || '无' }}</p>
             <div class="time-info">
-              <span><span class="detail-label">提交时间:</span> {{ formatDateTime(question.studentAnswer?.submitTime) }}</span>
-              <span><span class="detail-label">批改时间:</span> {{ formatDateTime(question.studentAnswer?.correctTime) }}</span>
+              <p><span class="detail-label">提交时间:</span> {{ formatDateTime(question.studentAnswer?.submitTime) }}</p>
+              <p><span class="detail-label">批改时间:</span> {{ formatDateTime(question.studentAnswer?.correctTime) }}</p>
             </div>
           </div>
         </div>
       </el-card>
     </div>
+
+    <!-- 固定在底部的操作按钮 -->
+    <div class="fixed-action-buttons">
+      <div class="action-buttons-container">
+        <el-button
+            type="primary"
+            @click="saveAnswers(0)"
+            :disabled="isButtonsDisabled"
+            v-if="!isExerciseNotStarted && !isExerciseEnded"
+        >
+          <i class="el-icon-upload2"></i> 保存答案
+        </el-button>
+        <el-button
+            type="success"
+            @click="confirmSubmit"
+            :disabled="isButtonsDisabled"
+            v-if="!isExerciseNotStarted && !isExerciseEnded"
+        >
+          <i class="el-icon-check"></i> 提交答案
+        </el-button>
+
+        <!-- 添加状态提示 -->
+        <el-alert
+            v-if="isExerciseNotStarted"
+            title="练习尚未开始，不能提交答案"
+            type="info"
+            :closable="false"
+            show-icon
+            class="status-alert"
+        />
+        <el-alert
+            v-if="isExerciseEnded"
+            title="练习已结束，不能提交答案"
+            type="error"
+            :closable="false"
+            show-icon
+            class="status-alert"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* 添加状态提示样式 */
+.status-alert {
+  flex-grow: 1;
+  margin: 0 10px;
+}
+
+.action-buttons-container {
+  display: flex;
+  align-items: center;
+}
+
 /* 倒计时紧急时闪烁动画 */
 @keyframes blink {
   0% { opacity: 1; }
@@ -370,6 +437,7 @@ const getCheckboxValues = computed(() => {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  padding-bottom: 80px; /* 为固定按钮留出空间 */
 }
 
 .header {
@@ -404,6 +472,7 @@ const getCheckboxValues = computed(() => {
 .exercise-header h2 {
   margin: 0;
   color: #333;
+  font-size: 18px;
 }
 
 .exercise-meta {
@@ -412,21 +481,16 @@ const getCheckboxValues = computed(() => {
 }
 
 .exercise-meta p {
-  margin: 5px 0;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
 }
 
 .meta-label {
   display: inline-block;
-  width: 50px;
+  width: 100px;
   color: #888;
   font-weight: bold;
-}
-
-.action-buttons {
-  margin: 20px 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
 }
 
 .question-list {
@@ -477,10 +541,9 @@ const getCheckboxValues = computed(() => {
 }
 
 .question-desc {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 15px;
+  margin: 10px 0 15px;
   line-height: 1.6;
+  display: inline-block;
 }
 
 .question-options {
@@ -527,14 +590,16 @@ const getCheckboxValues = computed(() => {
 }
 
 .correct-detail {
-  font-size: 14px;
+  font-size: 12px;
   color: #555;
   line-height: 1.8;
+  margin: 15px 0;
+  padding: 0 10px;
 }
 
 .detail-label {
   display: inline-block;
-  width: 60px;
+  width: 100px;
   color: #888;
   font-weight: bold;
 }
@@ -542,9 +607,30 @@ const getCheckboxValues = computed(() => {
 .time-info {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
-  font-size: 13px;
+  margin: 15px 0 10px;
+  font-size: 12px;
   color: #666;
+}
+
+/* 固定在底部的操作按钮 */
+.fixed-action-buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 10px 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.action-buttons-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 20px;
 }
 
 /* 响应式调整 */
@@ -574,6 +660,10 @@ const getCheckboxValues = computed(() => {
   .time-info {
     flex-direction: column;
     gap: 5px;
+  }
+
+  .action-buttons-container {
+    justify-content: center;
   }
 }
 </style>
