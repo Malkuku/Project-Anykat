@@ -90,6 +90,8 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
                 ChoiceQuestion choiceQuestion = studentAnswerDao.selectChoiceQuestion(answer.getQuestionId());
                 if(choiceQuestion != null){
                     Integer currentScore = studentAnswerDao.findCurrentScore(answer.getQuestionId());
+                    //设置批改时间
+                    answer.setCorrectTime(LocalDateTime.now());
                     //单选题
                     if (!choiceQuestion.getIsMulti()){
                         if(choiceQuestion.getCorrectAnswer().equals(answer.getAnswer())){
