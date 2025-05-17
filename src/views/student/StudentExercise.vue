@@ -95,6 +95,11 @@ const calculateScoreRate = (exercise) => {
   <div class="top-container">
     <div class="header-container">
       <div class="header-left">
+        <!-- 返回按钮 -->
+        <el-button type="primary" plain @click="router.go(-1)" class="back-btn">
+          <i class="el-icon-arrow-left"></i> 返回
+        </el-button>
+
         <h1>学生练习信息</h1>
         <el-tag type="info" class="status-tag">当前状态: {{ statusOptions.find(s => s.value === searchForm.status)?.label }}</el-tag>
       </div>
