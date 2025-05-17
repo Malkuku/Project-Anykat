@@ -4,6 +4,7 @@ import StudentCourseView from "@/views/student/StudentCourse.vue";
 import StudentExerciseView from "@/views/student/StudentExercise.vue";
 import StudentAnswerView from "@/views/student/StudentAnswer.vue";
 import TeacherExerciseView from '@/views/teacher/TeacherExercise.vue'
+import TeacherGradingView from "@/views/teacher/TeacherGrading.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,6 +20,7 @@ const router = createRouter({
         { path:'/student/exercise/:courseId/:semesterId',  name: 'studentExercise', component: StudentExerciseView},
         { path: '/student/answer/:courseId/:exerciseId', name: 'studentAnswer', component: StudentAnswerView},
         { path: '/teacher/exercise', name: 'teacherExercise', component: TeacherExerciseView},
+        { path: '/teacher/grading/:exerciseId', name: 'teacherGrading', component: TeacherGradingView}
     ]
 })
 

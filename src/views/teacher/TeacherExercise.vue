@@ -27,7 +27,7 @@ import {
   MoreFilled,
   VideoPlay,    // 进行中图标
   CircleCheck,  // 已完成图标
-  Clock         // 未开始图标
+  Clock, ArrowDown         // 未开始图标
 } from '@element-plus/icons-vue'
 
 // 获取状态图标的方法
@@ -484,15 +484,6 @@ const getStatusType = (status) => {
   return types[status] || '';
 };
 
-// 添加跳转批改页面的方法
-const navigateToGrading = (exerciseId) => {
-  // 这里使用router跳转，请确保已导入useRouter
-  router.push({
-    path: '/teacher/grading',
-    query: { exerciseId }
-  });
-};
-
 // 钩子函数
 onMounted(() => {
   fetchTeacherSemesters().then(() => {
@@ -647,7 +638,7 @@ onMounted(() => {
             <el-button
                 type="success"
                 size="small"
-                @click="navigateToGrading(row.exerciseId)"
+                @click="router.push(`/teacher/grading/${row.exerciseId}`);"
                 :disabled="row.status !== 1"
             >
               批改
