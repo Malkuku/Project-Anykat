@@ -21,9 +21,7 @@ import QuestionDialog from '@/components/QuestionManageDialog.vue';
 import router from "@/router";
 
 import {
-  Edit,
   Delete,
-  DocumentChecked,
   MoreFilled,
   VideoPlay,    // 进行中图标
   CircleCheck,  // 已完成图标
@@ -646,8 +644,8 @@ onMounted(() => {
 
             <!-- 状态和删除操作放入下拉菜单 -->
             <el-dropdown>
-              <el-button type="info" size="small">
-                更多<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              <el-button type="info" size="small" class="more-btn">
+                更多<el-icon><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
@@ -665,7 +663,6 @@ onMounted(() => {
                   <el-dropdown-item
                       @click="deleteExercise(row.exerciseId)"
                       :disabled="row.status === 1"
-                      class="danger-item"
                   >
                     <el-icon><Delete /></el-icon>
                     删除
@@ -846,44 +843,21 @@ onMounted(() => {
   align-items: center;
 }
 
-.el-table {
-  margin-top: 15px;
-}
 
-.el-pagination {
+/* 操作按钮容器样式 */
+.action-buttons {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 8px; /* 控制按钮之间的间距 */
 }
 
-/* 优化下拉选项样式 */
-.el-select-dropdown__item {
-  height: auto;
-  padding: 8px 20px;
-  line-height: 1.5;
+/* 更多按钮特殊样式 */
+.more-btn {
+  margin-left: 10px; /* 移除左边距 */
+  margin-right: 0; /* 移除右边距 */
+  padding: 7px 12px; /* 调整内边距与其他按钮一致 */
 }
 
-/* 确保下拉框足够宽 */
-.el-select-dropdown {
-  min-width: 400px !important;
-}
 
-/* 调整表单元素间距 */
-.el-form-item {
-  margin-bottom: 10px;
-}
-
-/* 题目列表样式 */
-.question-item {
-  padding: 10px;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.question-content {
-  margin-left: 10px;
-}
-
-.question-meta {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 5px;
-}
 </style>
