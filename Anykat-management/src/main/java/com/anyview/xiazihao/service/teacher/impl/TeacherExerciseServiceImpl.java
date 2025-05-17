@@ -137,10 +137,12 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
         }else if(user.getRole() == 1){
             //查看单学期，单班级是否已经存在相同练习名称
             // 获取课程对应的学期ID
-            Integer semesterId = teacherExerciseDao.selectSemesterIdByCourseId(exercise.getCourseId());
-            for(Integer classId : exercise.getClassIds()) {
-                if (teacherExerciseDao.checkExerciseName(semesterId, classId, exercise.getCreatorId(), exercise.getName()) > 0) {
-                    throw new PermissionDeniedException("同一学期，同一班级的练习名称不可重复");
+            if(!exercise.getName().equals(oldExercise.getName())){
+                Integer semesterId = teacherExerciseDao.selectSemesterIdByCourseId(exercise.getCourseId());
+                for(Integer classId : exercise.getClassIds()) {
+                    if (teacherExerciseDao.checkExerciseName(semesterId, classId, exercise.getCreatorId(), exercise.getName()) > 0) {
+                        throw new PermissionDeniedException("同一学期，同一班级的练习名称不可重复");
+                    }
                 }
             }
         }
