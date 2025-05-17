@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.service.teacher.impl;
 
+import com.anyview.xiazihao.annotation.KatTransactional;
 import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
@@ -10,6 +11,7 @@ import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.pojo.question.SubjectiveQuestion;
 import com.anyview.xiazihao.entity.result.PageResult;
 import com.anyview.xiazihao.service.teacher.QuestionService;
+import com.anyview.xiazihao.utils.JdbcUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
@@ -35,8 +37,10 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public void addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException {
+    @KatTransactional
+    public Integer addQuestion(BaseQuestion question) throws SQLException, FileNotFoundException {
         questionDao.addQuestion(question);
+        return JdbcUtils.getLastInsertId();
     }
 
     @Override

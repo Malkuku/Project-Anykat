@@ -81,10 +81,10 @@ public class QuestionController {
 
     //添加题目
     @KatRequestMapping(path = "", method = "POST")
-    public void addQuestion(
+    public Integer addQuestion(
             @KatRequestBody BaseQuestion question) throws SQLException, FileNotFoundException {
         log.debug("接收到的题目信息:{}", question);
-        questionService.addQuestion(question);
+        return questionService.addQuestion(question);
     }
 
     //批量删除题目
