@@ -99,7 +99,8 @@ public class TeacherGradingDaoImpl implements TeacherGradingDao {
             UPDATE student_answer
             SET correct_status = ?,
                 correct_comment = ?,
-                correct_time = ?
+                correct_time = ?,
+                score = ?
             WHERE id = ?
             """;
         JdbcUtils.executeUpdate(
@@ -107,6 +108,7 @@ public class TeacherGradingDaoImpl implements TeacherGradingDao {
                 studentAnswer.getCorrectStatus(),
                 studentAnswer.getCorrectComment(),
                 studentAnswer.getCorrectTime(),
+                studentAnswer.getScore(),
                 studentAnswer.getId()
         );
     }
