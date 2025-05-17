@@ -27,7 +27,7 @@ public class TeacherGradingController {
     private TeacherGradingService teacherGradingService;
 
     //修改批改状态
-    @KatRequestMapping(path = "/correction", method = "POST")
+    @KatRequestMapping(path = "/correction", method = "PUT")
     public void updateStudentAnswerCorrection(
             @KatRequestBody StudentAnswer studentAnswer) throws SQLException, FileNotFoundException {
         teacherGradingService.updateStudentAnswerCorrection(studentAnswer);
