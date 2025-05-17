@@ -134,14 +134,13 @@ const questionForm = ref({
 const choiceForm = ref({
   id: null,
   questionId: null,
-  isMulti: false,
   options: {
     A: '',
     B: '',
     C: '',
     D: ''
   },
-  correctAnswer: '',
+  correctAnswer: [],
   analysis: ''
 });
 
@@ -170,7 +169,18 @@ const choiceRules = ref({
     C: [{ required: true, message: '请输入选项C', trigger: 'blur' }],
     D: [{ required: true, message: '请输入选项D', trigger: 'blur' }]
   },
-  correctAnswer: [{ required: true, message: '请选择正确答案', trigger: 'change' }]
+  correctAnswer: [{
+    validator: (rule, value, callback) => {
+      if (!value || value.length === 0) {
+        callback(new Error('请选择正确答案'));
+      } else if (questionForm.value.type === 0 && value.length > 1) {
+        callback(new Error('单选题只能选择一个答案'));
+      } else {
+        callback();
+      }
+    },
+    trigger: 'change'
+  }]
 });
 
 const subjectiveRules = ref({
@@ -231,16 +241,44 @@ const editQuestion = async (id) => {
       activeTab.value = 'basic';
       questionForm.value = result.data;
 
-      // 根据题型加载扩展信息
+      // 根据题型预加载扩展信息
       if (result.data.type === 0 || result.data.type === 1) {
-        const choiceResult = await queryChoiceByQuestionIdApi(id);
-        if (choiceResult.code) {
-          choiceForm.value = choiceResult.data;
+        try {
+          const choiceResult = await queryChoiceByQuestionIdApi(id);
+          if (choiceResult.code) {
+            choiceForm.value = {
+              ...choiceResult.data,
+              correctAnswer: choiceResult.data.correctAnswer.split(',')
+            };
+          } else {
+            // 如果没有选择题扩展信息，初始化表单
+            choiceForm.value = {
+              id: null,
+              questionId: id,
+              options: { A: '', B: '', C: '', D: '' },
+              correctAnswer: [],
+              analysis: ''
+            };
+          }
+        } catch (error) {
+          console.error('加载选择题信息失败:', error);
         }
       } else if (result.data.type === 2) {
-        const subjectiveResult = await querySubjectiveByQuestionIdApi(id);
-        if (subjectiveResult.code) {
-          subjectiveForm.value = subjectiveResult.data;
+        try {
+          const subjectiveResult = await querySubjectiveByQuestionIdApi(id);
+          if (subjectiveResult.code) {
+            subjectiveForm.value = subjectiveResult.data;
+          } else {
+            // 如果没有简答题扩展信息，初始化表单
+            subjectiveForm.value = {
+              id: null,
+              questionId: id,
+              referenceAnswer: '',
+              wordLimit: 500
+            };
+          }
+        } catch (error) {
+          console.error('加载简答题信息失败:', error);
         }
       }
     }
@@ -270,7 +308,7 @@ const saveQuestion = async () => {
         }
 
         if (result.code) {
-          const questionId = questionForm.value.id || result.data.id;
+          const questionId = questionForm.value.id || result.data;
 
           // 根据题型保存扩展信息
           if (questionForm.value.type === 0 || questionForm.value.type === 1) {
@@ -301,15 +339,18 @@ const saveChoice = async (questionId) => {
   await choiceFormRef.value.validate(async (valid) => {
     if (valid) {
       let result;
+      const formData = {
+        ...choiceForm.value,
+        questionId: questionId,
+        isMulti: questionForm.value.type === 1, // 根据题目类型自动设置
+        correctAnswer: Array.isArray(choiceForm.value.correctAnswer)
+            ? choiceForm.value.correctAnswer.join(',')
+            : choiceForm.value.correctAnswer
+      };
+
       if (choiceForm.value.id) {
-        // 更新选择题
-        result = await updateChoiceApi(choiceForm.value);
+        result = await updateChoiceApi(formData);
       } else {
-        // 新增选择题
-        const formData = {
-          ...choiceForm.value,
-          questionId: questionId
-        };
         result = await addChoiceApi(formData);
       }
 
@@ -319,6 +360,7 @@ const saveChoice = async (questionId) => {
     }
   });
 };
+
 
 // 保存简答题
 const saveSubjective = async (questionId) => {
@@ -347,24 +389,41 @@ const saveSubjective = async (questionId) => {
 };
 
 // 删除题目
-const deleteQuestion = async (id) => {
+const deleteQuestion = async (ids) => {
   loading.value = true;
-  try {
-    await ElMessageBox.confirm('确定删除该题目吗?', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    });
+  // 如果是单个ID，转换为数组
+  const idArray = Array.isArray(ids) ? ids : [ids];
 
-    const result = await deleteQuestionsApi(id);
+  try {
+    await ElMessageBox.confirm(
+        `确定删除选中的${idArray.length}道题目吗?`,
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+    );
+
+    loading.value = true;
+    // 将数组转换为逗号分隔的字符串
+    const idParam = idArray.join(',');
+    const result = await deleteQuestionsApi(idParam);
+
     if (result.code) {
-      ElMessage.success('删除成功');
-      await search();
+      ElMessage.success(`成功删除${idArray.length}道题目`);
+      // 如果是批量删除，清空选中项
+      if (idArray.length > 1) {
+        selectedQuestions.value = [];
+      }
+      await search(); // 刷新列表
     } else {
       ElMessage.error(result.msg);
     }
-  } catch {
-    ElMessage.info('已取消删除');
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败');
+    }
   } finally {
     loading.value = false;
   }
@@ -444,6 +503,34 @@ watch(() => questionList.value, (newVal) => {
     });
   }
 }, { deep: true });
+
+// 监听题型变化
+watch(() => questionForm.value.type, (newType) => {
+  if (newType === 0 || newType === 1) {
+    // 选择题
+    choiceForm.value = {
+      id: null,
+      questionId: null,
+      isMulti: newType === 1, // 1表示多选题
+      options: {
+        A: '',
+        B: '',
+        C: '',
+        D: ''
+      },
+      correctAnswer: [],
+      analysis: ''
+    };
+  } else if (newType === 2) {
+    // 简答题
+    subjectiveForm.value = {
+      id: null,
+      questionId: null,
+      referenceAnswer: '',
+      wordLimit: 500
+    };
+  }
+});
 </script>
 
 <template>
@@ -536,7 +623,7 @@ watch(() => questionList.value, (newVal) => {
       </el-button>
       <el-button
           type="danger"
-          @click="deleteQuestion"
+          @click="deleteQuestion(selectedQuestions)"
           :disabled="selectedQuestions.length === 0"
           :loading="loading"
       >
@@ -650,11 +737,6 @@ watch(() => questionList.value, (newVal) => {
                   <el-input-number v-model="questionForm.score" :min="0" controls-position="right" />
                 </el-form-item>
               </el-col>
-              <el-col :span="12">
-                <el-form-item label="创建人ID" prop="creatorId">
-                  <el-input v-model="questionForm.creatorId" disabled />
-                </el-form-item>
-              </el-col>
             </el-row>
             <el-form-item label="题目描述" prop="description">
               <el-input v-model="questionForm.description" type="textarea" :rows="2" placeholder="请输入题目描述" />
@@ -677,9 +759,6 @@ watch(() => questionList.value, (newVal) => {
               :rules="choiceRules"
               label-width="100px"
           >
-            <el-form-item label="是否多选" prop="isMulti">
-              <el-switch v-model="choiceForm.isMulti" />
-            </el-form-item>
             <el-form-item label="选项A" prop="options.A">
               <el-input v-model="choiceForm.options.A" placeholder="请输入选项A内容" />
             </el-form-item>
