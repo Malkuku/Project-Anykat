@@ -77,8 +77,8 @@ SELECT
     sc.student_id,
     COUNT(DISTINCT eq.question_id) AS total_question_count,
     SUM(eq.score) AS total_exercise_score,
-    COUNT(DISTINCT sa.question_id) AS completed_question_count,
-    SUM(COALESCE(sa.score, 0)) AS student_total_score
+    COUNT(DISTINCT CASE WHEN sa.correct_status IN (1, 2) THEN sa.question_id END) AS completed_question_count,
+    SUM(COALESCE(CASE WHEN sa.correct_status IN (1, 2) THEN sa.score ELSE 0 END, 0)) AS student_total_score
 FROM
     exercise e
 JOIN
