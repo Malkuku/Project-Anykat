@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { queryStudentCoursesApi } from '@/api/student/studentCourse';
-import { useUserStore } from '@/stores/user';
-import { ElMessage } from 'element-plus';
-import {Calendar, Collection, Document} from "@element-plus/icons-vue";
-import { useRouter } from 'vue-router';
+import {onMounted, ref} from 'vue';
+import {queryStudentCourseProgressApi, queryStudentCoursesApi} from '@/api/student/studentCourse';
+import {useUserStore} from '@/stores/user';
+import {ElMessage} from 'element-plus';
+import {Calendar, Clock, Collection, Document} from "@element-plus/icons-vue";
+import {useRouter} from 'vue-router';
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -51,6 +51,47 @@ const fetchSemesterOptions = async () => {
   }
 };
 
+// 获取课程进度数据
+const fetchCourseProgress = async (courseId) => {
+  try {
+    // 获取全部练习进度
+    const allResult = await queryStudentCourseProgressApi({
+      studentId: userStore.id,
+      courseId: courseId
+    });
+
+    // 获取进行中练习进度
+    const inProgressResult = await queryStudentCourseProgressApi({
+      studentId: userStore.id,
+      courseId: courseId,
+      exerciseStatus: 1 // 进行中状态
+    });
+
+    if (allResult.code && inProgressResult.code) {
+      return {
+        allProgress: {
+          total: allResult.data.totalQuestions,
+          completed: allResult.data.completedQuestions,
+          percentage: allResult.data.totalQuestions > 0
+              ? Math.round((allResult.data.completedQuestions / allResult.data.totalQuestions) * 100)
+              : 0
+        },
+        inProgress: {
+          total: inProgressResult.data.totalQuestions,
+          completed: inProgressResult.data.completedQuestions,
+          percentage: inProgressResult.data.totalQuestions > 0
+              ? Math.round((inProgressResult.data.completedQuestions / inProgressResult.data.totalQuestions) * 100)
+              : 0
+        }
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('获取课程进度失败:', error);
+    return null;
+  }
+};
+
 // 获取课程数据
 const fetchCourses = async () => {
   try {
@@ -60,7 +101,19 @@ const fetchCourses = async () => {
     });
 
     if (result.code) {
-      courses.value = result.data.list;
+      // 获取每个课程的进度数据
+      courses.value = await Promise.all(
+          result.data.list.map(async course => {
+            const progress = await fetchCourseProgress(course.courseId);
+            return {
+              ...course,
+              progress: progress || {
+                allProgress: {total: 0, completed: 0, percentage: 0},
+                inProgress: {total: 0, completed: 0, percentage: 0}
+              }
+            };
+          })
+      );
       total.value = result.data.total;
     }
   } catch (error) {
@@ -111,7 +164,6 @@ const formatDate = (dateStr) => {
   <div class="course-content">
     <!-- 课程卡片列表 -->
     <div class="course-cards-container">
-      <!-- 添加 v-for 循环 -->
       <div
           v-for="course in courses"
           :key="course.courseId"
@@ -119,36 +171,75 @@ const formatDate = (dateStr) => {
       >
         <!-- 卡片头部 -->
         <div class="card-header">
-          <div class="course-badge">
-            <el-icon class="course-icon"><Document /></el-icon>
-          </div>
-          <div class="course-info">
-            <h3>{{ course.courseName }}</h3>
-            <div class="meta-info">
-              <span class="semester">
-                <el-icon><Calendar /></el-icon>
-                {{ course.semesterName }}
-              </span>
-              <span class="exercise-total">
-                <el-icon><Collection /></el-icon>
-                共 {{ course.exerciseCount || 0 }} 个练习
-              </span>
+          <div class="header-left">
+            <div class="course-badge">
+              <el-icon class="course-icon"><Document /></el-icon>
             </div>
+            <div class="course-info">
+              <h3>{{ course.courseName }}</h3>
+              <div class="meta-info">
+                <span class="semester">
+                  <el-icon><Calendar /></el-icon>
+                  {{ course.semesterName }}
+                </span>
+                <span class="exercise-total">
+                  <el-icon><Collection /></el-icon>
+                  共 {{ course.exerciseCount || 0 }} 个练习
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <el-tooltip content="进入课程" placement="top">
+              <el-button
+                  type="primary"
+                  circle
+                  class="play-btn"
+                  @click="router.push(`/student/exercise/${course.courseId}/${course.semesterId}`)"
+              >
+                <span class="play-icon"></span>
+              </el-button>
+            </el-tooltip>
           </div>
         </div>
 
-        <!-- 卡片底部 -->
-        <div class="card-footer">
-          <el-tooltip content="进入课程" placement="top">
-            <el-button
-                type="primary"
-                circle
-                class="play-btn"
-                @click="router.push(`/student/exercise/${course.courseId}/${course.semesterId}`)"
-            >
-              <span class="play-icon"></span>
-            </el-button>
-          </el-tooltip>
+        <!-- 进度条区域 -->
+        <div class="progress-section">
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-title">
+                <el-icon><Document /></el-icon>
+                全部练习题目进度
+              </span>
+              <span class="progress-count">
+                {{ course.progress.allProgress.completed }}/{{ course.progress.allProgress.total }}
+              </span>
+            </div>
+            <el-progress
+                :percentage="course.progress.allProgress.percentage"
+                :stroke-width="10"
+                :show-text="false"
+                color="#409EFF"
+            />
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-title">
+                <el-icon><Clock /></el-icon>
+                进行中练习题目
+              </span>
+              <span class="progress-count">
+                {{ course.progress.inProgress.completed }}/{{ course.progress.inProgress.total }}
+              </span>
+            </div>
+            <el-progress
+                :percentage="course.progress.inProgress.percentage"
+                :stroke-width="10"
+                :show-text="false"
+                color="#67C23A"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -166,7 +257,51 @@ const formatDate = (dateStr) => {
   </div>
 </template>
 
+
 <style scoped>
+/* 进度条区域样式 */
+.progress-section {
+  margin: 15px 0;
+  padding: 10px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.progress-item {
+  margin-bottom: 15px;
+}
+
+.progress-item:last-child {
+  margin-bottom: 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.progress-title {
+  color: #606266;
+  display: flex;
+  align-items: center;
+}
+
+.progress-title .el-icon {
+  margin-right: 5px;
+}
+
+.progress-count {
+  color: #909399;
+  font-weight: 500;
+}
+
+/* 调整卡片内边距 */
+.course-card {
+  padding: 20px 25px;
+}
+
 /* 顶层菜单栏样式 */
 .top-navbar {
   position: sticky;
@@ -281,10 +416,23 @@ const formatDate = (dateStr) => {
 /* 卡片头部 */
 .card-header {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 15px;
   margin-bottom: 15px;
 }
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-grow: 1;
+}
+
+.header-right {
+  flex-shrink: 0;
+}
+
 
 .course-badge {
   background: #409eff;
@@ -318,12 +466,6 @@ const formatDate = (dateStr) => {
 
 .meta-info .el-icon {
   margin-right: 4px;
-}
-
-/* 卡片底部 */
-.card-footer {
-  display: flex;
-  justify-content: flex-end;
 }
 
 /* 分页 */
