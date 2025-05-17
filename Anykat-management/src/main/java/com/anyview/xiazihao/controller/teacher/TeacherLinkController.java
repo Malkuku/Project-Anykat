@@ -9,6 +9,7 @@ import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.context.UserContext;
 import com.anyview.xiazihao.entity.pojo.Class;
 import com.anyview.xiazihao.entity.pojo.Course;
+import com.anyview.xiazihao.entity.pojo.Semester;
 import com.anyview.xiazihao.service.teacher.TeacherLinkService;
 
 import java.io.FileNotFoundException;
@@ -22,9 +23,9 @@ public class TeacherLinkController {
     @KatAutowired
     private TeacherLinkService teacherLinkService;
 
-    // 根据教师ID查询关联班级
-    @KatRequestMapping(path = "/classes/{id}", method = "GET")
-    public List<Class> getTeacherClasses(
+    // 根据教师ID查询关联学期
+    @KatRequestMapping(path = "/semesters/{id}", method = "GET")
+    public List<Semester> getTeacherSemesters(
             @KatPathVariable("id") Integer teacherId) throws SQLException, FileNotFoundException {
         if(UserContext.isAuthOpen()){
             try{
@@ -33,7 +34,22 @@ public class TeacherLinkController {
                 UserContext.clear();
             }
         }
-        return teacherLinkService.getTeacherClasses(teacherId);
+        return teacherLinkService.getTeacherSemesters(teacherId);
+    }
+
+    // 根据教师ID查询关联班级
+    @KatRequestMapping(path = "/classes", method = "GET")
+    public List<Class> getTeacherClasses(
+            @KatRequestParam("teacherId") Integer teacherId,
+            @KatRequestParam("semesterId") Integer semesterId) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                teacherId = UserContext.getUser().getId();
+            }finally{
+                UserContext.clear();
+            }
+        }
+        return teacherLinkService.getTeacherClasses(teacherId,semesterId);
     }
 
     // 根据教师ID查询关联课程

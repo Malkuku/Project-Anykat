@@ -5,6 +5,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.teacher.TeacherLinkDao;
 import com.anyview.xiazihao.entity.pojo.Class;
 import com.anyview.xiazihao.entity.pojo.Course;
+import com.anyview.xiazihao.entity.pojo.Semester;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
 import java.io.FileNotFoundException;
@@ -15,28 +16,32 @@ import java.util.List;
 @KatSingleton
 public class TeacherLinkDaoImpl implements TeacherLinkDao {
     @Override
-    public List<Class> getTeacherClasses(Integer teacherId) throws SQLException, FileNotFoundException {
+    public List<Class> getTeacherClasses(Integer teacherId, Integer semesterId) throws SQLException, FileNotFoundException {
         String sql = """
                 SELECT
-                    c.id,
-                    c.name
-                FROM
-                    class c
-                JOIN
-                    exercise_class ec ON c.id = ec.class_id
-                JOIN
-                    exercise e ON ec.exercise_id = e.id
-                JOIN
-                    teacher_course tc ON e.course_id = tc.course_id
-                WHERE
-                    tc.teacher_id = ?
-                GROUP BY
-                    c.id;
+                     cl.id,
+                     cl.name
+                 FROM
+                     class cl
+                 JOIN
+                     exercise_class ec ON cl.id = ec.class_id
+                 JOIN
+                     exercise e ON ec.exercise_id = e.id
+                 JOIN
+                     course co ON e.course_id = co.id
+                 JOIN
+                     teacher_course tc ON co.id = tc.course_id
+                 WHERE
+                     tc.teacher_id = ?
+                     AND co.semester_id = ?
+                 ORDER BY
+                     cl.name ASC;
                 """;
         return JdbcUtils.executeQuery(
                 sql,
                 Class.class,
-                teacherId
+                teacherId,
+                semesterId
         );
     }
 
@@ -63,6 +68,32 @@ public class TeacherLinkDaoImpl implements TeacherLinkDao {
                 Course.class,
                 teacherId,
                 semesterId
+        );
+    }
+
+    @Override
+    public List<Semester> getTeacherSemesters(Integer teacherId) throws SQLException, FileNotFoundException {
+        String sql = """
+                SELECT
+                    s.id,
+                    s.name,
+                    s.start_time,
+                    s.end_time
+                FROM
+                    semester s
+                JOIN
+                    course c ON s.id = c.semester_id
+                JOIN
+                    teacher_course tc ON c.id = tc.course_id
+                WHERE
+                    tc.teacher_id = ?
+                ORDER BY
+                    s.start_time DESC;
+                """;
+        return JdbcUtils.executeQuery(
+                sql,
+                Semester.class,
+                teacherId
         );
     }
 }
