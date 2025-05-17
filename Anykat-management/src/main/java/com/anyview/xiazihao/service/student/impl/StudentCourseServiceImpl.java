@@ -6,6 +6,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.student.StudentCourseDao;
 import com.anyview.xiazihao.entity.param.view.StudentCourseQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
+import com.anyview.xiazihao.entity.view.StudentCourseProgress;
 import com.anyview.xiazihao.entity.view.StudentCourseView;
 import com.anyview.xiazihao.service.student.StudentCourseService;
 
@@ -31,5 +32,10 @@ public class StudentCourseServiceImpl implements StudentCourseService {
         List<StudentCourseView> studentCourses = studentCourseDao.selectStudentCoursesByPage(param);
 
         return new PageResult<>(total, studentCourses);
+    }
+
+    @Override
+    public StudentCourseProgress selectStudentCourseProgress(Integer studentId, Integer courseId, Integer exerciseStatus) throws SQLException, FileNotFoundException {
+        return studentCourseDao.selectStudentCourseProgress(studentId, courseId, exerciseStatus);
     }
 }

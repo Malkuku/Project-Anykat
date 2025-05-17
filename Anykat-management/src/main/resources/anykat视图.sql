@@ -27,6 +27,39 @@ WHERE
 GROUP BY
     u.id, c.id, s.id;
 
+-- 完成数据统计
+CREATE OR REPLACE VIEW v_student_course_progress AS
+SELECT
+    sc.student_id,
+    c.id AS course_id,
+    s.id AS semester_id,
+    e.id AS exercise_id,
+    (SELECT COUNT(DISTINCT e2.id)
+     FROM exercise e2
+     JOIN exercise_class ec2 ON ec2.exercise_id = e2.id
+     JOIN student_class sc2 ON sc2.class_id = ec2.class_id
+     WHERE e2.course_id = c.id AND sc2.student_id = sc.student_id) AS total_exercises,
+    COUNT(DISTINCT eq.question_id) AS total_questions,
+    SUM(eq.score) AS total_score,
+    COUNT(DISTINCT sa.question_id) AS completed_questions,
+    SUM(CASE WHEN sa.correct_status > 0 THEN eq.score ELSE 0 END) AS completed_score,
+    e.status AS exercise_status
+FROM
+    course c
+JOIN semester s ON c.semester_id = s.id
+JOIN exercise e ON e.course_id = c.id
+JOIN exercise_question eq ON eq.exercise_id = e.id
+JOIN exercise_class ec ON ec.exercise_id = e.id
+JOIN student_class sc ON sc.class_id = ec.class_id
+JOIN user u ON sc.student_id = u.id
+LEFT JOIN student_answer sa ON sa.exercise_id = e.id
+                         AND sa.question_id = eq.question_id
+                         AND sa.student_id = sc.student_id
+                         AND sa.correct_status > 0
+GROUP BY
+    sc.student_id, c.id, s.id, e.id, e.status;
+
+
 -- 学生练习视图
 CREATE OR REPLACE VIEW v_student_exercises AS
 SELECT
@@ -69,79 +102,6 @@ LEFT JOIN
 GROUP BY
     e.id, e.name, e.course_id, c.name, e.start_time, e.end_time,
     e.status, e.creator_id, u.name, s.id, s.name, sc.student_id;
-
-
--- 学生查看练习题目列表
-CREATE OR REPLACE VIEW v_student_exercise_questions AS
-SELECT
-    eq.exercise_id,
-    e.name AS exercise_name,
-    e.course_id,
-    c.name AS course_name,
-    e.start_time,
-    e.end_time,
-    e.status AS exercise_status,
-    bq.id AS question_id,
-    bq.type AS question_type,
-    bq.description AS question_description,
-    bq.content AS question_content,
-    bq.difficulty,
-    eq.score,
-    eq.sort_order,
-    -- 学生相关信息（只有当有答题记录时才显示）
-    sa.student_id,
-    u.name AS student_name,
-    sa.answer AS student_answer,
-    sa.score AS student_score,
-    sa.correct_status,
-    sa.correct_comment,
-    sa.submit_time,
-    -- 根据批改状态决定是否显示正确答案
-    CASE
-        WHEN sa.id IS NOT NULL AND sa.correct_status = 2 THEN cq.correct_answer  -- 已批改显示答案
-        ELSE NULL                                         -- 其他情况不显示
-    END AS correct_answer,
-    -- 根据批改状态决定是否显示答案解析
-    CASE
-        WHEN sa.id IS NOT NULL AND sa.correct_status = 2 THEN cq.analysis       -- 已批改显示解析
-        ELSE NULL                                        -- 其他情况不显示
-    END AS answer_analysis,
-    -- 选择题选项
-    CASE
-        WHEN bq.type IN (0, 1) THEN cq.options
-        ELSE NULL
-    END AS question_options,
-    -- 主观题参考信息
-    CASE
-        WHEN bq.type = 2 THEN sq.reference_answer
-        ELSE NULL
-    END AS reference_answer,
-    CASE
-        WHEN bq.type = 2 THEN sq.word_limit
-        ELSE NULL
-    END AS word_limit,
-    eq.created_at,
-    eq.updated_at
-FROM
-    exercise_question eq
-JOIN
-    exercise e ON eq.exercise_id = e.id
-JOIN
-    course c ON e.course_id = c.id
-JOIN
-    base_question bq ON eq.question_id = bq.id
-LEFT JOIN
-    student_answer sa ON eq.exercise_id = sa.exercise_id
-                     AND eq.question_id = sa.question_id
-                     -- 添加学生ID条件，只有当查询特定学生时才关联
-LEFT JOIN
-    user u ON sa.student_id = u.id
-LEFT JOIN
-    choice_question cq ON bq.id = cq.question_id AND bq.type IN (0, 1)
-LEFT JOIN
-    subjective_question sq ON bq.id = sq.question_id AND bq.type = 2;
-
-
 
 -- 纯粹的题目列表版本
 CREATE OR REPLACE VIEW v_student_exercise_questions AS

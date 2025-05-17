@@ -1,6 +1,7 @@
 package com.anyview.xiazihao.dao.student;
 
 import com.anyview.xiazihao.entity.param.view.StudentCourseQueryParam;
+import com.anyview.xiazihao.entity.view.StudentCourseProgress;
 import com.anyview.xiazihao.entity.view.StudentCourseView;
 
 import java.io.FileNotFoundException;
@@ -12,4 +13,6 @@ public interface StudentCourseDao {
     Integer selectStudentCourseCount(StudentCourseQueryParam param) throws FileNotFoundException, SQLException;
     //  根据条件查询学生课程
     List<StudentCourseView> selectStudentCoursesByPage(StudentCourseQueryParam param) throws SQLException, FileNotFoundException;
+    //  根据条件查询学生课程进度
+    StudentCourseProgress selectStudentCourseProgress(Integer studentId, Integer courseId, Integer exerciseStatus) throws SQLException, FileNotFoundException;
 }

@@ -4,6 +4,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.student.StudentCourseDao;
 import com.anyview.xiazihao.entity.param.view.StudentCourseQueryParam;
+import com.anyview.xiazihao.entity.view.StudentCourseProgress;
 import com.anyview.xiazihao.entity.view.StudentCourseView;
 import com.anyview.xiazihao.utils.JdbcUtils;
 
@@ -48,5 +49,31 @@ public class StudentCourseDaoImpl implements StudentCourseDao {
                 StudentCourseView.class,
                 param
         );
+    }
+
+    @Override
+    public StudentCourseProgress selectStudentCourseProgress(Integer studentId, Integer courseId, Integer exerciseStatus) throws SQLException, FileNotFoundException {
+        String sql = """
+                SELECT
+                    SUM(total_questions) as total_questions,
+                    SUM(completed_questions) as completed_questions,
+                    SUM(total_score) as total_score,
+                    SUM(completed_score) as completed_score
+                FROM
+                    v_student_course_progress
+                WHERE
+                    student_id = ?
+                    AND (? IS NULL OR course_id = ?)
+                    AND (? IS NULL OR exercise_status = ?)
+                ORDER BY
+                    exercise_id;
+                """;
+        return JdbcUtils.executeQuery(
+                sql,
+                StudentCourseProgress.class,
+                studentId,
+                courseId, courseId,
+                exerciseStatus, exerciseStatus
+        ).get(0);
     }
 }

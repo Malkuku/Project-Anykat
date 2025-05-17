@@ -8,6 +8,7 @@ import com.anyview.xiazihao.controller.annotation.KatRequestParam;
 import com.anyview.xiazihao.entity.context.UserContext;
 import com.anyview.xiazihao.entity.param.view.StudentCourseQueryParam;
 import com.anyview.xiazihao.entity.result.PageResult;
+import com.anyview.xiazihao.entity.view.StudentCourseProgress;
 import com.anyview.xiazihao.entity.view.StudentCourseView;
 import com.anyview.xiazihao.service.student.StudentCourseService;
 
@@ -20,6 +21,22 @@ import java.sql.SQLException;
 public class StudentCourseController {
     @KatAutowired
     private StudentCourseService studentCourseService;
+
+    // 学生课程进度查询
+    @KatRequestMapping(path = "/progress", method = "GET")
+    public StudentCourseProgress selectStudentCourseProgress(
+            @KatRequestParam("studentId") Integer studentId,
+            @KatRequestParam(value = "courseId",  required = false) Integer courseId,
+            @KatRequestParam(value = "exerciseStatus",required = false) Integer exerciseStatus) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                studentId = UserContext.getUser().getId();
+            }finally{
+                UserContext.clear();
+            }
+        }
+        return studentCourseService.selectStudentCourseProgress(studentId, courseId, exerciseStatus);
+    }
 
     // 学生课程信息分页查询
     @KatRequestMapping(path = "", method = "GET")
