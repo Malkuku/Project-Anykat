@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Enumeration;
+import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -110,7 +111,7 @@ public class TomcatApplication {
     }
 
     private static boolean isRunningInJar() {
-        String protocol = TomcatApplication.class.getResource("").getProtocol();
+        String protocol = Objects.requireNonNull(TomcatApplication.class.getResource("")).getProtocol();
         return "jar".equals(protocol);
     }
 
@@ -124,7 +125,7 @@ public class TomcatApplication {
         tempDir.deleteOnExit();
 
         String jarPath = jarUrl.getPath().replaceFirst("file:", "").split("!")[0];
-        jarPath = URLDecoder.decode(jarPath, StandardCharsets.UTF_8.name());  // 处理路径编码
+        jarPath = URLDecoder.decode(jarPath, StandardCharsets.UTF_8);  // 处理路径编码
 
         try (JarFile jarFile = new JarFile(jarPath)) {
             Enumeration<JarEntry> entries = jarFile.entries();
