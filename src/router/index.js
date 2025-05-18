@@ -46,7 +46,7 @@ router.beforeEach((to, from, next) => {
 
     //检查需要教师权限
     if(to.matched.some(record => record.meta.requiresTeacher)){
-        if(!userStore.role < 1){
+        if(!userStore.role > 0){
             next({
                 path: '/error',
                 query: {
