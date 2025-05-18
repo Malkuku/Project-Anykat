@@ -427,15 +427,6 @@ onMounted(() => {
   z-index: 3;
 }
 
-.slide-enter-active, .slide-leave-active {
-  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.slide-enter-from, .slide-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
 .active .panel-content {
   transform: translateX(-150px);
 }
@@ -443,19 +434,6 @@ onMounted(() => {
 .login-btn {
   width: 100%;
   margin-top: 10px;
-}
-
-/* 波浪效果 */
-.waves {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100px;
-  background-size: cover;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255,255,255,0.2)' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat;
-  z-index: 1;
-  animation: wave 8s linear infinite;
 }
 
 /* 动画效果 */
@@ -473,11 +451,6 @@ onMounted(() => {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-@keyframes wave {
-  0% { background-position-x: 0; }
-  100% { background-position-x: 1440px; }
 }
 
 /* 响应式设计 */
