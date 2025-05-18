@@ -5,9 +5,11 @@ tomcat:
   #端口
   port: 8080
   #webapp目录
-  webappDir: "Anykat-management/src/webapp"
+  webappDir: "Anykat-management/src/main/webapp"
   #扫描的目录
   classesDir: "Anykat-management/target/classes"
+  #Jar包的内部路径
+  jarClassesDir: "/com/anyview/xiazihao/controller"
 
 
 # Jwt相关配置

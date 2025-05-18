@@ -7,4 +7,5 @@ public class TomcatConfig {
     private int port;
     private String webappDir;
     private String classesDir;
+    private String jarClassesDir;
 }
