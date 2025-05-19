@@ -19,6 +19,7 @@ public class ServletUtils {
         resp.setContentType("application/json");
         PrintWriter out = resp.getWriter();
         out.print(JsonUtils.toJson(result));
+        log.info("返回结果:{}", JsonUtils.toJson(result));
         out.flush();
     }
     // 封装获取请求体方法
