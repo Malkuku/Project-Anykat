@@ -125,15 +125,33 @@ onMounted(() => {
   >
     <!-- 查询表单 -->
     <div class="container">
-      <el-form :model="queryParams" inline>
-        <el-form-item label="用户姓名">
-          <el-input v-model="queryParams.name" placeholder="请输入用户姓名" width="150" clearable @clear="search" />
+      <el-form :model="queryParams" inline class="query-form">
+        <el-form-item label="用户姓名" class="form-item">
+          <el-input
+              v-model="queryParams.name"
+              placeholder="请输入用户姓名"
+              clearable
+              @clear="search"
+          />
         </el-form-item>
-        <el-form-item label="用户名">
-          <el-input v-model="queryParams.username" placeholder="请输入用户名" width="150" clearable @clear="search" />
+
+        <el-form-item label="用户名" class="form-item">
+          <el-input
+              v-model="queryParams.username"
+              placeholder="请输入用户名"
+              clearable
+              @clear="search"
+          />
         </el-form-item>
-        <el-form-item label="身份">
-          <el-select v-model="queryParams.role" placeholder="请选择身份" width="120" clearable @change="search">
+
+        <el-form-item label="身份" class="form-item role-select">
+          <el-select
+              v-model="queryParams.role"
+              placeholder="请选择身份"
+              clearable
+              @change="search"
+              style="width: 150px"
+          >
             <el-option
                 v-for="item in roleOptions"
                 :key="item.value"
@@ -142,7 +160,8 @@ onMounted(() => {
             />
           </el-select>
         </el-form-item>
-        <el-form-item>
+
+        <el-form-item class="form-item actions">
           <el-button type="primary" @click="search">查询</el-button>
           <el-button @click="resetQuery">重置</el-button>
         </el-form-item>
@@ -190,6 +209,42 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
+/* 查询表单优化 */
+.query-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-item {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 180px;
+}
+
+.role-select {
+  min-width: 200px; /* 给选择器更多空间 */
+}
+
+.actions {
+  flex: none;
+  min-width: auto;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .form-item {
+    min-width: 100%;
+  }
+
+  .actions {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
+
 .container {
   margin: 15px 0;
 }

@@ -311,9 +311,58 @@ onMounted(() => {
 
     </div>
   </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2025 Anykat实训平台 | ka-cat </p>
+      <p>了解详情 | <a href="https://github.com/Malkuku/Project-Anykat.git" target="_blank">GitHub仓库</a></p>
+    </div>
+  </footer>
 </template>
 
 <style scoped>
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 8px 0; /* 减少上下内边距 */
+  background-color: rgba(255, 255, 255, 0.7); /* 增加透明度 */
+  text-align: center;
+  font-size: 12px;
+  color: rgba(102, 102, 102, 0.9); /* 文字也增加透明度 */
+  border-top: 1px solid rgba(238, 238, 238, 0.7); /* 边框透明度 */
+  z-index: 10;
+  backdrop-filter: blur(3px); /* 减少模糊程度 */
+  transform: translateY(5px); /* 稍微往下移动一点 */
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.footer p {
+  margin: 3px 0; /* 减少段落间距 */
+  line-height: 1.3;
+}
+
+.footer a {
+  color: #409eff; /* 给链接添加主题色 */
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 6px 0;
+    font-size: 11px; /* 稍微增大移动端字体 */
+  }
+}
 
 /* 表单验证错误提示样式 */
 .login-form :deep(.el-form-item__error) {
