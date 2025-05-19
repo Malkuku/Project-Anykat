@@ -1,34 +1,25 @@
 -- 删除所有表数据（按照外键依赖顺序）
-DELETE FROM student_answer;
-DELETE FROM exercise_question;
-DELETE FROM exercise_class;
-DELETE FROM notification;
-DELETE FROM teacher_course;
-DELETE FROM student_class;
-DELETE FROM exercise;
-DELETE FROM course;
-DELETE FROM choice_question;
-DELETE FROM subjective_question;
-DELETE FROM base_question;
-DELETE FROM semester;
-DELETE FROM class;
-DELETE FROM user;
+-- 禁用外键检查
+SET FOREIGN_KEY_CHECKS = 0;
 
--- 重置自增ID索引
-ALTER TABLE student_answer AUTO_INCREMENT = 1;
-ALTER TABLE exercise_question AUTO_INCREMENT = 1;
-ALTER TABLE exercise_class AUTO_INCREMENT = 1;
-ALTER TABLE notification AUTO_INCREMENT = 1;
-ALTER TABLE teacher_course AUTO_INCREMENT = 1;
-ALTER TABLE student_class AUTO_INCREMENT = 1;
-ALTER TABLE exercise AUTO_INCREMENT = 1;
-ALTER TABLE choice_question AUTO_INCREMENT = 1;
-ALTER TABLE subjective_question AUTO_INCREMENT = 1;
-ALTER TABLE base_question AUTO_INCREMENT = 1;
-ALTER TABLE course AUTO_INCREMENT = 1;
-ALTER TABLE semester AUTO_INCREMENT = 1;
-ALTER TABLE class AUTO_INCREMENT = 1;
-ALTER TABLE user AUTO_INCREMENT = 1;
+-- 使用TRUNCATE清空表（更快且重置自增ID）
+TRUNCATE TABLE student_answer;
+TRUNCATE TABLE exercise_question;
+TRUNCATE TABLE exercise_class;
+TRUNCATE TABLE notification;
+TRUNCATE TABLE teacher_course;
+TRUNCATE TABLE student_class;
+TRUNCATE TABLE exercise;
+TRUNCATE TABLE course;
+TRUNCATE TABLE choice_question;
+TRUNCATE TABLE subjective_question;
+TRUNCATE TABLE base_question;
+TRUNCATE TABLE semester;
+TRUNCATE TABLE class;
+TRUNCATE TABLE user;
+
+-- 重新启用外键检查
+SET FOREIGN_KEY_CHECKS = 1;
 
 #用户表
 -- 管理员
@@ -323,3 +314,88 @@ INSERT INTO `notification` (`target_user_id`, `sender_id`, `effective_time`, `co
 (14, 7, '2025-05-09 08:00:00', '机器学习实验三即将开始'),
 (15, 7, '2025-05-31 08:00:00', '深度学习大作业即将开始'),
 (16, 7, '2025-05-31 08:00:00', '深度学习大作业即将开始');
+
+#补充测试数据
+
+# 新增练习
+INSERT INTO `exercise` (`name`, `course_id`, `start_time`, `end_time`, `status`, `creator_id`) VALUES
+-- 正在进行中的练习(状态1)
+('数据结构期末复习', 1, '2025-05-15 00:00:00', '2025-05-22 23:59:59', 1, 3),
+('算法设计实验三', 2, '2025-05-18 00:00:00', '2025-05-25 23:59:59', 1, 3),
+('数据库系统大作业', 3, '2025-05-20 00:00:00', '2025-06-05 23:59:59', 1, 4),
+
+-- 即将开始的练习(状态0)
+('操作系统期中考试', 4, '2025-05-25 00:00:00', '2025-05-27 23:59:59', 0, 4),
+('计算机网络实验四', 5, '2025-05-28 00:00:00', '2025-06-04 23:59:59', 0, 5),
+('组成原理期末复习', 6, '2025-06-01 00:00:00', '2025-06-08 23:59:59', 0, 5),
+('软件工程期末考试', 7, '2025-06-10 00:00:00', '2025-06-12 23:59:59', 0, 6),
+('人工智能导论实验', 8, '2025-06-15 00:00:00', '2025-06-22 23:59:59', 0, 6),
+('机器学习期末项目', 9, '2025-06-18 00:00:00', '2025-06-25 23:59:59', 0, 7),
+('深度学习实验五', 10, '2025-06-20 00:00:00', '2025-06-30 23:59:59', 0, 7);
+
+# 新增练习班级关联
+INSERT INTO `exercise_class` (`exercise_id`, `class_id`) VALUES
+(21, 1), (21, 2),  -- 数据结构期末复习
+(22, 1), (22, 3),  -- 算法设计实验三
+(23, 2), (23, 4),  -- 数据库系统大作业
+(24, 3), (24, 5),  -- 操作系统期中考试
+(25, 4), (25, 6),  -- 计算机网络实验四
+(26, 5), (26, 7),  -- 组成原理期末复习
+(27, 6), (27, 8),  -- 软件工程期末考试
+(28, 7), (28, 9),  -- 人工智能导论实验
+(29, 8), (29, 10), -- 机器学习期末项目
+(30, 9), (30, 11); -- 深度学习实验五
+
+# 新增练习题目关联
+INSERT INTO `exercise_question` (`exercise_id`, `question_id`, `sort_order`, `score`) VALUES
+-- 数据结构期末复习(2题)
+(21, 1, 1, 10), (21, 11, 2, 15),
+-- 算法设计实验三(2题)
+(22, 2, 1, 10), (22, 12, 2, 20),
+-- 数据库系统大作业(3题)
+(23, 5, 1, 10), (23, 6, 2, 15), (23, 15, 3, 15),
+-- 操作系统期中考试(2题)
+(24, 3, 1, 15), (24, 13, 2, 20),
+-- 计算机网络实验四(2题)
+(25, 4, 1, 10), (25, 14, 2, 15),
+-- 组成原理期末复习(3题)
+(26, 7, 1, 10), (26, 8, 2, 10), (26, 17, 3, 20),
+-- 软件工程期末考试(2题)
+(27, 9, 1, 15), (27, 16, 2, 25),
+-- 人工智能导论实验(2题)
+(28, 10, 1, 10), (28, 18, 2, 20),
+-- 机器学习期末项目(3题)
+(29, 19, 1, 15), (29, 20, 2, 20), (29, 16, 3, 15),
+-- 深度学习实验五(2题)
+(30, 17, 1, 20), (30, 18, 2, 20);
+
+# 新增学生答题记录(部分已完成)
+INSERT INTO `student_answer` (`student_id`, `exercise_id`, `question_id`, `answer`, `score`, `correct_status`, `correct_comment`, `correct_time`, `submit_time`) VALUES
+-- 数据结构期末复习(已提交部分)
+(7, 21, 1, 'A', 10, 2, '回答正确', '2025-05-16 14:00:00', '2025-05-16 10:30:00'),
+(7, 21, 11, 'A,B,C', 15, 2, '回答正确', '2025-05-16 14:00:00', '2025-05-16 10:30:00'),
+(8, 21, 1, 'B', 0, 2, '回答错误', '2025-05-17 09:00:00', '2025-05-17 08:45:00'),
+(8, 21, 11, 'A,B', 10, 2, '部分正确', '2025-05-17 09:00:00', '2025-05-17 08:45:00'),
+
+-- 算法设计实验三(已提交未批改)
+(9, 22, 2, 'B', NULL, 1, NULL, NULL, '2025-05-19 15:20:00'),
+(9, 22, 12, 'A,C', NULL, 1, NULL, NULL, '2025-05-19 15:20:00'),
+(10, 22, 2, 'C', NULL, 1, NULL, NULL, '2025-05-19 16:30:00'),
+
+-- 数据库系统大作业(已保存未提交)
+(11, 23, 5, '80', NULL, 0, NULL, NULL, NULL),
+(12, 23, 6, 'B', NULL, 0, NULL, NULL, NULL);
+
+# 新增通知
+INSERT INTO `notification` (`target_user_id`, `sender_id`, `effective_time`, `content`) VALUES
+-- 给所有学生的近期练习通知
+(7, 3, '2025-05-18 08:00:00', '数据结构期末复习进行中，截止5月22日'),
+(8, 3, '2025-05-18 08:00:00', '数据结构期末复习进行中，截止5月22日'),
+(9, 3, '2025-05-17 08:00:00', '算法设计实验三已开始，请及时完成'),
+(10, 3, '2025-05-17 08:00:00', '算法设计实验三已开始，请及时完成'),
+(11, 4, '2025-05-19 08:00:00', '数据库系统大作业明天开始，请做好准备'),
+(12, 4, '2025-05-19 08:00:00', '数据库系统大作业明天开始，请做好准备'),
+(13, 4, '2025-05-24 08:00:00', '操作系统期中考试即将开始，请复习第1-5章'),
+(14, 4, '2025-05-24 08:00:00', '操作系统期中考试即将开始，请复习第1-5章'),
+(15, 5, '2025-05-27 08:00:00', '下周将进行计算机网络实验四'),
+(16, 5, '2025-05-27 08:00:00', '下周将进行计算机网络实验四');
