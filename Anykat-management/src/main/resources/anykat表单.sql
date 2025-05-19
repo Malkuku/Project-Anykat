@@ -1,3 +1,18 @@
+DROP TABLE IF EXISTS `student_class`;
+DROP TABLE IF EXISTS `student_answer`;
+DROP TABLE IF EXISTS `exercise_class`;
+DROP TABLE IF EXISTS `exercise_question`;
+DROP TABLE IF EXISTS `teacher_course`;
+DROP TABLE IF EXISTS `choice_question`;
+DROP TABLE IF EXISTS `subjective_question`;
+DROP TABLE IF EXISTS `base_question`;
+DROP TABLE IF EXISTS `exercise`;
+DROP TABLE IF EXISTS `class`;
+DROP TABLE IF EXISTS `notification`;
+DROP TABLE IF EXISTS `course`;
+DROP TABLE IF EXISTS `semester`;
+DROP TABLE IF EXISTS `user`;
+
 -- 用户表
 CREATE TABLE `user` (
 `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -9,7 +24,7 @@ CREATE TABLE `user` (
 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`),
 UNIQUE KEY `idx_username` (`username`)
-)  COMMENT='用户表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- 班级表
 CREATE TABLE `class` (
@@ -18,7 +33,7 @@ CREATE TABLE `class` (
 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`)
-)  COMMENT='班级表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='班级表';
 
 -- 学期表
 CREATE TABLE `semester` (
@@ -29,7 +44,7 @@ CREATE TABLE `semester` (
 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`)
-)  COMMENT='学期表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学期表';
 
 -- 课程表
 CREATE TABLE `course` (
@@ -41,7 +56,7 @@ CREATE TABLE `course` (
 PRIMARY KEY (`id`),
 KEY `idx_semester` (`semester_id`),
 CONSTRAINT `fk_course_semester` FOREIGN KEY (`semester_id`) REFERENCES `semester` (`id`) ON DELETE CASCADE
-)  COMMENT='课程表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课程表';
 
 -- 题目表
 CREATE TABLE `base_question` (
@@ -56,7 +71,7 @@ CREATE TABLE `base_question` (
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX `idx_type` (`type`)
-) COMMENT='基础题目表';
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='基础题目表';
 -- 选择题扩展表
 CREATE TABLE `choice_question` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -69,7 +84,7 @@ CREATE TABLE `choice_question` (
   UNIQUE KEY `uk_question` (`question_id`),
   CONSTRAINT `fk_cq_question` FOREIGN KEY (`question_id`)
     REFERENCES `base_question` (`id`) ON DELETE CASCADE
-) COMMENT='选择题表';
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='选择题表';
 -- 选项JSON示例：
 -- {
 --   "A": "TCP协议",
@@ -88,7 +103,7 @@ CREATE TABLE `subjective_question` (
   UNIQUE KEY `uk_question` (`question_id`),
   CONSTRAINT `fk_sq_question` FOREIGN KEY (`question_id`)
     REFERENCES `base_question` (`id`) ON DELETE CASCADE
-) COMMENT='主观题表';
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='主观题表';
 
 
 -- 练习表
@@ -107,7 +122,7 @@ KEY `idx_course` (`course_id`),
 KEY `idx_creator` (`creator_id`),
 CONSTRAINT `fk_exercise_course` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_exercise_creator` FOREIGN KEY (`creator_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-)  COMMENT='练习表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='练习表';
 
 -- 学生班级关联表
 CREATE TABLE `student_class` (
@@ -121,7 +136,7 @@ UNIQUE KEY `uk_student_class` (`student_id`,`class_id`),
 KEY `idx_class` (`class_id`),
 CONSTRAINT `fk_sc_class` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_sc_student` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-)  COMMENT='学生班级关联表';
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci  COMMENT='学生班级关联表';
 
 -- 教师课程关联表
 CREATE TABLE `teacher_course` (
@@ -135,7 +150,7 @@ UNIQUE KEY `uk_teacher_course` (`teacher_id`,`course_id`),
 KEY `idx_course` (`course_id`),
 CONSTRAINT `fk_tc_course` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_tc_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-)  COMMENT='教师课程关联表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='教师课程关联表';
 
 -- 练习班级关联表
 CREATE TABLE `exercise_class` (
@@ -149,7 +164,7 @@ UNIQUE KEY `uk_exercise_class` (`exercise_id`,`class_id`),
 KEY `idx_class` (`class_id`),
 CONSTRAINT `fk_ec_class` FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_ec_exercise` FOREIGN KEY (`exercise_id`) REFERENCES `exercise` (`id`) ON DELETE CASCADE
-)  COMMENT='练习班级关联表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='练习班级关联表';
 
 -- 练习题目关联表
 CREATE TABLE `exercise_question` (
@@ -165,7 +180,7 @@ UNIQUE KEY `uk_exercise_question` (`exercise_id`,`question_id`),
 KEY `idx_question` (`question_id`),
 CONSTRAINT `fk_eq_exercise` FOREIGN KEY (`exercise_id`) REFERENCES `exercise` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_eq_question` FOREIGN KEY (`question_id`) REFERENCES `base_question` (`id`) ON DELETE CASCADE
-)  COMMENT='练习题目关联表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='练习题目关联表';
 
 -- 学生答题记录表
 CREATE TABLE `student_answer` (
@@ -188,7 +203,7 @@ KEY `idx_question` (`question_id`),
 CONSTRAINT `fk_sa_exercise` FOREIGN KEY (`exercise_id`) REFERENCES `exercise` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_sa_question` FOREIGN KEY (`question_id`) REFERENCES `base_question` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_sa_student` FOREIGN KEY (`student_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-)  COMMENT='学生答题记录表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='学生答题记录表';
 
 -- 提醒表
 CREATE TABLE `notification` (
@@ -204,4 +219,4 @@ KEY `idx_target_user` (`target_user_id`),
 KEY `idx_sender` (`sender_id`),
 CONSTRAINT `fk_notification_sender` FOREIGN KEY (`sender_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
 CONSTRAINT `fk_notification_target` FOREIGN KEY (`target_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-)  COMMENT='提醒表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='提醒表';
