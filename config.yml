@@ -9,7 +9,7 @@ tomcat:
   #扫描的目录
   classesDir: "Anykat-management/target/classes"
   #Jar包的内部路径
-  jarClassesDir: "/com/anyview/xiazihao/controller"
+  jarClassesDir: "/com/anyview/xiazihao"
 
 
 # Jwt相关配置
@@ -32,7 +32,7 @@ container:
 
 # 数据库连接池相关设置
 hakimi:
-  url: "jdbc:mysql://localhost:3306/anykat"
+  url: "jdbc:mysql://localhost:3306/anykat?useUnicode=true&characterEncoding=utf-8"
   username: "root"
   password: "pin666"
   maxSize: 10
