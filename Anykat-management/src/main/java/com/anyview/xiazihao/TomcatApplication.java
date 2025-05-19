@@ -11,6 +11,7 @@ import org.apache.catalina.webresources.JarResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -64,6 +65,8 @@ public class TomcatApplication {
         ctx.setReloadable(true);
 
         // 4. 启动服务器
+        String serverIp = InetAddress.getLocalHost().getHostAddress(); // 获取本机 IP
+        tomcat.getConnector().setAttribute("address", serverIp); // 绑定到服务器 IP
         tomcat.start();
 
         // 5. 设置类加载器
@@ -75,7 +78,7 @@ public class TomcatApplication {
         final ContainerFactory containerFactory = new ContainerFactory();
         ctx.getServletContext().setAttribute("ContainerFactory", containerFactory);
 
-        log.info("Server running at http://localhost:{}", tomcat.getConnector().getPort());
+        log.info("Server running at http://{}:{}", serverIp, tomcat.getConnector().getPort());
         tomcat.getServer().await();
     }
 
