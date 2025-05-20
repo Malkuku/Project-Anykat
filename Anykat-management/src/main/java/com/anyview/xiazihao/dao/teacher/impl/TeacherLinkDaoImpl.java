@@ -18,7 +18,7 @@ public class TeacherLinkDaoImpl implements TeacherLinkDao {
     @Override
     public List<Class> getTeacherClasses(Integer teacherId, Integer semesterId) throws SQLException, FileNotFoundException {
         String sql = """
-                SELECT
+                SELECT DISTINCT
                      cl.id,
                      cl.name
                  FROM
@@ -48,7 +48,7 @@ public class TeacherLinkDaoImpl implements TeacherLinkDao {
     @Override
     public List<Course> getTeacherCourses(Integer teacherId, Integer semesterId) throws SQLException, FileNotFoundException {
         String sql = """
-                SELECT
+                SELECT DISTINCT
                     c.id,
                     c.name
                 FROM
@@ -74,7 +74,7 @@ public class TeacherLinkDaoImpl implements TeacherLinkDao {
     @Override
     public List<Semester> getTeacherSemesters(Integer teacherId) throws SQLException, FileNotFoundException {
         String sql = """
-                SELECT
+                SELECT DISTINCT
                     s.id,
                     s.name,
                     s.start_time,
