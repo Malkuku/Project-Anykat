@@ -348,6 +348,48 @@ const deleteExercise = async (id) => {
   }
 };
 
+// 复用练习
+const reuseExercise = async (id) => {
+  const result = await queryExerciseByIdApi(id);
+  if (result.code) {
+    dialogFormVisible.value = true;
+    formTitle.value = '新增练习(复用)';
+
+    const data = result.data;
+    // 重置表单
+    resetForm();
+
+    // 填充基本信息
+    exerciseForm.name = `${data.name}(复制)`;
+    exerciseForm.courseId = data.courseId;
+    exerciseForm.classIds = data.classIds || [];
+    exerciseForm.questionIds = data.questionIds || [];
+    exerciseForm.questionScores = data.questionScores || [];
+
+    // 查询题目详情
+    if (data.questionIds && data.questionIds.length > 0) {
+      try {
+        const questionDetails = await Promise.all(
+            data.questionIds.map(id => queryQuestionByIdApi(id))
+        );
+
+        exerciseForm.questions = questionDetails
+            .filter(res => res.code)
+            .map(res => res.data);
+
+        if (exerciseForm.questions.length !== data.questionIds.length) {
+          ElMessage.warning('部分题目信息获取失败');
+        }
+      } catch (error) {
+        ElMessage.error('获取题目信息失败');
+      }
+    }
+
+    // 初始化已选择的题目
+    selectedQuestions.value = data.questionIds || [];
+  }
+};
+
 // 修改练习状态
 const changeStatus = async (id, status) => {
   const statusText = ['未开始', '进行中', '已结束'][status];
@@ -659,6 +701,12 @@ onMounted(() => {
                       <component :is="getStatusIcon(item.value)" />
                     </el-icon>
                     {{ item.label }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                      @click="reuseExercise(row.exerciseId)"
+                  >
+                    <el-icon><MoreFilled /></el-icon>
+                    复用练习
                   </el-dropdown-item>
                   <el-dropdown-item
                       @click="deleteExercise(row.exerciseId)"
