@@ -15,8 +15,7 @@ public class TeacherGradingDetail {
     private Integer teacherId;  // 教师ID
     private String teacherName; //  教师姓名
 
-    private Integer classId;            // 班级ID
-    private String className;           // 班级名称
+    private String classNames;           // 班级名称
 
     private Integer studentId;         // 学生ID
     private String studentName;        // 学生姓名

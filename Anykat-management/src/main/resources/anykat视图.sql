@@ -209,14 +209,14 @@ GROUP BY
     e.id, c.id, s.id, u.id;
 
 
+-- 教师批改界面
 CREATE OR REPLACE VIEW `v_teacher_grading_details` AS
 SELECT
     tc.teacher_id AS teacher_id,
     (SELECT name FROM user WHERE id = tc.teacher_id) AS teacher_name,
     e.id AS exercise_id,
     e.name AS exercise_name,
-    c.id AS class_id,
-    c.name AS class_name,
+    GROUP_CONCAT(DISTINCT c.name ORDER BY c.id SEPARATOR ', ') AS class_names,
     u.id AS student_id,
     u.name AS student_name,
 
@@ -254,7 +254,7 @@ JOIN
 LEFT JOIN
     student_answer sa ON sa.student_id = u.id AND sa.exercise_id = e.id
 GROUP BY
-    tc.teacher_id, e.id, c.id, u.id;
+    tc.teacher_id, e.id, u.id;
 
 
 -- 简单批改信息

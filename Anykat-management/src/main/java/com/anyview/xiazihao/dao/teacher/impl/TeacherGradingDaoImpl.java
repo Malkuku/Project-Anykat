@@ -24,8 +24,7 @@ public class TeacherGradingDaoImpl implements TeacherGradingDao {
         FROM v_teacher_grading_details
         WHERE teacher_id = #{teacherId}
             AND exercise_id = #{exerciseId}
-            AND (#{classId} IS NULL OR class_id = #{classId})
-            AND (#{className} IS NULL OR class_name LIKE CONCAT('%', #{className}, '%'))
+            AND (#{classNames} IS NULL OR class_names LIKE CONCAT('%', #{classNames}, '%'))
             AND (#{studentId} IS NULL OR student_id = #{studentId})
             AND (#{studentName} IS NULL OR student_name LIKE CONCAT('%', #{studentName}, '%'))
         """;
@@ -44,8 +43,7 @@ public class TeacherGradingDaoImpl implements TeacherGradingDao {
         FROM v_teacher_grading_details
         WHERE teacher_id = #{teacherId}
             AND exercise_id = #{exerciseId}
-            AND (#{classId} IS NULL OR class_id = #{classId})
-            AND (#{className} IS NULL OR class_name LIKE CONCAT('%', #{className}, '%'))
+            AND (#{classNames} IS NULL OR class_names LIKE CONCAT('%', #{classNames}, '%'))
             AND (#{studentId} IS NULL OR student_id = #{studentId})
             AND (#{studentName} IS NULL OR student_name LIKE CONCAT('%', #{studentName}, '%'))
         ORDER BY last_submit_time DESC
