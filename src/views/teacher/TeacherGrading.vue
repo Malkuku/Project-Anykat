@@ -13,7 +13,7 @@ import { ElMessage } from 'element-plus';
 const route = useRoute();
 const userStore = useUserStore();
 
-// 新增：是否只显示需要批改的勾选状态
+// 是否只显示需要批改的勾选状态
 const onlyShowUncorrected = ref(false);
 
 // 获取路由参数中的练习ID
@@ -51,39 +51,16 @@ const search = async () => {
 
   const result = await queryGradingDetailsApi(params);
   if (result.code) {
-    // 分组处理：按学生ID分组
-    const groupedList = result.data.list.reduce((acc, item) => {
-      if (!acc[item.studentId]) {
-        acc[item.studentId] = {
-          ...item,
-          classNames: [item.className], // 存储所有班级名称
-          answeredQuestions: item.answeredQuestions,
-          totalQuestions: item.totalQuestions,
-          savedUnsubmittedCount: item.savedUnsubmittedCount,
-          submittedUncorrectedCount: item.submittedUncorrectedCount,
-          correctedCount: item.correctedCount,
-          currentScore: item.currentScore,
-          maxScore: item.maxScore,
-          lastSubmitTime: item.lastSubmitTime,
-          lastCorrectTime: item.lastCorrectTime
-        };
-      } else {
-        // 合并班级名称
-        acc[item.studentId].classNames.push(item.className);
-      }
-      return acc;
-    }, {});
-
-    // 将分组后的数据转换为数组
-    gradingList.value = Object.values(groupedList).map(item => ({
+    gradingList.value = result.data.list.map(item => ({
       ...item,
-      className: item.classNames.length > 1 ? `${item.classNames[0]} 等${item.classNames.length}个班级` : item.classNames[0]
+      // 处理班级名称显示
+      classNames: item.classNames.includes(',')
+          ? `${item.classNames.split(',')[0].trim()} 等${item.classNames.split(',').length}个班级`
+          : item.classNames
     }));
-
     total.value = result.data.total;
   }
 };
-
 
 // 重置查询
 const resetQuery = () => {
@@ -122,7 +99,7 @@ const viewQuestions = async (student) => {
 
   const result = await queryGradingQuestionsApi(params);
   if (result.code) {
-    questionList.value = result.data.filter(q => q.correctStatus !== 0);;
+    questionList.value = result.data.filter(q => q.correctStatus !== 0);
     questionDialogVisible.value = true;
   }
 };
@@ -163,19 +140,16 @@ const saveCorrection = async () => {
     return;
   }
 
-  // 自动设置为已批改状态
   const params = {
     ...correctionForm.value,
-    correctStatus: 2  // 强制设置为已批改
+    correctStatus: 2
   };
 
   const result = await updateCorrectionApi(params);
   if (result.code) {
     ElMessage.success('批改信息更新成功');
     detailDialogVisible.value = false;
-    // 刷新题目列表
     await viewQuestions(currentStudent.value);
-    // 刷新主列表
     await search();
   }
 };
@@ -206,7 +180,6 @@ onMounted(() => {
       </el-form-item>
     </el-form>
 
-    <!-- 新增：只显示需要批改的勾选框 -->
     <div class="filter-container">
       <el-checkbox v-model="onlyShowUncorrected">只显示需要批改的部分</el-checkbox>
     </div>
@@ -216,7 +189,7 @@ onMounted(() => {
   <div class="container">
     <el-table :data="filteredGradingList" border style="width: 100%">
       <el-table-column type="index" label="序号" width="60" align="center" />
-      <el-table-column prop="className" label="班级" width="120" align="center" />
+      <el-table-column prop="classNames" label="班级" width="180" align="center" />
       <el-table-column prop="studentName" label="学生" width="120" align="center" />
       <el-table-column label="答题情况" align="center">
         <template #default="{row}">
@@ -241,7 +214,13 @@ onMounted(() => {
       <el-table-column prop="lastCorrectTime" label="最后批改时间" width="180" align="center" />
       <el-table-column label="操作" width="150" align="center">
         <template #default="{row}">
-          <el-button type="primary" size="small" @click="viewQuestions(row)">批改</el-button>
+          <el-button
+              type="primary"
+              size="small"
+              @click="viewQuestions(row)"
+          >
+            批改
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -279,7 +258,13 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="操作" width="120" align="center">
         <template #default="{row}">
-          <el-button type="primary" size="small" @click="viewQuestionDetail(row)">批改</el-button>
+          <el-button
+              type="primary"
+              size="small"
+              @click="viewQuestionDetail(row)"
+          >
+            {{ row.correctStatus === 2 ? '更正批改' : '批改' }}
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -360,7 +345,6 @@ onMounted(() => {
   white-space: pre-wrap;
 }
 
-/* 新增：勾选框容器样式 */
 .filter-container {
   margin-bottom: 15px;
   padding: 10px;
