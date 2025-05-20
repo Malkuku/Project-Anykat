@@ -18,6 +18,7 @@ import com.anyview.xiazihao.utils.JdbcUtils;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,9 +129,6 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
         }
         //获取旧练习
         Exercise oldExercise = teacherExerciseDao.selectExerciseById(exercise.getId());
-        if(oldExercise.getStatus() == 1){
-            throw new PermissionDeniedException("已发布的练习不可修改");
-        }
         //补全信息
         exercise.setCourseId(oldExercise.getCourseId());
 
@@ -148,6 +146,16 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
                         throw new PermissionDeniedException("同一学期，同一班级的练习名称不可重复");
                     }
                 }
+            }
+        }
+        //根据时间更新状态
+        if(exercise.getStartTime() != null && exercise.getEndTime() != null){
+            if(exercise.getStartTime().isAfter(LocalDateTime.now())){
+                exercise.setStatus(0);
+            }else if(exercise.getEndTime().isBefore(LocalDateTime.now())){
+                exercise.setStatus(2);
+            }else{
+                exercise.setStatus(1);
             }
         }
         //更新练习表

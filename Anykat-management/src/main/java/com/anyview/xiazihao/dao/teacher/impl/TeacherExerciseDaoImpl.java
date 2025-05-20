@@ -291,6 +291,7 @@ public class TeacherExerciseDaoImpl implements TeacherExerciseDao {
                 UPDATE `exercise`
                 SET name = COALESCE(#{name},name),
                     course_id = COALESCE(#{courseId},course_id),
+                    status = COALESCE(#{status},status),
                     start_time = COALESCE(#{startTime},start_time),
                     end_time = COALESCE(#{endTime},end_time)
                 WHERE id = #{id}
