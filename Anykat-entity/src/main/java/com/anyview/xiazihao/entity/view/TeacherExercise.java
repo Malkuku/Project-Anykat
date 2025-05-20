@@ -25,8 +25,8 @@ public class TeacherExercise {
     private LocalDateTime semesterStartTime; // 学期开始时间
     private LocalDateTime semesterEndTime;   // 学期结束时间
 
-    private Integer classId;            // 班级ID
-    private String className;           // 班级名称
+    private String classIds;            // 班级ID "1,2,3"
+    private String classNames;           // 班级名称 "班级A, 班级B, 班级C"
 
     private Integer teacherId;          // 教师ID
     private String teacherName;         // 教师姓名

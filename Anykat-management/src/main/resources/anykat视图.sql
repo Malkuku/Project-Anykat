@@ -177,8 +177,9 @@ SELECT
     s.name AS semester_name,
     s.start_time AS semester_start_time,
     s.end_time AS semester_end_time,
-    cl.id AS class_id,
-    cl.name AS class_name,
+    -- 合并班级信息
+    GROUP_CONCAT(DISTINCT cl.id ORDER BY cl.id) AS class_ids,
+    GROUP_CONCAT(DISTINCT cl.name ORDER BY cl.id SEPARATOR ', ') AS class_names,
     u.id AS teacher_id,
     u.name AS teacher_name,
     COUNT(DISTINCT eq.question_id) AS question_count,
@@ -205,7 +206,7 @@ LEFT JOIN
 LEFT JOIN
     class cl ON ec.class_id = cl.id
 GROUP BY
-    e.id, c.id, s.id, cl.id, u.id;
+    e.id, c.id, s.id, u.id;
 
 
 CREATE OR REPLACE VIEW `v_teacher_grading_details` AS
