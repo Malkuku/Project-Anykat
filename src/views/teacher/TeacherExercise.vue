@@ -5,8 +5,7 @@ import {
   addExerciseApi,
   queryExerciseByIdApi,
   updateExerciseApi,
-  deleteExerciseByIdApi,
-  updateExerciseStatusApi
+  deleteExerciseByIdApi
 } from '@/api/teacher/teacherExercise';
 import {
   queryTeacherClassesApi,
@@ -27,13 +26,6 @@ import {
   CircleCheck,  // 已完成图标
   Clock, ArrowDown         // 未开始图标
 } from '@element-plus/icons-vue'
-
-// 获取状态图标的方法
-const getStatusIcon = (status) => {
-  const icons = [Clock, VideoPlay, CircleCheck];
-  return icons[status] || MoreFilled;
-};
-
 
 const classesList = ref([]);
 const coursesList = ref([]);
@@ -177,8 +169,7 @@ const search = async () => {
 
   const result = await queryExerciseListApi(params);
   if (result.code) {
-    // 合并同一个练习的不同班级
-    exerciseList.value = mergeClassNames(result.data.list);
+    exerciseList.value = result.data.list;
     pageInfo.total = result.data.total;
   }
 };
@@ -390,27 +381,21 @@ const reuseExercise = async (id) => {
   }
 };
 
-// 修改练习状态
-const changeStatus = async (id, status) => {
-  const statusText = ['未开始', '进行中', '已结束'][status];
-
-  try {
-    await ElMessageBox.confirm(`确定要将练习状态修改为"${statusText}"吗?`, '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    });
-
-    const result = await updateExerciseStatusApi({ id, status });
-    if (result.code) {
-      ElMessage.success('状态修改成功');
-      await search();
-    } else {
-      ElMessage.error(result.msg);
-    }
-  } catch {
-    ElMessage.info('已取消操作');
-  }
+//提示练习状态
+const showStatusChangeTip = () => {
+  ElMessageBox.alert(
+      '练习状态由系统根据时间自动计算，无法手动修改。<br><br>' +
+      '如需更改状态，请调整开始/结束时间：<br>' +
+      `- 未开始：开始时间 > 当前时间<br>` +
+      `- 进行中：开始时间 ≤ 当前时间 < 结束时间<br>` +
+      `- 已结束：当前时间 ≥ 结束时间<br><br>` +
+      '请进入编辑模式调整时间。',
+      '状态管理提示',
+      {
+        confirmButtonText: '确定',
+        dangerouslyUseHTMLString: true,
+      }
+  );
 };
 
 // 处理题目选择确认
@@ -444,26 +429,6 @@ const handleQuestionConfirm = (questions) => {
 
   ElMessage.success(`成功添加 ${newQuestions.length} 道题目`);
   questionDialogVisible.value = false;
-};
-
-// 合并班级
-const mergeClassNames = (exercises) => {
-  const merged = {};
-  exercises.forEach(ex => {
-    if (!merged[ex.exerciseId]) {
-      merged[ex.exerciseId] = {
-        ...ex,
-        classNames: [ex.className],
-        classIds: [ex.classId]
-      };
-    } else {
-      if (!merged[ex.exerciseId].classNames.includes(ex.className)) {
-        merged[ex.exerciseId].classNames.push(ex.className);
-        merged[ex.exerciseId].classIds.push(ex.classId);
-      }
-    }
-  });
-  return Object.values(merged);
 };
 
 // 打开题目管理弹窗
@@ -634,14 +599,24 @@ onMounted(() => {
       <el-table-column prop="exerciseName" label="练习名称" width="180" align="center" />
       <el-table-column prop="courseName" label="课程名称" width="150" align="center" />
       <el-table-column prop="classNames" label="班级" width="180" align="center">
-        <template #default="{row}">
-          <el-tooltip effect="dark" placement="top">
-            <template #content>
-              <div v-for="className in row.classNames" :key="className">{{ className }}</div>
-            </template>
-            <el-tag>{{ row.classNames.length }}个班级</el-tag>
-          </el-tooltip>
-        </template>
+      <template #default="{row}">
+        <el-popover
+            placement="top-start"
+            width="200"
+            trigger="hover"
+        >
+          <template #reference>
+            <el-tag>{{ row.classCount }}个班级</el-tag>
+          </template>
+          <div class="class-list">
+            <div v-for="(className, index) in row.classNames.split(', ')"
+                 :key="index"
+                 class="class-item">
+              {{ className }}
+            </div>
+          </div>
+        </el-popover>
+      </template>
       </el-table-column>
       <el-table-column label="时间范围" width="300" align="center">
         <template #default="{row}">
@@ -679,7 +654,7 @@ onMounted(() => {
                 type="success"
                 size="small"
                 @click="router.push(`/teacher/grading/${row.exerciseId}`);"
-                :disabled="row.status !== 1"
+                :disabled="row.status === 0"
             >
               批改
             </el-button>
@@ -692,15 +667,10 @@ onMounted(() => {
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item
-                      v-for="item in statusOptions"
-                      :key="item.value"
-                      @click="changeStatus(row.exerciseId, item.value)"
-                      :disabled="row.status === item.value"
+                      @click="showStatusChangeTip(row)"
                   >
-                    <el-icon>
-                      <component :is="getStatusIcon(item.value)" />
-                    </el-icon>
-                    {{ item.label }}
+                    <el-icon><MoreFilled /></el-icon>
+                    修改状态
                   </el-dropdown-item>
                   <el-dropdown-item
                       @click="reuseExercise(row.exerciseId)"
@@ -880,6 +850,22 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
+/* 添加班级列表样式 */
+.class-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.class-item {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.class-item:last-child {
+  border-bottom: none;
+}
+
 .container {
   margin: 15px 0;
 }
@@ -890,7 +876,6 @@ onMounted(() => {
   gap: 10px;
   align-items: center;
 }
-
 
 /* 操作按钮容器样式 */
 .action-buttons {
