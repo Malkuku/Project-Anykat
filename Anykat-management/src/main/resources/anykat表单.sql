@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS `anykat`;
+USE `anykat`;
+
 DROP TABLE IF EXISTS `student_class`;
 DROP TABLE IF EXISTS `student_answer`;
 DROP TABLE IF EXISTS `exercise_class`;

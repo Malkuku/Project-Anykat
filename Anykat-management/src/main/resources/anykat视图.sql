@@ -1,3 +1,5 @@
+USE `anykat`;
+
 -- 学生课程视图
 CREATE OR REPLACE VIEW v_student_courses AS
 SELECT

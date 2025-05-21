@@ -1,3 +1,5 @@
+USE `anykat`;
+
 -- 开启事件调度器
 SET GLOBAL event_scheduler = ON;
 

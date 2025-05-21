@@ -1,3 +1,5 @@
+USE `anykat`;
+
 -- 删除所有表数据（按照外键依赖顺序）
 -- 禁用外键检查
 SET FOREIGN_KEY_CHECKS = 0;
