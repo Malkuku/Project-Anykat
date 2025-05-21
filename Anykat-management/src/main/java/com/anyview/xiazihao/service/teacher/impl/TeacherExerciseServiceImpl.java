@@ -63,6 +63,16 @@ public class TeacherExerciseServiceImpl implements TeacherExerciseService {
                 }
             }
         }
+        //根据时间更新状态
+        if(exercise.getStartTime() != null && exercise.getEndTime() != null){
+            if(exercise.getStartTime().isAfter(LocalDateTime.now())){
+                exercise.setStatus(0);
+            }else if(exercise.getEndTime().isBefore(LocalDateTime.now())){
+                exercise.setStatus(2);
+            }else{
+                exercise.setStatus(1);
+            }
+        }
         //添加练习表
         teacherExerciseDao.addExercise(exercise);
         Integer exerciseId = JdbcUtils.getLastInsertId();
