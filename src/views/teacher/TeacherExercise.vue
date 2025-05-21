@@ -670,7 +670,7 @@ onMounted(() => {
                   <el-dropdown-item
                       @click="showStatusChangeTip(row)"
                   >
-                    <el-icon><MoreFilled /></el-icon>
+                    <el-icon><Clock /></el-icon>
                     修改状态
                   </el-dropdown-item>
                   <el-dropdown-item
