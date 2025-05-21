@@ -102,15 +102,17 @@ public class StudentAnswerDaoImpl implements StudentAnswerDao {
     }
 
     @Override
-    public Integer findCurrentScore(Integer questionId) throws SQLException, FileNotFoundException {
+    public Integer findCurrentScore(Integer questionId, Integer exerciseId) throws SQLException, FileNotFoundException {
         String sql = """
             SELECT score
-            FROM base_question
-            WHERE id = ?
+            FROM exercise_question
+            WHERE exercise_id = ?
+            AND question_id = ?
             """;
         return JdbcUtils.executeQuery(
                 sql,
                 Integer.class,
+                exerciseId,
                 questionId
         ).get(0);
     }

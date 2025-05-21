@@ -89,7 +89,7 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
             if(answer.getCorrectStatus() == 1 && (oldAnswer == null || oldAnswer.getCorrectStatus() == 0)){
                 ChoiceQuestion choiceQuestion = studentAnswerDao.selectChoiceQuestion(answer.getQuestionId());
                 if(choiceQuestion != null){
-                    Integer currentScore = studentAnswerDao.findCurrentScore(answer.getQuestionId());
+                    Integer currentScore = studentAnswerDao.findCurrentScore(answer.getQuestionId(),answer.getExerciseId());
                     //设置批改时间
                     answer.setCorrectTime(LocalDateTime.now());
                     //单选题

@@ -24,7 +24,7 @@ public interface StudentAnswerDao {
     //查询选择题信息
     ChoiceQuestion selectChoiceQuestion(Integer questionId) throws SQLException, FileNotFoundException;
     // 查询当前题目的分数
-    Integer findCurrentScore(Integer questionId) throws SQLException, FileNotFoundException;
+    Integer findCurrentScore(Integer questionId, Integer exerciseId) throws SQLException, FileNotFoundException;
     // 查询当前练习状态
     Integer selectExerciseStatus(Integer exerciseId) throws SQLException, FileNotFoundException;
 }
