@@ -1,0 +1,85 @@
+package com.anyview.xiazihao.controller.teacher;
+
+import com.anyview.xiazihao.containerFactory.annotation.KatAutowired;
+import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
+import com.anyview.xiazihao.controller.annotation.*;
+import com.anyview.xiazihao.entity.context.UserContext;
+import com.anyview.xiazihao.entity.param.view.TeacherExerciseQueryParam;
+import com.anyview.xiazihao.entity.pojo.Exercise;
+import com.anyview.xiazihao.entity.result.PageResult;
+import com.anyview.xiazihao.entity.view.TeacherExercise;
+import com.anyview.xiazihao.service.teacher.TeacherExerciseService;
+
+import java.io.FileNotFoundException;
+import java.sql.SQLException;
+
+@KatComponent
+@KatController
+@KatRequestMapping(path = "/teacher-exercises")
+public class TeacherExerciseController {
+    @KatAutowired
+    private TeacherExerciseService teacherExerciseService;
+
+    //修改练习信息
+    @KatRequestMapping(path = "", method = "PUT")
+    public void updateExercise(
+            @KatRequestBody Exercise exercise) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                exercise.setCreatorId(UserContext.getUser().getId());
+            }finally{
+                UserContext.clear();
+            }
+        }
+        teacherExerciseService.updateExercise(exercise);
+    }
+
+    //根据id查询练习详情
+    @KatRequestMapping(path = "/{id}", method = "GET")
+    public Exercise selectExerciseById(
+            @KatPathVariable("id") Integer id) throws SQLException, FileNotFoundException {
+        return teacherExerciseService.selectExerciseById(id);
+    }
+
+    //删除练习
+    @KatRequestMapping(path = "/{id}", method = "DELETE")
+    public void deleteExercise(
+            @KatPathVariable("id") Integer id) throws SQLException, FileNotFoundException {
+        teacherExerciseService.deleteExercise(id);
+    }
+
+    // 修改练习状态
+    @KatRequestMapping(path = "/status", method = "PUT")
+    public void updateExerciseStatus(
+            @KatRequestBody Exercise exercise) throws SQLException, FileNotFoundException {
+        teacherExerciseService.updateExerciseStatus(exercise.getId(), exercise.getStatus());
+    }
+
+    // 添加练习
+    @KatRequestMapping(path = "", method = "POST")
+    public void addExercise(
+            @KatRequestBody Exercise exercise) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                exercise.setCreatorId(UserContext.getUser().getId());
+            }finally{
+                UserContext.clear();
+            }
+        }
+        teacherExerciseService.addExercise(exercise);
+    }
+
+    // 教师练习列表分页查询
+    @KatRequestMapping(path = "", method = "GET")
+    public PageResult<TeacherExercise> selectTeacherExercisesByPage(
+            @KatRequestParam("param") TeacherExerciseQueryParam param) throws SQLException, FileNotFoundException {
+        if(UserContext.isAuthOpen()){
+            try{
+                param.setTeacherId(UserContext.getUser().getId());
+            }finally{
+                UserContext.clear();
+            }
+        }
+        return teacherExerciseService.selectTeacherExercisesByPage(param);
+    }
+}
