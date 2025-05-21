@@ -225,12 +225,12 @@ SELECT
     (SELECT COUNT(*) FROM exercise_question eq WHERE eq.exercise_id = e.id) AS total_questions,
 
     -- 批改状态统计
-    SUM(CASE WHEN sa.correct_status = 0 THEN 1 ELSE 0 END) AS saved_unsubmitted_count,
-    SUM(CASE WHEN sa.correct_status = 1 THEN 1 ELSE 0 END) AS submitted_uncorrected_count,
-    SUM(CASE WHEN sa.correct_status = 2 THEN 1 ELSE 0 END) AS corrected_count,
+    SUM(CASE WHEN sa.correct_status = 0 THEN 1 ELSE 0 END) / COUNT(DISTINCT c.id) AS saved_unsubmitted_count,
+    SUM(CASE WHEN sa.correct_status = 1 THEN 1 ELSE 0 END) / COUNT(DISTINCT c.id) AS submitted_uncorrected_count,
+    SUM(CASE WHEN sa.correct_status = 2 THEN 1 ELSE 0 END) / COUNT(DISTINCT c.id) AS corrected_count,
 
     -- 分数统计
-    COALESCE(SUM(sa.score), 0) AS current_score,
+    COALESCE(SUM(sa.score), 0) / COUNT(DISTINCT c.id) AS current_score,
     (SELECT SUM(eq.score)
     FROM exercise_question eq
     WHERE eq.exercise_id = e.id) AS max_score,
