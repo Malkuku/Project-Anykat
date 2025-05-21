@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Objects;
 
@@ -103,6 +104,13 @@ public class TypeConverter {
                 }
                 if (targetType == Boolean.class || targetType == boolean.class) {
                     return Boolean.parseBoolean(strValue);
+                }
+                //时间转换
+                if (targetType == LocalDateTime.class) {
+                    return LocalDateTime.parse(strValue, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                }
+                if (targetType == LocalDate.class) {
+                    return LocalDate.parse(strValue, DateTimeFormatter.ISO_LOCAL_DATE);
                 }
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Failed to convert string '" + strValue +
