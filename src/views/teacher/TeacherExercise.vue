@@ -24,6 +24,7 @@ import {
   MoreFilled,
   Clock, ArrowDown
 } from '@element-plus/icons-vue'
+import {formatDateTime} from "@/utils/date";
 
 const classesList = ref([]);
 const coursesList = ref([]);
@@ -152,8 +153,8 @@ const search = async () => {
 
   // 处理日期范围
   if (dateRange.value && dateRange.value.length === 2) {
-    queryParams.startTime = dayjs(dateRange.value[0]).format('YYYY-MM-DD HH:mm:ss');
-    queryParams.endTime = dayjs(dateRange.value[1]).format('YYYY-MM-DD HH:mm:ss');
+    queryParams.startTime = formatDateTime(dateRange.value[0]);
+    queryParams.endTime = formatDateTime(dateRange.value[1]);
   } else {
     queryParams.startTime = null;
     queryParams.endTime = null;
