@@ -22,9 +22,7 @@ import router from "@/router";
 import {
   Delete,
   MoreFilled,
-  VideoPlay,    // 进行中图标
-  CircleCheck,  // 已完成图标
-  Clock, ArrowDown         // 未开始图标
+  Clock, ArrowDown
 } from '@element-plus/icons-vue'
 
 const classesList = ref([]);
@@ -53,9 +51,9 @@ const pageInfo = reactive({
 const queryParams = reactive({
   teacherId: userStore.id || null, // 从userStore获取教师ID
   semesterId: null,
-  exerciseName: '',
-  courseName: '',
-  className: '',
+  exerciseName: null,
+  courseName: null,
+  className: null,
   startTime: null,
   endTime: null,
   status: null,
@@ -545,7 +543,7 @@ onMounted(() => {
           <el-input v-model="queryParams.className" placeholder="请输入班级名称" clearable />
         </el-form-item>
 
-        <el-form-item label="时间范围" style="width: 200px">
+        <el-form-item label="时间范围" class="time-range-item">
           <el-date-picker
               v-model="dateRange"
               type="datetimerange"
@@ -553,6 +551,7 @@ onMounted(() => {
               start-placeholder="开始日期"
               end-placeholder="结束日期"
               value-format="YYYY-MM-DD HH:mm:ss"
+              style="width: 360px"
           />
         </el-form-item>
 
@@ -572,10 +571,11 @@ onMounted(() => {
           <el-button @click="() => {
             dateRange.value = [];
             Object.keys(queryParams).forEach(key => {
-              if (key !== 'teacherId') {
+              if (key !== 'teacherId' && key !== 'semesterId') {
                 queryParams[key] = null;
               }
             });
+            search();
           }">重置</el-button>
         </el-form-item>
       </el-form>
@@ -850,6 +850,43 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
+/* 时间范围选择器专用样式 */
+.time-range-item {
+  width: 380px; /* 比内部选择器略宽 */
+  margin-right: 0; /* 移除右边距 */
+}
+
+/* 响应式调整 */
+@media (max-width: 1600px) {
+  .query-form .el-form-item {
+    width: 240px !important;
+  }
+  .time-range-item {
+    width: 320px !important;
+  }
+  .time-range-item .el-date-picker {
+    width: 300px !important;
+  }
+}
+
+/* 小屏幕适配 */
+@media (max-width: 1200px) {
+  .query-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .query-form .el-form-item {
+    width: 100% !important;
+    margin-right: 0;
+  }
+  .time-range-item {
+    width: 100% !important;
+  }
+  .time-range-item .el-date-picker {
+    width: 100% !important;
+  }
+}
 
 /* 添加班级列表样式 */
 .class-list {
