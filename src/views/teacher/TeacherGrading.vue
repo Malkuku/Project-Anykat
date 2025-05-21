@@ -9,9 +9,15 @@ import {
   updateCorrectionApi
 } from '@/api/teacher/teacherGrading';
 import { ElMessage } from 'element-plus';
+import router from "@/router";
 
 const route = useRoute();
 const userStore = useUserStore();
+
+// 返回上一页
+const goBack = () => {
+  router.go(-1);
+};
 
 // 是否只显示需要批改的勾选状态
 const onlyShowUncorrected = ref(false);
@@ -163,7 +169,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <h1>练习批改管理</h1>
+  <div class="header-container">
+    <el-button type="primary" plain @click="goBack" class="back-btn">
+      <i class="el-icon-arrow-left"></i> 返回
+    </el-button>
+    <h1>练习批改管理</h1>
+  </div>
 
   <!-- 查询表单 -->
   <div class="container">
@@ -328,6 +339,23 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.header-container {
+  display: flex;
+  align-items: center;
+  padding-right: 100px;
+  margin-bottom: 20px;
+}
+
+.header-container h1 {
+  margin: 0;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.back-btn {
+  margin-right: 10px;
+}
+
 .container {
   margin: 15px 0;
 }
