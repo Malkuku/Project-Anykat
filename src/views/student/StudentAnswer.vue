@@ -122,11 +122,13 @@ onUnmounted(() => {
 // 保存答案
 const saveAnswers = async (status) => {
   try {
-    // 准备要提交的答案数据 - 只包含有答案的题目
+    // 准备要提交的答案数据 - 只包含有答案且未提交的题目
     const answersToSubmit = questionList.value
         .filter(question => {
           const answer = answers.value[question.questionId];
-          return answer && answer.answer.trim() !== '';
+          return answer &&
+              answer.answer.trim() !== '' &&
+              !isQuestionSubmitted(question.questionId);
         })
         .map(question => {
           const answer = answers.value[question.questionId] || { answer: '', correctStatus: 0 };
@@ -141,7 +143,7 @@ const saveAnswers = async (status) => {
         });
 
     if (answersToSubmit.length === 0) {
-      ElMessage.warning('没有可提交的答案');
+      ElMessage.warning(status === 1 ? '没有可提交的新答案' : '没有可保存的新答案');
       return;
     }
 
@@ -199,6 +201,12 @@ const formatScore = (score, totalScore) => {
 const isSubmitted = computed(() => {
   return questionList.value.some(item => item.studentAnswer?.correctStatus === 1 || item.studentAnswer?.correctStatus === 2);
 });
+
+// 计算每个题目是否已提交
+const isQuestionSubmitted = (questionId) => {
+  const question = questionList.value.find(q => q.questionId === questionId);
+  return question?.studentAnswer?.correctStatus === 1 || question?.studentAnswer?.correctStatus === 2;
+};
 
 // 处理多选题的答案
 const handleCheckboxChange = (questionId, value) => {
@@ -292,7 +300,7 @@ const getCheckboxValues = computed(() => {
         }
         answers[question.questionId].answer = val;
       }"
-              :disabled="isSubmitted"
+              :disabled="isQuestionSubmitted(question.questionId) || isExerciseEnded || isExerciseNotStarted"
           >
             <el-radio
                 v-for="(option, key) in question.questionOptions"
@@ -310,7 +318,7 @@ const getCheckboxValues = computed(() => {
           <el-checkbox-group
               :model-value="getCheckboxValues(question.questionId)"
               @update:model-value="val => handleCheckboxChange(question.questionId, val)"
-              :disabled="isSubmitted"
+              :disabled="isQuestionSubmitted(question.questionId) || isExerciseEnded || isExerciseNotStarted"
           >
             <el-checkbox
                 v-for="(option, key) in question.questionOptions"
@@ -330,12 +338,12 @@ const getCheckboxValues = computed(() => {
               :rows="5"
               :model-value="answers[question.questionId]?.answer"
               @update:model-value="val => {
-        if (!answers[question.questionId]) {
-          answers[question.questionId] = { answer: '', correctStatus: 0 };
-        }
-        answers[question.questionId].answer = val;
-      }"
-              :disabled="isSubmitted"
+      if (!answers[question.questionId]) {
+        answers[question.questionId] = { answer: '', correctStatus: 0 };
+      }
+      answers[question.questionId].answer = val;
+    }"
+              :disabled="isQuestionSubmitted(question.questionId) || isExerciseEnded || isExerciseNotStarted"
               :maxlength="question.wordLimit"
               show-word-limit
               placeholder="请输入您的答案"
@@ -368,7 +376,7 @@ const getCheckboxValues = computed(() => {
         <el-button
             type="primary"
             @click="saveAnswers(0)"
-            :disabled="isButtonsDisabled"
+            :disabled="isExerciseNotStarted || isExerciseEnded || !questionList.some(q => !isQuestionSubmitted(q.questionId))"
             v-if="!isExerciseNotStarted && !isExerciseEnded"
         >
           <i class="el-icon-upload2"></i> 保存答案
@@ -376,13 +384,13 @@ const getCheckboxValues = computed(() => {
         <el-button
             type="success"
             @click="confirmSubmit"
-            :disabled="isButtonsDisabled"
+            :disabled="isExerciseNotStarted || isExerciseEnded || !questionList.some(q => !isQuestionSubmitted(q.questionId))"
             v-if="!isExerciseNotStarted && !isExerciseEnded"
         >
           <i class="el-icon-check"></i> 提交答案
         </el-button>
 
-        <!-- 添加状态提示 -->
+        <!-- Status messages -->
         <el-alert
             v-if="isExerciseNotStarted"
             title="练习尚未开始，不能提交答案"
@@ -395,6 +403,14 @@ const getCheckboxValues = computed(() => {
             v-if="isExerciseEnded"
             title="练习已结束，不能提交答案"
             type="error"
+            :closable="false"
+            show-icon
+            class="status-alert"
+        />
+        <el-alert
+            v-if="!isExerciseNotStarted && !isExerciseEnded && !questionList.some(q => !isQuestionSubmitted(q.questionId))"
+            title="所有题目已提交"
+            type="success"
             :closable="false"
             show-icon
             class="status-alert"
