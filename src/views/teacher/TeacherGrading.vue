@@ -264,7 +264,7 @@ onMounted(() => {
       </el-table-column>
       <el-table-column prop="gradingScore" label="得分" width="100" align="center">
         <template #default="{row}">
-          {{ row.gradingScore || '-' }}
+          {{ row.gradingScore === null ? '-' : row.gradingScore}}
         </template>
       </el-table-column>
       <el-table-column label="操作" width="120" align="center">
