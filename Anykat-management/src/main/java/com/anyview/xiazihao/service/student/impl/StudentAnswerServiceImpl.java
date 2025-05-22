@@ -7,6 +7,7 @@ import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.student.StudentAnswerDao;
 import com.anyview.xiazihao.entity.exception.IncompleteParameterException;
 import com.anyview.xiazihao.entity.exception.PermissionDeniedException;
+import com.anyview.xiazihao.entity.pojo.Exercise;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.pojo.question.BaseQuestion;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
@@ -75,10 +76,10 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
            exerciseIds.add(answer.getExerciseId());
         }
         for (Integer exerciseId : exerciseIds) {
-            Integer exerciseStatus = studentAnswerDao.selectExerciseStatus(exerciseId);
-            if(exerciseStatus == null) throw new IncompleteParameterException("练习不存在");
-            if(exerciseStatus == 0) throw new PermissionDeniedException("练习未开始");
-            if(exerciseStatus == 2) throw new PermissionDeniedException("练习已结束");
+            Exercise exercise = studentAnswerDao.selectExerciseTime(exerciseId);
+            if(exercise.getStartTime() == null || exercise.getEndTime() == null) throw new IncompleteParameterException("练习不存在");
+            if(exercise.getStartTime().isAfter( LocalDateTime.now())) throw new PermissionDeniedException("练习未开始");
+            if(exercise.getEndTime().isBefore(LocalDateTime.now())) throw new PermissionDeniedException("练习已结束");
         }
 
         //遍历提交

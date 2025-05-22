@@ -1,5 +1,6 @@
 package com.anyview.xiazihao.dao.student;
 
+import com.anyview.xiazihao.entity.pojo.Exercise;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
@@ -25,6 +26,6 @@ public interface StudentAnswerDao {
     ChoiceQuestion selectChoiceQuestion(Integer questionId) throws SQLException, FileNotFoundException;
     // 查询当前题目的分数
     Integer findCurrentScore(Integer questionId, Integer exerciseId) throws SQLException, FileNotFoundException;
-    // 查询当前练习状态
-    Integer selectExerciseStatus(Integer exerciseId) throws SQLException, FileNotFoundException;
+    //  查询当前题目所属的练习
+    Exercise selectExerciseTime(Integer exerciseId) throws SQLException, FileNotFoundException;
 }

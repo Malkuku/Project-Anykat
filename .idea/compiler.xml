@@ -8,8 +8,8 @@
         <outputRelativeToContentRoot value="true" />
         <module name="Anykat-utils" />
         <module name="Anykat-management" />
-        <module name="Anykat-entity" />
         <module name="Anykat-core" />
+        <module name="Anykat-entity" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

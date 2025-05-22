@@ -3,6 +3,7 @@ package com.anyview.xiazihao.dao.student.impl;
 import com.anyview.xiazihao.containerFactory.annotation.KatComponent;
 import com.anyview.xiazihao.containerFactory.annotation.KatSingleton;
 import com.anyview.xiazihao.dao.student.StudentAnswerDao;
+import com.anyview.xiazihao.entity.pojo.Exercise;
 import com.anyview.xiazihao.entity.pojo.StudentAnswer;
 import com.anyview.xiazihao.entity.pojo.question.ChoiceQuestion;
 import com.anyview.xiazihao.entity.view.StudentExerciseQuestion;
@@ -118,18 +119,16 @@ public class StudentAnswerDaoImpl implements StudentAnswerDao {
     }
 
     @Override
-    public Integer selectExerciseStatus(Integer exerciseId) throws SQLException, FileNotFoundException {
+    public Exercise selectExerciseTime(Integer exerciseId) throws SQLException, FileNotFoundException {
         String sql = """
-            SELECT status
+            SELECT start_time,end_time
             FROM exercise
             WHERE id = ?
             """;
-            List<Integer> statuses = JdbcUtils.executeQuery(
-                    sql,
-                    Integer.class,
-                    exerciseId
-            );
-
-        return statuses.isEmpty() ? null : statuses.get(0);
+        return JdbcUtils.executeQuery(
+                sql,
+                Exercise.class,
+                exerciseId
+        ).get(0);
     }
 }
