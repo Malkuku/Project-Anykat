@@ -4,6 +4,9 @@
 
 > 注意：本分支仅包含Docker部署配置，完整源码请切换至对应的release分支
 
+## 🔖 接口文档
+- [Apifox](https://apifox.com/apidoc/shared-12f2d07c-745b-473f-944f-e9db20e986d1)
+
 ## 📬 技术博客
 - [CSDN技术专栏](https://blog.csdn.net/2301_79760424)
 - [GitHub博客仓库](https://github.com/Malkuku/MyBlog)
@@ -72,8 +75,7 @@ docker-compose up -d
     - 自动阅卷（客观题）
     - 手动评分（主观题）
       
->ps：文档仅供参考，请以实物为准<br>
->大D老师，我让你润色，没让你吹水啊，我都不知道自己这么厉害😰👍
+>ps：文档仅供参考，请以实物为准(感谢大D老师的润色)
 
 ## 🛠️ 版本演进
 
