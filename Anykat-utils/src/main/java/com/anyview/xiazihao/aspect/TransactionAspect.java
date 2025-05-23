@@ -18,7 +18,7 @@ import java.sql.Connection;
 public class TransactionAspect {
 
     @KatAround("@annotation(com.anyview.xiazihao.annotation.KatTransactional)")
-    @KatOrder(Integer.MIN_VALUE)
+    @KatOrder(Integer.MAX_VALUE)
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         Connection conn = null;
         try {
