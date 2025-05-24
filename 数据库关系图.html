@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Anykat 数据库关系图</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      background-color: #f5f5f5;
+    }
+    #network { 
+      width: 100%; 
+      height: 90vh; 
+      border: 1px solid #ddd; 
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 { 
+      color: #333; 
+      text-align: center; 
+      margin-bottom: 20px;
+    }
+    .controls {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 8px 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1>Anykat 数据库关系图</h1>
+  <div class="controls">
+    <button onclick="stabilize()">稳定布局</button>
+    <button onclick="resetView()">重置视图</button>
+    <button onclick="fitView()">适应视图</button>
+  </div>
+  <div id="network"></div>
+  <script>
+    const nodes = new vis.DataSet([
+  {
+    "id": 1,
+    "label": "user\n(用户表)",
+    "group": "core",
+    "shape": "box",
+    "color": "#FFA07A",
+    "font": {
+      "size": 16
+    }
+  },
+  {
+    "id": 2,
+    "label": "class\n(班级表)",
+    "group": "basic",
+    "shape": "box",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 3,
+    "label": "semester\n(学期表)",
+    "group": "basic",
+    "shape": "box",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 4,
+    "label": "course\n(课程表)",
+    "group": "basic",
+    "shape": "box",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 5,
+    "label": "base_question\n(基础题目)",
+    "group": "question",
+    "shape": "box",
+    "color": "#98FB98",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 6,
+    "label": "choice_question\n(选择题)",
+    "group": "question",
+    "shape": "box",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 7,
+    "label": "subjective_question\n(主观题)",
+    "group": "question",
+    "shape": "box",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 8,
+    "label": "exercise\n(练习表)",
+    "group": "activity",
+    "shape": "box",
+    "color": "#ADD8E6",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 9,
+    "label": "student_class\n(学生班级)",
+    "group": "relation",
+    "shape": "diamond",
+    "color": "#E0E0E0",
+    "font": {
+      "size": 12
+    }
+  },
+  {
+    "id": 10,
+    "label": "teacher_course\n(教师课程)",
+    "group": "relation",
+    "shape": "diamond",
+    "color": "#E0E0E0",
+    "font": {
+      "size": 12
+    }
+  },
+  {
+    "id": 11,
+    "label": "exercise_class\n(练习班级)",
+    "group": "relation",
+    "shape": "diamond",
+    "color": "#E0E0E0",
+    "font": {
+      "size": 12
+    }
+  },
+  {
+    "id": 12,
+    "label": "exercise_question\n(练习题目)",
+    "group": "relation",
+    "shape": "diamond",
+    "color": "#E0E0E0",
+    "font": {
+      "size": 12
+    }
+  },
+  {
+    "id": 13,
+    "label": "student_answer\n(学生答案)",
+    "group": "activity",
+    "shape": "box",
+    "font": {
+      "size": 14
+    }
+  },
+  {
+    "id": 14,
+    "label": "notification\n(通知表)",
+    "group": "activity",
+    "shape": "box",
+    "font": {
+      "size": 14
+    }
+  }
+]);
+    const edges = new vis.DataSet([
+  {
+    "from": 1,
+    "to": 9,
+    "label": "学生属于",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "69d3d2f2-d8e9-4db7-97d9-3c456ea64ad6"
+  },
+  {
+    "from": 2,
+    "to": 9,
+    "label": "包含学生",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "3e202f2a-dc37-470b-9993-250badb8b8a3"
+  },
+  {
+    "from": 1,
+    "to": 10,
+    "label": "教师教授",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "e93615a9-ca72-4744-943a-72a7d67528e9"
+  },
+  {
+    "from": 4,
+    "to": 10,
+    "label": "被教授",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "eaba5af9-bb5f-4328-9558-06c104f07274"
+  },
+  {
+    "from": 3,
+    "to": 4,
+    "label": "包含课程",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "7c3f7702-a759-4831-85a7-cd285c00a137"
+  },
+  {
+    "from": 5,
+    "to": 6,
+    "label": "扩展",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "7d186ded-f14d-41d2-905f-8a6904c8a07c"
+  },
+  {
+    "from": 5,
+    "to": 7,
+    "label": "扩展",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "4afe7c3a-c22f-472e-879d-b75bd856a806"
+  },
+  {
+    "from": 5,
+    "to": 12,
+    "label": "被使用",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "10e7b707-ef0a-435a-949b-7683a564f9b1"
+  },
+  {
+    "from": 8,
+    "to": 12,
+    "label": "包含题目",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "3b5e7644-376d-4040-a39f-56067324c58a"
+  },
+  {
+    "from": 8,
+    "to": 11,
+    "label": "分配给",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "a368c4bc-7534-4165-888c-126a1967d433"
+  },
+  {
+    "from": 2,
+    "to": 11,
+    "label": "班级接收",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "5459872c-a9b3-403e-8e67-e4422217e110"
+  },
+  {
+    "from": 1,
+    "to": 13,
+    "label": "学生回答",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "26e08a4a-b1ea-4151-9d85-113b8112662f"
+  },
+  {
+    "from": 5,
+    "to": 13,
+    "label": "题目被答",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "7de52e85-fd70-4fa9-b269-d7af7581718e"
+  },
+  {
+    "from": 8,
+    "to": 13,
+    "label": "练习记录",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "eab1b0e5-533f-48a6-95a2-b02117fbbd58"
+  },
+  {
+    "from": 1,
+    "to": 14,
+    "label": "发送通知",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "a616ae68-1654-417e-a09a-aedf5872d53d"
+  },
+  {
+    "from": 1,
+    "to": 14,
+    "label": "接收通知",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "15383fee-4b8b-43e5-86b5-f8ca3132b686"
+  },
+  {
+    "from": 1,
+    "to": 5,
+    "label": "创建题目",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "e8dbbea7-4ead-4a60-a60f-c0c7ef598d5f"
+  },
+  {
+    "from": 1,
+    "to": 8,
+    "label": "创建练习",
+    "arrows": "to",
+    "font": {
+      "size": 12,
+      "strokeWidth": 0
+    },
+    "id": "b8765221-02c8-4407-92e4-0ef79ca98cb9"
+  }
+]);
+    
+    const container = document.getElementById('network');
+    const data = { nodes, edges };
+    
+    let physicsEnabled = true;
+    let network = null;
+    
+    const options = {
+      layout: {
+        randomSeed: 42, // 确保初始布局一致
+      },
+      edges: {
+        smooth: {
+          type: 'dynamic',
+          roundness: 0.5
+        },
+        font: { 
+          size: 12, 
+          align: 'middle',
+          strokeWidth: 0,
+          background: 'white',
+          strokeColor: 'white',
+          padding: 3
+        },
+        arrows: { 
+          to: { 
+            enabled: true, 
+            scaleFactor: 0.7,
+            type: 'arrow' 
+          } 
+        },
+        color: {
+          color: '#666',
+          highlight: '#2B7CE9',
+          hover: '#2B7CE9'
+        },
+        width: 1.5,
+        selectionWidth: 2.5,
+        hoverWidth: 2
+      },
+      nodes: {
+        font: { 
+          size: 14,
+          face: 'Arial',
+          strokeWidth: 2,
+          strokeColor: '#ffffff'
+        },
+        margin: 8,
+        widthConstraint: { 
+          maximum: 150,
+          minimum: 100
+        },
+        heightConstraint: {
+          minimum: 60
+        },
+        shadow: {
+          enabled: true,
+          color: 'rgba(0,0,0,0.2)',
+          size: 10,
+          x: 5,
+          y: 5
+        },
+        borderWidth: 1,
+        borderWidthSelected: 2,
+        color: {
+          border: '#2B7CE9',
+          background: '#D2E5FF',
+          highlight: {
+            border: '#2B7CE9',
+            background: '#D2E5FF'
+          },
+          hover: {
+            border: '#2B7CE9',
+            background: '#D2E5FF'
+          }
+        }
+      },
+      physics: {
+        enabled: true,
+        solver: 'forceAtlas2Based',
+        forceAtlas2Based: {
+          gravitationalConstant: -50,
+          centralGravity: 0.01,
+          springLength: 200,
+          springConstant: 0.08,
+          damping: 0.4,
+          avoidOverlap: 0.1
+        },
+        stabilization: {
+          enabled: true,
+          iterations: 1000,
+          updateInterval: 25,
+          onlyDynamicEdges: false,
+          fit: true
+        },
+        timestep: 0.5,
+        adaptiveTimestep: true
+      },
+      interaction: {
+        dragNodes: true,
+        dragView: true,
+        hideEdgesOnDrag: false,
+        hideNodesOnDrag: false,
+        hover: true,
+        keyboard: {
+          enabled: true,
+          speed: { x: 10, y: 10, zoom: 0.02 },
+          bindToWindow: true
+        },
+        multiselect: true,
+        navigationButtons: true,
+        selectable: true,
+        selectConnectedEdges: true,
+        tooltipDelay: 300,
+        zoomView: true
+      },
+      manipulation: {
+        enabled: false
+      }
+    };
+    
+    network = new vis.Network(container, data, options);
+    
+    // 添加控制函数
+    function stabilize() {
+      network.stabilize(200);
+    }
+    
+    function resetView() {
+      network.fit({
+        animation: {
+          duration: 1000,
+          easingFunction: 'easeInOutQuad'
+        }
+      });
+    }
+    
+    
+    function fitView() {
+      network.fit({
+        nodes: nodes.getIds(),
+        animation: true
+      });
+    }
+    
+    // 初始稳定后自动适应视图
+    network.once('stabilizationIterationsDone', function() {
+      network.fit({
+        nodes: nodes.getIds(),
+        animation: {
+          duration: 1000,
+          easingFunction: 'easeInOutQuad'
+        }
+      });
+    });
+    
+    // 添加右键菜单
+    network.on("oncontext", function(params) {
+      params.event.preventDefault();
+      if (params.nodes.length > 0) {
+        alert("节点ID: " + params.nodes[0]);
+      } else if (params.edges.length > 0) {
+        alert("边ID: " + params.edges[0]);
+      }
+    });
+  </script>
+</body>
+</html>
