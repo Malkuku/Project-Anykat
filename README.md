@@ -1,6 +1,6 @@
 # Project-Anykat
 
-**Anyview项目二轮考核作品 | [在线预览](http://8.138.29.57) | [后端源码](https://github.com/Malkuku/Project-Anykat/tree/release-1.1) | [前端源码](https://github.com/Malkuku/Project-Anykat/tree/vue-release-1.1)**
+**Anyview项目二轮考核作品 | [在线预览-已失效] | [后端源码](https://github.com/Malkuku/Project-Anykat/tree/release-1.1) | [前端源码](https://github.com/Malkuku/Project-Anykat/tree/vue-release-1.1)**
 
 > 注意：本分支仅包含Docker部署配置，完整源码请切换至对应的release分支
 
